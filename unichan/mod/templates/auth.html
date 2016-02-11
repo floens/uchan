@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Auth{% endblock %}
+
+{% block content %}
+    {% if authed %}
+        Authed<br>
+        <br>
+        <form action="{{ url_for('.mod_auth') }}" method="POST">
+            <input name="token" type="hidden" value="{{ csrf_token() }}">
+            <input name="deauth" type="hidden" value="yes">
+            <input type="submit" value="Deauth">
+        </form>
+    {% else %}
+        <form action="{{ url_for('.mod_auth') }}" method="POST">
+            <input name="token" type="hidden" value="{{ csrf_token() }}">
+            <fieldset>
+                <legend>Authorize</legend>
+
+                <label>Username<br>
+                    <input type="text" name="username"><br>
+                </label>
+
+                <label>Pass<br>
+                    <input type="password" name="password"><br>
+                </label>
+                <br>
+
+                <input type="submit" value="Submit">
+            </fieldset>
+        </form>
+    {% endif %}
+{% endblock %}

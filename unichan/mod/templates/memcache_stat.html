@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Memcached stats{% endblock %}
+
+{% block content %}
+    <h2>Memcache statistics</h2>
+
+    {% for server in stats %}
+        <h3>{{ server[0] }}</h3>
+
+        <table style="border: 1px solid black;">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Detail</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for stat in server[1] %}
+                <tr>
+                    <td>{{ stat[0] }}</td>
+                    <td>{{ stat[1] }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+    {% endfor %}
+
+{% endblock %}

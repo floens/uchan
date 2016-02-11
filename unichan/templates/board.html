@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Board /{{ board.name }}/{% endblock %}
+
+{% import "widget/post.html" as post_widget %}
+{% import "widget/post_form.html" as post_form_widget %}
+{% import "widget/post_manage.html" as post_manage_widget %}
+
+{% block content %}
+    <div class="board-header">
+        <h1>/{{ board.name }}/ - {{ board_config.full_name }}</h1>
+        <div class="description">{{ board_config.description }}</div>
+    </div>
+    <br>
+
+    <hr class="content-divider">
+
+    {{ post_form_widget.render(board) }}
+
+    <hr class="content-divider">
+
+    {% for thread in threads %}
+        {{ post_widget.render(thread.posts[0], thread) }}
+
+        {% for post_snippet in thread.posts[1:][-5:] %}
+            {{ post_widget.render(post_snippet, None, True, False) }}
+        {% endfor %}
+        <hr class="content-divider">
+    {% endfor %}
+
+    {% for i in range(2) %}
+        [<a href="{{ url_for('board', board_name=board.name, page=i if i > 0 else None) }}">{{ i + 1 }}</a>]
+    {% endfor %}
+
+{% endblock %}

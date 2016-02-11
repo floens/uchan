@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Mod{% endblock %}
+
+{% block content %}
+    Mod stuff<br>
+    Logged in as {{ moderator.username }}<br>
+    <br>
+    Current session count: {{ session_count }}<br>
+    <form action="{{ url_for('.reset_sessions') }}" method="POST">
+        <input name="token" type="hidden" value="{{ csrf_token() }}">
+        <input type="submit" value="Reset all sessions">
+    </form>
+    <br>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% macro render(post_item, thread=None, snippet=False, show_checkbox=False) %}
+    <div class="post{{ ' snippet' if snippet else '' }}" id="p{{ post_item.refno }}">
+        <div class="header">
+            {% if post_item.subject %}
+                <span class="subject">
+                    {{ post_item.subject }}
+                </span>
+                <br>
+            {% endif %}
+            <a href="#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
+            <span class="name">
+                {{ post_item.name }}
+            </span>
+            <span class="date">
+                {{ post_item.date|post_time }}
+            </span>
+            {% if show_checkbox %}
+                <span class="manage">
+                <input type="checkbox" name="post_id" value="{{ post_item.id }}">
+            </span>
+            {% endif %}
+        </div>
+        <div class="text">
+            {{ post_item.html|safe }}
+        </div>
+
+        {% if thread %}
+            <div class="boardinfo">
+                {% if thread.omitted_count > 0 %}
+                    {{ thread.omitted_count ~ ' ' ~ thread.omitted_count|pluralize('reply','replies') }} omitted
+                {% endif %}
+                [<a href="{{ url_for('view_thread', board_name=thread.board.name, thread_id=thread.id) }}">View thread</a>]
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}

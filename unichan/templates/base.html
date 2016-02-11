@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'style/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}">
+
+    {% block styles %}{% endblock %}
+    <noscript>
+        <style>
+            .jsonly {
+                display: none;
+            }
+        </style>
+    </noscript>
+</head>
+<body>
+
+{% if all_boards %}
+    <div class="top-list">
+        [<a href="{{ url_for('index') }}">index</a>]
+        {% for board in all_boards.boards %}
+            [<a href="{{ url_for('board', board_name=board.name) }}">{{ board.name }}</a>]
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if mod_links %}
+    <div class="top-list">
+        {% for mod_link in mod_links %}
+            [<a href="{{ mod_link[1] }}">{{ mod_link[0] }}</a>]
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="content">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul>
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+
+    <div class="footer">
+        Page served by µchan
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/board.js') }}"></script>
+{% block javascripts %}
+{% endblock %}
+</body>
+</html>

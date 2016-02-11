@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Mod boards{% endblock %}
+
+{% block content %}
+    <h2>Boards</h2>
+
+    <form action="{{ url_for('.mod_board_add') }}" method="POST">
+        <fieldset>
+            <legend>Add board</legend>
+            <input name="token" type="hidden" value="{{ csrf_token() }}">
+
+            <label>Board name
+                <small>a-z0-9_ max 20 chars</small>
+                <br>
+                <input type="text" name="board_name">
+            </label>
+            <br>
+            <input type="submit" value="Add">
+        </fieldset>
+    </form>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for board in boards %}
+            <tr>
+                <td>{{ board.name }}</td>
+                <td>[<a href="{{ url_for('.mod_board', board_name=board.name) }}">Modify</a>]</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

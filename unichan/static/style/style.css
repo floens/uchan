@@ -1,0 +1,111 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: arial, helvetica, sans-serif;
+    background: #EBF3FF;
+    font-size: 13px;
+}
+
+.top-list {
+    padding: 5px;
+}
+
+.content {
+    padding: 20px;
+}
+
+.board-header h1 {
+    text-align: center;
+    color: #af0a0f;
+    font-weight: bold;
+    font-size: 2.5em;
+}
+
+.board-header .description {
+    text-align: center;
+}
+
+.content-divider {
+    border: none;
+    border-top: 1px solid #B1B1B1;
+    margin: 0.7em 0 0.7em 0;
+}
+
+.post-form {
+    max-width: 500px;
+}
+
+.post-form legend {
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.post-form [name="text"] {
+    width: 100%;
+    min-width: 400px;
+    padding: 0;
+}
+
+.post-manage-form-container {
+    text-align: right;
+    width: 100%;
+}
+
+.post {
+    padding: 10px;
+    margin: 5px 0 5px 0;
+}
+
+.post.snippet {
+    margin-left: 50px;
+}
+
+.post:target, .post.highlight {
+    background-color: #fff4e2;
+}
+
+.post .header .subject {
+    color: #0200ff;
+}
+
+.post .header .refno {
+    color: #000;
+    text-decoration: none;
+}
+
+.post .header .refno:hover {
+    text-decoration: underline;
+    color: #ff0000;
+}
+
+.post .header .name {
+    font-weight: bold;
+    color: #018a00;
+}
+
+.post .header .date {
+}
+
+.post .text {
+    padding: 0.3em 0 0.3em 0;
+    word-wrap: break-word;
+}
+
+.post .text .quote {
+    color: #789922;
+}
+
+.post .boardinfo {
+    margin: 20px 0 0 0;
+    color: #5a5a5a;
+}
+
+.footer {
+    margin: 3em 0 1em 0;
+    text-align: center;
+    font-size: 11px;
+    color: #5a5a5a;
+}

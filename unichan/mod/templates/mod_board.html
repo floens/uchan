@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Modify board{% endblock %}
+
+{% import "widget/dynamic_config.html" as dynamic_config_widget %}
+
+{% block content %}
+    <h2>Modify board</h2>
+
+    Changing board {{ board.name }}<br>
+
+    <form action="{{ url_for('.mod_board_delete') }}" method="POST">
+        <input name="token" type="hidden" value="{{ csrf_token() }}">
+        <button name="board_name" value="{{ board.name }}">Delete board</button>
+        <br>
+        <b>This will permanently delete the whole board!</b>
+    </form>
+    <br>
+    <br>
+
+    {{ dynamic_config_widget.render(board_config, url_for('.mod_board', board_name=board.name)) }}
+
+{% endblock %}

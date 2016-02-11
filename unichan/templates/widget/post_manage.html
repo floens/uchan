@@ -1,0 +1,17 @@
+{% macro render_begin() %}
+    <form class="post-manage-form" action="{{ url_for('post_manage') }}" method="post">
+{% endmacro %}
+
+{% macro render_end() %}
+    <div class="post-manage-form-container">
+        {#To delete or report posts, check the checkbox next to the post and select the appropiate action here.#}
+        <label>Password
+            <small>(for post deletion)</small>
+            <input type="password" name="password" size="12"/>
+        </label>
+
+        <button name="mode" value="delete">Delete</button>
+        <button name="mode" value="report">Report</button>
+    </div>
+    </form>
+{% endmacro %}

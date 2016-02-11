@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Thread view{% endblock %}
+
+{% import "widget/post.html" as post_widget %}
+{% import "widget/post_form.html" as post_form_widget %}
+{% import "widget/post_manage.html" as post_manage_widget %}
+
+{% block content %}
+    <h2>Viewing thread</h2>
+    [<a href="{{ url_for('board', board_name=thread.board.name) }}">Back</a>]
+
+    <hr class="content-divider">
+
+    {{ post_manage_widget.render_begin() }}
+    {% for post_item in thread.posts %}
+        {{ post_widget.render(post_item, show_checkbox=True) }}
+    {% endfor %}
+
+    <hr class="content-divider">
+
+    {{ post_manage_widget.render_end() }}
+
+    <hr class="content-divider">
+
+    {{ post_form_widget.render(thread.board, thread) }}
+    <br>
+    [<a href="{{ url_for('board', board_name=thread.board.name) }}">Back</a>]
+{% endblock %}

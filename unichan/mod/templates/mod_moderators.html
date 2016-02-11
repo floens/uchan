@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Mod moderators{% endblock %}
+
+{% block content %}
+    <h2>Moderators</h2>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Boards</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for moderator in moderators %}
+            <tr>
+                <td>{{ moderator.username }}</td>
+                <td>
+                    {% for board in moderator.boards %}
+                        /{{ board.name }}/&nbsp;
+                    {% endfor %}
+                </td>
+                <td>[<a href="{{ url_for('.mod_moderator', moderator_id=moderator.id) }}">Modify</a>]</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

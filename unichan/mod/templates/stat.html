@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics{% endblock %}
+
+{% block content %}
+    <h2>Statistics</h2>
+
+    <table border="1px solid black">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Detail</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for k, v in stats.items() %}
+            <tr>
+                <td>{{ k }}</td>
+                <td>{{ v }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Modify moderator{% endblock %}
+
+{% block content %}
+    <h2>Modify moderator</h2>
+
+    Changing moderator {{ moderator.username }}<br>
+
+    Admin of boards:<br>
+    <form action="{{ url_for('.mod_moderator_board_remove', moderator_id=moderator.id) }}" method="POST">
+        <input name="token" type="hidden" value="{{ csrf_token() }}">
+
+        <ul>
+            {% for board in moderator.boards %}
+                <li>
+                    <a href="{{ url_for('board', board_name=board.name) }}">/{{ board.name }}/</a>
+                    <button name="board_name" value="{{ board.name }}">Remove</button>
+                </li>
+            {% endfor %}
+        </ul>
+    </form>
+
+    <form action="{{ url_for('.mod_moderator_board_add', moderator_id=moderator.id) }}" method="POST">
+        <fieldset>
+            <legend>Add board to moderator</legend>
+            <input name="token" type="hidden" value="{{ csrf_token() }}">
+
+            <label>Board name<br>
+                <input type="text" name="board_name" style="width: 100px;">
+            </label>
+            <input type="submit" value="Submit">
+        </fieldset>
+    </form>
+
+{% endblock %}

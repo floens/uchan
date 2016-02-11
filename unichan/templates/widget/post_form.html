@@ -1,0 +1,40 @@
+{% macro render(board, thread=None) %}
+    <form class="post-form" action="{{ url_for('post') }}" method="post">
+        <fieldset>
+            {% if thread %}
+                <legend>Reply to thread</legend>
+            {% else %}
+                <legend>New thread</legend>
+                <label>
+                    Subject<br>
+                    <input type="text" name="subject">
+                </label>
+                <br>
+            {% endif %}
+            <label>
+                Name<br>
+                <input type="text" name="name">
+            </label>
+            <br>
+            <label>
+                Password
+                <small>(for post deletion)</small>
+                <br>
+                <input type="password" name="password">
+            </label>
+            <br>
+            <label>
+                Text<br>
+                <textarea name="text" rows="8"></textarea>
+            </label>
+            <br>
+            <input type="submit" value="Submit"/>
+
+            <input type="hidden" name="board" value="{{ board.name }}"/>
+
+            {% if thread %}
+                <input type="hidden" name="thread" value="{{ thread.id }}"/>
+            {% endif %}
+        </fieldset>
+    </form>
+{% endmacro %}

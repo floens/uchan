@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Index{% endblock %}
+
+{% block content %}
+    <h2>Welcome to {{ config.SITE_NAME }}</h2>
+    <br>
+    We have the following boards:<br>
+    <ul>
+        {% for board in boards %}
+            <li>[<a href="{{ url_for('board', board_name=board.name) }}">{{ board.name }}</a>]</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
