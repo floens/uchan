@@ -3,11 +3,10 @@ from flask import request, redirect, url_for, render_template, abort, session, f
 from unichan import app, g
 from unichan.database import get_db
 from unichan.lib import roles, ArgumentError
-from unichan.lib.board_config import BoardConfig
-from unichan.lib.models import Board, Post, Report, Session, Thread, Moderator
-from unichan.lib.models.siteconfig import Siteconfig
+from unichan.lib.configs import BoardConfig, SiteConfig
+from unichan.lib.models import Board, Post, Report, Session, Thread
+from unichan.lib.models.config import Config
 from unichan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, get_authed_moderator
-from unichan.lib.site_config import SiteConfig
 from unichan.mod import mod, mod_role_restrict
 from unichan.view import check_csrf_token
 
@@ -222,8 +221,8 @@ def mod_board(board_name):
     if not board:
         abort(404)
 
-    board_config = BoardConfig()
-    board_config.deserialize(board.config)
+    board_config_row = board.config
+    board_config = g.config_service.load_config(board_config_row)
 
     if request.method == 'GET':
         return render_template('mod_board.html', board=board, board_config=board_config)
@@ -233,19 +232,12 @@ def mod_board(board_name):
         if not check_csrf_token(form.get('token')):
             abort(400)
 
-        for config in board_config.configs:
-            form_value = form.get(config.name, None)
-            if form_value is not None:
-                try:
-                    config.set(form_value)
-                except ArgumentError as e:
-                    flash('Error setting value for {}: {}'.format(config.name, str(e)))
-                    return redirect(url_for('.mod_board', board_name=board_name))
-
-        board.config = board_config.serialize()
-        g.board_service.update_board_config(board)
-
-        flash('Board config updated')
+        try:
+            g.config_service.save_from_form(board_config, board_config_row, form)
+            flash('Board config updated')
+            g.board_cache.invalidate_board_config(board_name)
+        except ArgumentError as e:
+            flash(str(e))
 
         return redirect(url_for('.mod_board', board_name=board_name))
 
@@ -253,31 +245,22 @@ def mod_board(board_name):
 @mod.route('/mod_site', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_site():
-    site_config_row = get_db().query(Siteconfig).one()
-
-    site_config = SiteConfig()
-    site_config.deserialize(site_config.config)
+    site_config_row = g.config_service.get_config_by_type(SiteConfig.TYPE)
+    site_config = g.config_service.load_config(site_config_row)
 
     if request.method == 'GET':
-        return render_template('mod_board.html', board=board, board_config=board_config)
+        return render_template('mod_site.html', site_config=site_config)
     else:
         form = request.form
 
         if not check_csrf_token(form.get('token')):
             abort(400)
 
-        for config in board_config.configs:
-            form_value = form.get(config.name, None)
-            if form_value is not None:
-                try:
-                    config.set(form_value)
-                except ArgumentError as e:
-                    flash('Error setting value for {}: {}'.format(config.name, str(e)))
-                    return redirect(url_for('.mod_board', board_name=board_name))
+        try:
+            g.config_service.save_from_form(site_config, site_config_row, form, 'mod_site_')
+            flash('Site config updated')
+            g.site_cache.invalidate_site_config()
+        except ArgumentError as e:
+            flash(str(e))
 
-        board.config = board_config.serialize()
-        g.board_service.update_board_config(board)
-
-        flash('Board config updated')
-
-        return redirect(url_for('.mod_board', board_name=board_name))
+        return redirect(url_for('.mod_site'))

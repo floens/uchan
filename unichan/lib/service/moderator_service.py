@@ -1,10 +1,8 @@
 import string
 
 import bcrypt
-import re
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
-
 from unichan.database import get_db
 from unichan.lib.models import Moderator
 

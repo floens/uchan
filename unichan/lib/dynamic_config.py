@@ -48,31 +48,20 @@ class DynamicConfigItem:
 
 
 class DynamicConfig:
+    TYPE = ''
+
     def __init__(self):
         self.configs = []
-
-    def serialize(self):
-        output = []
-
-        for config in self.configs:
-            output.append({
-                'name': config.name,
-                'value': config.value
-            })
-
-        return json.dumps(output)
-
-    def deserialize(self, data):
-        obj = json.loads(data)
-
-        for config in self.configs:
-            config.value = config.default_value
-            for item in obj:
-                if item['name'] == config.name:
-                    config.value = item['value']
 
     def get(self, key):
         for item in self.configs:
             if item.name == key:
                 return item.value
         return None
+
+    def set(self, key, value):
+        for item in self.configs:
+            if item.nam == key:
+                item.set(value)
+
+        raise KeyError()

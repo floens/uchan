@@ -4,6 +4,7 @@ from flask import Flask, render_template
 
 from unichan.database import clean_up
 from unichan.lib import BadRequestError
+from unichan.lib.configs import BoardConfig, SiteConfig
 from unichan.lib.models import Moderator
 from unichan.web import CustomSessionInterface
 
@@ -19,9 +20,11 @@ class Globals():
         self.cache = None
         self.posts_cache = None
         self.board_cache = None
+        self.site_cache = None
         self.posts_service = None
         self.board_service = None
         self.moderator_service = None
+        self.config_service = None
 
 
 g = Globals()
@@ -51,7 +54,8 @@ def setup_logger():
     import logging
     from logging.handlers import RotatingFileHandler
 
-    app.logger.handlers[0].setFormatter(logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"))
+    app.logger.handlers[0].setFormatter(
+            logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"))
     log_handler = RotatingFileHandler('log/' + config.APP_NAME + '.log', maxBytes=5000000, backupCount=5)
     log_handler.setFormatter(logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"))
     app.logger.addHandler(log_handler)
@@ -148,14 +152,24 @@ def init():
     from unichan.lib.service import ModeratorService
     g.moderator_service = ModeratorService(g.cache)
 
-    # database.metadata_create_all()
-    # test_models()
+    from unichan.lib.service import ConfigService
+    g.config_service = ConfigService()
+
+    from unichan.lib.cache import SiteCache
+    g.site_cache = SiteCache(g.cache)
+
+    database.metadata_create_all()
+    test_models()
 
 
 def test_models():
     try:
-        from unichan.lib.models import Board
         from unichan import g
+
+        if g.config_service.get_config_by_type(SiteConfig.TYPE) is None:
+            g.config_service.save_config(SiteConfig(), None)
+
+        from unichan.lib.models import Board
         b_board = g.board_service.find_board('b')
         if not b_board:
             a_board = Board()
@@ -168,12 +182,13 @@ def test_models():
 
         from unichan.lib import roles
 
-        moderator = Moderator()
-        moderator.roles = [roles.ROLE_ADMIN]
-        moderator.username = 'florens'
+        existing_moderator = g.moderator_service.find_moderator_username('florens')
+        if not existing_moderator:
+            moderator = Moderator()
+            moderator.roles = [roles.ROLE_ADMIN]
+            moderator.username = 'florens'
 
-        g.moderator_service.create_moderator(moderator, 'passwd')
-
+            g.moderator_service.create_moderator(moderator, 'passwd')
     finally:
         clean_up()
 

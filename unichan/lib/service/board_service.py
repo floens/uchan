@@ -4,10 +4,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 
-from unichan import g
+from unichan import g, BoardConfig
 from unichan.database import get_db
 from unichan.lib import ArgumentError
-from unichan.lib.models import Board
+from unichan.lib.models import Board, Config
 
 
 class BoardService:
@@ -53,6 +53,10 @@ class BoardService:
             raise ArgumentError('Invalid board name')
 
         db = get_db()
+
+        board_config = BoardConfig()
+        board.config_id = g.config_service.save_config(board_config, None).id
+
         db.add(board)
 
         try:

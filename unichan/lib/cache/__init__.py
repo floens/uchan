@@ -48,3 +48,4 @@ class CacheDict(dict):
 
 from unichan.lib.cache.board_cache import BoardCache
 from unichan.lib.cache.posts_cache import PostsCache
+from unichan.lib.cache.site_cache import SiteCache

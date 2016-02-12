@@ -4,3 +4,4 @@ from .thread import Thread
 from .post import Post
 from .report import Report
 from .moderator import Moderator
+from .config import Config

@@ -17,6 +17,11 @@ body {
     padding: 20px;
 }
 
+.motd {
+    font-weight: bold;
+    text-align: center;
+}
+
 .board-header h1 {
     text-align: center;
     color: #af0a0f;

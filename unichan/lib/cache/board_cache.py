@@ -38,7 +38,9 @@ class BoardCache:
             board = g.board_service.find_board(board_name)
             if not board:
                 return None
-            board_config_cache = BoardConfigCacheProxy(board.get_config_dict())
+
+            config = g.config_service.load_config_dict(board.config)
+            board_config_cache = BoardConfigCacheProxy(config)
             self.cache.set(key, board_config_cache)
         return board_config_cache
 

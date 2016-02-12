@@ -12,6 +12,10 @@
 
     <hr class="content-divider">
 
+    <div class="motd">{{ site_config.motd }}</div>
+
+    <hr class="content-divider">
+
     {{ post_manage_widget.render_begin() }}
     {% for post_item in thread.posts %}
         {{ post_widget.render(post_item, show_checkbox=True) }}

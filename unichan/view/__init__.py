@@ -17,7 +17,9 @@ def inject_variables():
     if config.SHOW_BOARDS_AT_TOP:
         all_boards = g.board_cache.all_boards()
 
-    return dict(all_boards=all_boards)
+    site_config_cached = g.site_cache.find_site_config_cached()
+
+    return dict(all_boards=all_boards, site_config=site_config_cached)
 
 
 @app.route('/favicon.ico')

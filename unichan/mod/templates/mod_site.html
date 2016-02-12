@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Modify site{% endblock %}
+
+{% import "widget/dynamic_config.html" as dynamic_config_widget %}
+
+{% block content %}
+    <h2>Modify site</h2>
+
+    Changing config<br>
+
+    {{ dynamic_config_widget.render(site_config, url_for('.mod_site'), 'mod_site_') }}
+
+{% endblock %}

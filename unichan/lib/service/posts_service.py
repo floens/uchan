@@ -75,7 +75,9 @@ class PostsService:
 
             thread_len = db.query(Post).filter_by(thread_id=thread_id).count()
 
-            if not sage or thread_len < board.get_dynamic_config().get('bump_limit'):
+            board_config = g.config_service.load_config(board.config)
+
+            if not sage or thread_len < board_config.get('bump_limit'):
                 thread.last_modified = now()
 
             post.refno = thread.refno_counter
@@ -99,7 +101,8 @@ class PostsService:
                 if moderator is None:
                     raise Exception('Moderator not found')
 
-            moderator_can_delete = moderator is not None and g.moderator_service.moderates_board(moderator, post.thread.board)
+            moderator_can_delete = moderator is not None and g.moderator_service.moderates_board(moderator,
+                                                                                                 post.thread.board)
             can_delete = moderator_can_delete or (details.password is not None and details.password == post.password)
             if can_delete:
                 self.delete_post(post)
