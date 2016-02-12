@@ -1,6 +1,6 @@
 unichan.db
-config.py
-config_celery.py
+/config.py
+/config_celery.py
 
 .idea
 *.iml
