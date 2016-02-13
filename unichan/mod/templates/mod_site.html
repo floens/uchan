@@ -9,4 +9,12 @@
 
     {{ dynamic_config_widget.render(site_config, url_for('.mod_site'), 'mod_site_') }}
 
+    <br>
+
+    Current session count: {{ session_count }}<br>
+    <form action="{{ url_for('.reset_sessions') }}" method="POST">
+        {{ csrf_html() }}
+        <input type="submit" value="Reset all sessions">
+    </form>
+
 {% endblock %}

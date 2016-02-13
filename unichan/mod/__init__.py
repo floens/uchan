@@ -37,7 +37,6 @@ def inject_variables():
     if get_authed():
         mod_links = [
             ('auth', url_for('.mod_auth')),
-            ('index', url_for('.mod_index')),
             ('mod posts', url_for('.mod_post'))
         ]
 

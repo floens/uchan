@@ -12,20 +12,7 @@ from unichan.view import check_csrf_token, with_token
 
 @mod.route('/')
 def mod_index():
-    session_count = get_db().query(Session).count()
-
-    moderator = get_authed_moderator()
-
-    return render_template('mod_index.html', session_count=session_count, moderator=moderator)
-
-
-@mod.route('/reset_sessions', methods=['POST'])
-@mod_role_restrict(roles.ROLE_ADMIN)
-@with_token()
-def reset_sessions():
-    app.reset_sessions(get_db(), [session.session_id])
-
-    return redirect(url_for('.mod_index'))
+    return redirect(url_for('.mod_auth'))
 
 
 @mod.route('/auth', methods=['GET', 'POST'])
@@ -59,7 +46,9 @@ def mod_auth():
 
         return redirect(url_for('.mod_auth'))
     else:
-        return render_template('auth.html', authed=get_authed())
+        authed = get_authed()
+        moderator = get_authed_moderator() if authed else None
+        return render_template('auth.html', authed=authed, moderator=moderator)
 
 
 @mod.route('/mod_post')
@@ -301,7 +290,9 @@ def mod_site():
     site_config = g.config_service.load_config(site_config_row)
 
     if request.method == 'GET':
-        return render_template('mod_site.html', site_config=site_config)
+        session_count = get_db().query(Session).count()
+
+        return render_template('mod_site.html', site_config=site_config, session_count=session_count)
     else:
         form = request.form
 
@@ -316,3 +307,11 @@ def mod_site():
             flash(str(e))
 
         return redirect(url_for('.mod_site'))
+
+
+@mod.route('/mod_site/reset_sessions', methods=['POST'])
+@mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
+def reset_sessions():
+    app.reset_sessions(get_db(), [session.session_id])
+    return redirect(url_for('.mod_site'))

@@ -4,7 +4,7 @@
 
 {% block content %}
     {% if authed %}
-        Authed<br>
+        Logged in as <b>{{ moderator.username }}</b><br>
         <br>
         <form action="{{ url_for('.mod_auth') }}" method="POST">
             {{ csrf_html() }}
