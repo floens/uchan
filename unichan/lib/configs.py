@@ -23,3 +23,5 @@ class SiteConfig(DynamicConfig):
         super().__init__()
 
         self.configs.append(DynamicConfigItem('motd', 'MOTD', '', str, maximum=500))
+        self.configs.append(DynamicConfigItem('default_name', 'Default posting name', 'Anonymous', str, maximum=25))
+        self.configs.append(DynamicConfigItem('boards_top', 'Show board list at top', True, bool))

@@ -158,8 +158,8 @@ def init():
     from unichan.lib.cache import SiteCache
     g.site_cache = SiteCache(g.cache)
 
-    database.metadata_create_all()
-    test_models()
+    # database.metadata_create_all()
+    # test_models()
 
 
 def test_models():

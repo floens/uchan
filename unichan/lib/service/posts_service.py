@@ -26,10 +26,12 @@ class PostsService:
             raise BadRequestError('Board not found')
         board_name = board.name
 
+        site_config_cached = g.site_cache.find_site_config_cached()
+
         sage = False
         try:
             if not post_details.name:
-                post_details.name = config.DEFAULT_NAME
+                post_details.name = site_config_cached.default_name
 
             validate_post(post_details.text)
             parse_post(post_details.text)

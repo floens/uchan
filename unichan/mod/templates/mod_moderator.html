@@ -5,7 +5,7 @@
 {% block content %}
     <h2>Modify moderator</h2>
 
-    Changing moderator {{ moderator.username }}<br>
+    Changing moderator <b>{{ moderator.username }}</b><br>
 
     Admin of boards:<br>
     <form action="{{ url_for('.mod_moderator_board_remove', moderator_id=moderator.id) }}" method="POST">

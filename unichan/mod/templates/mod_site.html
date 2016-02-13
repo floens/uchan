@@ -7,8 +7,6 @@
 {% block content %}
     <h2>Modify site</h2>
 
-    Changing config<br>
-
     {{ dynamic_config_widget.render(site_config, url_for('.mod_site'), 'mod_site_') }}
 
 {% endblock %}

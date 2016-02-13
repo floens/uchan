@@ -9,12 +9,11 @@ class DynamicConfigItem:
         self.description = description
         self.default_value = default_value
         self.value_type = value_type
+        self.value_type_name = value_type.__name__
         self.value = default_value
 
         self.minimum = minimum
         self.maximum = maximum
-
-        self.text_input = value_type is str
 
     def set(self, raw_value):
         if self.value_type == int:
@@ -43,6 +42,8 @@ class DynamicConfigItem:
                 raise ArgumentError('Maximum length of {}'.format(self.maximum))
 
             self.value = value
+        elif self.value_type == bool:
+            self.value = raw_value == 'on'
         else:
             raise Exception('Unknown value type')
 

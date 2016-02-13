@@ -6,9 +6,11 @@
 
             {% for config_item in config.configs %}
                 <label>
-                    {% if config_item.text_input %}
-                        <textarea name="{{ prefix }}{{ config_item.name }}" cols="60" rows="8">{{ config_item.value }}</textarea>
+                    {% if config_item.value_type_name == 'str' %}
+                        <textarea name="{{ prefix }}{{ config_item.name }}" cols="60" rows="4">{{ config_item.value }}</textarea>
                         <br>
+                    {% elif config_item.value_type_name == 'bool' %}
+                        <input type="checkbox" name="{{ prefix }}{{ config_item.name }}" {% if config_item.value %}checked{% endif %}>
                     {% else %}
                         <input type="text" name="{{ prefix }}{{ config_item.name }}" value="{{ config_item.value }}" style="width: 50px;"/>
                     {% endif %}

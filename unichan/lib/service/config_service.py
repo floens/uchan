@@ -71,6 +71,10 @@ class ConfigService:
                     config_item.set(form_value)
                 except ArgumentError as e:
                     raise ArgumentError('Error setting value for {}: {}'.format(config_item.name, str(e)))
+            else:
+                # Unchecked checkbox
+                if config_item.value_type == bool:
+                    config_item.value = False
 
         self.save_config(config, config_row)
 

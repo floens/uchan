@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import Blueprint, abort, request, url_for
+from flask import Blueprint, abort, request, url_for, redirect
 
 from unichan.lib import roles
 from unichan.lib.moderator_request import request_has_role, get_authed
@@ -8,10 +8,14 @@ from unichan.lib.moderator_request import request_has_role, get_authed
 mod = Blueprint('mod', __name__, url_prefix='/mod', template_folder='templates')
 
 
+def mod_abort_redirect():
+    return redirect(url_for('.mod_auth'))
+
+
 @mod.before_request
 def mod_restrict():
     if request.endpoint != 'mod.mod_auth' and not get_authed():
-        abort(404)
+        return mod_abort_redirect()
 
 
 def mod_role_restrict(role):
@@ -19,7 +23,7 @@ def mod_role_restrict(role):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not request_has_role(role):
-                abort(404)
+                return mod_abort_redirect()
 
             return f(*args, **kwargs)
 

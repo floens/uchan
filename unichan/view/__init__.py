@@ -13,11 +13,11 @@ from unichan.lib.models import Post
 
 @app.context_processor
 def inject_variables():
-    all_boards = None
-    if config.SHOW_BOARDS_AT_TOP:
-        all_boards = g.board_cache.all_boards()
-
     site_config_cached = g.site_cache.find_site_config_cached()
+
+    all_boards = None
+    if site_config_cached.boards_top:
+        all_boards = g.board_cache.all_boards()
 
     return dict(all_boards=all_boards, site_config=site_config_cached)
 

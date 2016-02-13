@@ -7,7 +7,8 @@
 {% block content %}
     <h2>Modify board</h2>
 
-    Changing board {{ board.name }}<br>
+    Changing board <b>{{ board.name }}</b><br>
+    <br>
 
     <form action="{{ url_for('.mod_board_delete') }}" method="POST">
         <input name="token" type="hidden" value="{{ csrf_token() }}">
