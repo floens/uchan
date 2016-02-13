@@ -18,7 +18,7 @@
 
     {{ post_manage_widget.render_begin() }}
     {% for post_item in thread.posts %}
-        {{ post_widget.render(post_item, show_checkbox=True) }}
+        {{ post_widget.render(post_item, thread_view=True) }}
     {% endfor %}
 
     <hr class="content-divider">
@@ -30,4 +30,9 @@
     {{ post_form_widget.render(thread.board, thread) }}
     <br>
     [<a href="{{ url_for('board', board_name=thread.board.name) }}">Back</a>]
+{% endblock %}
+
+{% block javascripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/thread.js') }}"></script>
 {% endblock %}

@@ -1,4 +1,4 @@
-{% macro render(post_item, thread=None, snippet=False, show_checkbox=False) %}
+{% macro render(post_item, thread=None, snippet=False, thread_view=False) %}
     <div class="post{{ ' snippet' if snippet else '' }}" id="p{{ post_item.refno }}">
         <div class="header">
             {% if post_item.subject %}
@@ -7,14 +7,16 @@
                 </span>
                 <br>
             {% endif %}
-            <a href="#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
+            {% if thread_view %}
+                <a href="#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
+            {% endif %}
             <span class="name">
                 {{ post_item.name }}
             </span>
             <span class="date">
                 {{ post_item.date|post_time }}
             </span>
-            {% if show_checkbox %}
+            {% if thread_view %}
                 <span class="manage">
                 <input type="checkbox" name="post_id" value="{{ post_item.id }}">
             </span>
