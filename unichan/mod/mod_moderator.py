@@ -7,6 +7,13 @@ from unichan.mod import mod, mod_role_restrict
 from unichan.view import with_token
 
 
+def get_moderator_or_abort(moderator_id):
+    moderator = g.moderator_service.find_moderator_id(moderator_id)
+    if not moderator:
+        abort(404)
+    return moderator
+
+
 @mod.route('/mod_moderator')
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_moderators():
@@ -46,11 +53,7 @@ def mod_moderator_add():
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
 def mod_moderator_delete():
-    moderator_id = request.form['moderator_id']
-
-    moderator = g.moderator_service.find_moderator_id(moderator_id)
-    if not moderator:
-        abort(404)
+    moderator = get_moderator_or_abort(request.form['moderator_id'])
 
     g.moderator_service.delete_moderator(moderator)
     flash('Moderator deleted')
@@ -61,20 +64,18 @@ def mod_moderator_delete():
 @mod.route('/mod_moderator/<int:moderator_id>')
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_moderator(moderator_id):
-    moderator = g.moderator_service.find_moderator_id(moderator_id)
-    if not moderator:
-        abort(404)
+    moderator = get_moderator_or_abort(moderator_id)
 
-    return render_template('mod_moderator.html', moderator=moderator)
+    all_roles = ', '.join(roles.ALL_ROLES)
+
+    return render_template('mod_moderator.html', moderator=moderator, all_roles=all_roles)
 
 
 @mod.route('/mod_moderator/<int:moderator_id>/board_add', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
 def mod_moderator_board_add(moderator_id):
-    moderator = g.moderator_service.find_moderator_id(moderator_id)
-    if not moderator:
-        abort(404)
+    moderator = get_moderator_or_abort(moderator_id)
 
     board_name = request.form['board_name']
     board = g.board_service.find_board(board_name)
@@ -91,9 +92,7 @@ def mod_moderator_board_add(moderator_id):
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
 def mod_moderator_board_remove(moderator_id):
-    moderator = g.moderator_service.find_moderator_id(moderator_id)
-    if not moderator:
-        abort(404)
+    moderator = get_moderator_or_abort(moderator_id)
 
     board_name = request.form['board_name']
     board = g.board_service.find_board(board_name)
@@ -110,9 +109,7 @@ def mod_moderator_board_remove(moderator_id):
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
 def mod_moderator_password(moderator_id):
-    moderator = g.moderator_service.find_moderator_id(moderator_id)
-    if not moderator:
-        abort(404)
+    moderator = get_moderator_or_abort(moderator_id)
 
     new_password = request.form['new_password']
 
@@ -121,5 +118,43 @@ def mod_moderator_password(moderator_id):
         flash('Changed password')
     except ArgumentError as e:
         flash(e.message)
+
+    return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
+
+
+@mod.route('/mod_moderator/<int:moderator_id>/role_add', methods=['POST'])
+@mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
+def mod_moderator_role_add(moderator_id):
+    moderator = get_moderator_or_abort(moderator_id)
+
+    role = request.form['role']
+
+    if not g.moderator_service.role_exists(role):
+        flash('That role does not exist')
+    else:
+        try:
+            g.moderator_service.add_role(moderator, role)
+        except ArgumentError as e:
+            flash(e.message)
+
+    return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
+
+
+@mod.route('/mod_moderator/<int:moderator_id>/role_remove', methods=['POST'])
+@mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
+def mod_moderator_role_remove(moderator_id):
+    moderator = get_moderator_or_abort(moderator_id)
+
+    role = request.form['role']
+
+    if not g.moderator_service.role_exists(role):
+        flash('That role does not exist')
+    else:
+        try:
+            g.moderator_service.remove_role(moderator, role)
+        except ArgumentError as e:
+            flash(e.message)
 
     return redirect(url_for('.mod_moderator', moderator_id=moderator_id))

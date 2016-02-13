@@ -6,8 +6,11 @@
     <h2>Modify moderator</h2>
 
     Changing moderator <b>{{ moderator.username }}</b><br>
+    <br>
 
-    Admin of boards:<br>
+    <hr class="content-divider">
+
+    Assigned to these boards:<br>
     <form action="{{ url_for('.mod_moderator_board_remove', moderator_id=moderator.id) }}" method="POST">
         {{ csrf_html() }}
 
@@ -32,6 +35,37 @@
             <input type="submit" value="Submit">
         </fieldset>
     </form>
+
+    <hr class="content-divider">
+
+    Roles:<br>
+    <form action="{{ url_for('.mod_moderator_role_remove', moderator_id=moderator.id) }}" method="POST">
+        {{ csrf_html() }}
+
+        <ul>
+            {% for role in moderator.roles %}
+                <li>
+                    {{ role }}
+                    <button name="role" value="{{ role }}">Remove role</button>
+                </li>
+            {% endfor %}
+        </ul>
+    </form>
+
+    <form action="{{ url_for('.mod_moderator_role_add', moderator_id=moderator.id) }}" method="POST">
+        <fieldset>
+            <legend>Add role to moderator</legend>
+            {{ csrf_html() }}
+            Available roles: {{ all_roles }}<br>
+            <br>
+            <label>Role<br>
+                <input type="text" name="role" style="width: 100px;">
+            </label>
+            <input type="submit" value="Submit">
+        </fieldset>
+    </form>
+
+    <hr class="content-divider">
 
     <form action="{{ url_for('.mod_moderator_password', moderator_id=moderator.id) }}" method="POST">
         <fieldset>

@@ -1,8 +1,9 @@
 from sqlalchemy import Column, String, LargeBinary
 from sqlalchemy import Integer
-from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects.postgresql import ARRAY
 
 from unichan.database import ModelBase
+from unichan.lib.models import MutableList
 
 
 class Moderator(ModelBase):
@@ -12,4 +13,4 @@ class Moderator(ModelBase):
     username = Column(String(), unique=True)
     password = Column(LargeBinary())
 
-    roles = Column(postgresql.ARRAY(String), index=True)
+    roles = Column(MutableList.as_mutable(ARRAY(String)), index=True)

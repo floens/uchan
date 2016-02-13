@@ -7,6 +7,13 @@ from unichan.mod import mod, mod_role_restrict
 from unichan.view import check_csrf_token, with_token
 
 
+def get_board_or_abort(board_name):
+    board = g.board_service.find_board(board_name)
+    if not board:
+        abort(404)
+    return board
+
+
 @mod.route('/mod_board')
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_boards():
@@ -41,11 +48,7 @@ def mod_board_add():
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
 def mod_board_delete():
-    board_name = request.form['board_name']
-
-    board = g.board_service.find_board(board_name)
-    if not board:
-        abort(404)
+    board = get_board_or_abort(request.form['board_name'])
 
     g.board_service.delete_board(board)
     flash('Board deleted')
@@ -56,9 +59,7 @@ def mod_board_delete():
 @mod.route('/mod_board/<board_name>', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_board(board_name):
-    board = g.board_service.find_board(board_name)
-    if not board:
-        abort(404)
+    board = get_board_or_abort(board_name)
 
     board_config_row = board.config
     board_config = g.config_service.load_config(board_config_row)

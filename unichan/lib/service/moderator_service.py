@@ -6,6 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from unichan.database import get_db
 from unichan.lib import ArgumentError
+from unichan.lib import roles
 from unichan.lib.models import Moderator
 
 
@@ -74,8 +75,32 @@ class ModeratorService:
     def get_all_moderators(self):
         return get_db().query(Moderator).all()
 
+    def role_exists(self, role):
+        return role is not None and role in roles.ALL_ROLES
+
     def has_role(self, moderator, role):
         return role is not None and role in moderator.roles
+
+    def add_role(self, moderator, role):
+        if not self.role_exists(role):
+            raise ArgumentError('Invalid role')
+
+        moderator.roles.append(role)
+
+        db = get_db()
+        db.commit()
+
+    def remove_role(self, moderator, role):
+        if not role:
+            raise ArgumentError('Invalid role')
+
+        if not self.has_role(moderator, role):
+            raise ArgumentError('Role not on moderator')
+
+        moderator.roles.remove(role)
+
+        db = get_db()
+        db.commit()
 
     def moderates_board(self, moderator, board):
         return board in moderator.boards

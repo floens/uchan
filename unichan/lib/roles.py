@@ -1,1 +1,3 @@
 ROLE_ADMIN = 'admin'
+
+ALL_ROLES = [ROLE_ADMIN]
