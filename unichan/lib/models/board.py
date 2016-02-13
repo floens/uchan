@@ -1,10 +1,7 @@
-import json
-
 from sqlalchemy import Column, Integer, String, Table, ForeignKey
 from sqlalchemy.orm import relationship
 
 from unichan.database import ModelBase
-from unichan.lib.configs import BoardConfig
 
 board_moderator_table = Table(
         'boardmoderator',

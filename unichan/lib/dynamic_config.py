@@ -1,5 +1,3 @@
-import json
-
 from unichan.lib import ArgumentError
 
 

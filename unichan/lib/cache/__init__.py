@@ -1,7 +1,5 @@
 import json
 
-from unichan import g
-
 
 class CacheWrapper:
     def __init__(self, cache):

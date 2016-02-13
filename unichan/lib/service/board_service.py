@@ -4,10 +4,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 
-from unichan import g, BoardConfig
+from unichan import g
 from unichan.database import get_db
 from unichan.lib import ArgumentError
-from unichan.lib.models import Board, Config
+from unichan.lib.configs import BoardConfig
+from unichan.lib.models import Board
 
 
 class BoardService:

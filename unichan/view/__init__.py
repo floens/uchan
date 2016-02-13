@@ -1,9 +1,11 @@
 import random
 import string
 import time
+from functools import wraps
 from urllib.parse import urlparse
 
-from flask import send_from_directory, session
+from flask import send_from_directory, session, request, abort
+from markupsafe import escape, Markup
 
 import config
 from unichan import g, app
@@ -34,6 +36,24 @@ def generate_csrf_token():
     return session['_csrf_token']
 
 
+def generate_csrf_token_html():
+    return Markup('<input name="token" type="hidden" value="{}">'.format(escape(generate_csrf_token())))
+
+
+def with_token():
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not check_csrf_token(request.form.get('token')):
+                abort(400)
+
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
 def check_csrf_token(form_token):
     session_token = session.get('_csrf_token', None)
     return session_token is not None and form_token is not None and session_token == form_token
@@ -50,6 +70,7 @@ def check_csrf_referer(request):
 
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
+app.jinja_env.globals['csrf_html'] = generate_csrf_token_html
 
 if config.DEBUG:
     @app.route('/test')

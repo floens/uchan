@@ -10,15 +10,16 @@
     Changing board <b>{{ board.name }}</b><br>
     <br>
 
+    {{ dynamic_config_widget.render(board_config, url_for('.mod_board', board_name=board.name)) }}
+
+    <br>
+    <br>
+
     <form action="{{ url_for('.mod_board_delete') }}" method="POST">
-        <input name="token" type="hidden" value="{{ csrf_token() }}">
+        {{ csrf_html() }}
         <button name="board_name" value="{{ board.name }}">Delete board</button>
         <br>
         <b>This will permanently delete the whole board!</b>
     </form>
-    <br>
-    <br>
-
-    {{ dynamic_config_widget.render(board_config, url_for('.mod_board', board_name=board.name)) }}
 
 {% endblock %}

@@ -1,5 +1,6 @@
-from unichan import SiteConfig, g
+from unichan import g
 from unichan.lib.cache import CacheDict
+from unichan.lib.configs import SiteConfig
 
 
 class SiteCache:

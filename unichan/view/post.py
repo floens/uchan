@@ -4,7 +4,7 @@ from unichan import app
 from unichan.lib import BadRequestError
 from unichan.lib.moderator_request import get_authed_moderator
 from unichan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task
-from unichan.view import check_csrf_token, check_csrf_referer
+from unichan.view import check_csrf_referer
 
 
 @app.route('/post', methods=['POST'])

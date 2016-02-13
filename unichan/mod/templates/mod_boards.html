@@ -8,7 +8,7 @@
     <form action="{{ url_for('.mod_board_add') }}" method="POST">
         <fieldset>
             <legend>Add board</legend>
-            <input name="token" type="hidden" value="{{ csrf_token() }}">
+            {{ csrf_html() }}
 
             <label>Board name
                 <small>a-z0-9_ max 20 chars</small>

@@ -3,12 +3,11 @@ from flask import request, redirect, url_for, render_template, abort, session, f
 from unichan import app, g
 from unichan.database import get_db
 from unichan.lib import roles, ArgumentError
-from unichan.lib.configs import BoardConfig, SiteConfig
-from unichan.lib.models import Board, Post, Report, Session, Thread
-from unichan.lib.models.config import Config
+from unichan.lib.configs import SiteConfig
+from unichan.lib.models import Board, Post, Report, Session, Thread, Moderator
 from unichan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, get_authed_moderator
 from unichan.mod import mod, mod_role_restrict
-from unichan.view import check_csrf_token
+from unichan.view import check_csrf_token, with_token
 
 
 @mod.route('/')
@@ -22,10 +21,8 @@ def mod_index():
 
 @mod.route('/reset_sessions', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
 def reset_sessions():
-    if not check_csrf_token(request.form.get('token')):
-        abort(400)
-
     app.reset_sessions(get_db(), [session.session_id])
 
     return redirect(url_for('.mod_index'))
@@ -41,8 +38,8 @@ def mod_auth():
             if request.form.get('deauth') == 'yes':
                 unset_mod_authed()
         else:
-            username = request.form.get('username')
-            password = request.form.get('password')
+            username = request.form['username']
+            password = request.form['password']
 
             mod_service = g.moderator_service
 
@@ -57,7 +54,7 @@ def mod_auth():
                         mod_service.check_password(moderator, password)
                         set_mod_authed(moderator)
                         flash('Logged in')
-                    except ValueError:
+                    except ArgumentError:
                         flash('Invalid username or password')
 
         return redirect(url_for('.mod_auth'))
@@ -112,6 +109,49 @@ def mod_moderators():
     return render_template('mod_moderators.html', moderators=moderators)
 
 
+@mod.route('/mod_moderator/add', methods=['POST'])
+@mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
+def mod_moderator_add():
+    moderator_name = request.form['moderator_name']
+    if not g.moderator_service.check_username_validity(moderator_name):
+        flash('Invalid moderator name')
+        return redirect(url_for('.mod_moderators'))
+
+    moderator_password = request.form['moderator_password']
+    if not g.moderator_service.check_password_validity(moderator_password):
+        flash('Invalid moderator password')
+        return redirect(url_for('.mod_moderators'))
+
+    moderator = Moderator()
+    moderator.roles = []
+    moderator.username = moderator_name
+
+    try:
+        g.moderator_service.create_moderator(moderator, moderator_password)
+    except ArgumentError as e:
+        flash(e.message)
+    flash('Moderator added')
+
+    return redirect(url_for('.mod_moderators'))
+
+
+@mod.route('/mod_moderator/delete', methods=['POST'])
+@mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
+def mod_moderator_delete():
+    moderator_id = request.form['moderator_id']
+
+    moderator = g.moderator_service.find_moderator_id(moderator_id)
+    if not moderator:
+        abort(404)
+
+    g.moderator_service.delete_moderator(moderator)
+    flash('Moderator deleted')
+
+    return redirect(url_for('.mod_moderators'))
+
+
 @mod.route('/mod_moderator/<int:moderator_id>')
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_moderator(moderator_id):
@@ -124,15 +164,13 @@ def mod_moderator(moderator_id):
 
 @mod.route('/mod_moderator/<int:moderator_id>/board_add', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
 def mod_moderator_board_add(moderator_id):
-    if not check_csrf_token(request.form.get('token')):
-        abort(400)
-
     moderator = g.moderator_service.find_moderator_id(moderator_id)
     if not moderator:
         abort(404)
 
-    board_name = request.form.get('board_name')
+    board_name = request.form['board_name']
     board = g.board_service.find_board(board_name)
     if board is None:
         flash('That board does not exist')
@@ -145,21 +183,39 @@ def mod_moderator_board_add(moderator_id):
 
 @mod.route('/mod_moderator/<int:moderator_id>/board_remove', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
 def mod_moderator_board_remove(moderator_id):
-    if not check_csrf_token(request.form.get('token')):
-        abort(400)
-
     moderator = g.moderator_service.find_moderator_id(moderator_id)
     if not moderator:
         abort(404)
 
-    board_name = request.form.get('board_name')
+    board_name = request.form['board_name']
     board = g.board_service.find_board(board_name)
     if board is None:
         flash('That board does not exist')
     else:
         g.board_service.board_remove_moderator(board, moderator)
         flash('Board removed from moderator')
+
+    return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
+
+
+@mod.route('/mod_moderator/<int:moderator_id>/change_password', methods=['POST'])
+@mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
+def mod_moderator_password(moderator_id):
+    moderator = g.moderator_service.find_moderator_id(moderator_id)
+    if not moderator:
+        abort(404)
+
+    old_password = request.form['old_password']
+    new_password = request.form['new_password']
+
+    try:
+        g.moderator_service.change_password(moderator, old_password, new_password)
+        flash('Changed password')
+    except ArgumentError as e:
+        flash(e.message)
 
     return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
 
@@ -174,11 +230,9 @@ def mod_boards():
 
 @mod.route('/mod_board/add', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
 def mod_board_add():
-    if not check_csrf_token(request.form.get('token')):
-        abort(400)
-
-    board_name = request.form.get('board_name')
+    board_name = request.form['board_name']
 
     if not g.board_service.check_board_name_validity(board_name):
         flash('Invalid board name')
@@ -189,20 +243,18 @@ def mod_board_add():
 
     try:
         g.board_service.add_board(board)
+        flash('Board added')
     except ArgumentError as e:
         flash(e.message)
-    flash('Board added')
 
     return redirect(url_for('.mod_board', board_name=board.name))
 
 
 @mod.route('/mod_board/delete', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
 def mod_board_delete():
-    if not check_csrf_token(request.form.get('token')):
-        abort(400)
-
-    board_name = request.form.get('board_name')
+    board_name = request.form['board_name']
 
     board = g.board_service.find_board(board_name)
     if not board:

@@ -7,13 +7,13 @@
         Authed<br>
         <br>
         <form action="{{ url_for('.mod_auth') }}" method="POST">
-            <input name="token" type="hidden" value="{{ csrf_token() }}">
+            {{ csrf_html() }}
             <input name="deauth" type="hidden" value="yes">
             <input type="submit" value="Deauth">
         </form>
     {% else %}
         <form action="{{ url_for('.mod_auth') }}" method="POST">
-            <input name="token" type="hidden" value="{{ csrf_token() }}">
+            {{ csrf_html() }}
             <fieldset>
                 <legend>Authorize</legend>
 

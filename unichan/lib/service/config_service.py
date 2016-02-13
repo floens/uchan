@@ -1,6 +1,7 @@
 import json
 
 from sqlalchemy.orm.exc import NoResultFound
+
 from unichan.database import get_db
 from unichan.lib import ArgumentError
 from unichan.lib.configs import BoardConfig, SiteConfig

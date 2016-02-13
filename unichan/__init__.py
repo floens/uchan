@@ -4,8 +4,6 @@ from flask import Flask, render_template
 
 from unichan.database import clean_up
 from unichan.lib import BadRequestError
-from unichan.lib.configs import BoardConfig, SiteConfig
-from unichan.lib.models import Moderator
 from unichan.web import CustomSessionInterface
 
 
@@ -166,6 +164,8 @@ def test_models():
     try:
         from unichan import g
 
+        from unichan.lib.configs import BoardConfig, SiteConfig
+
         if g.config_service.get_config_by_type(SiteConfig.TYPE) is None:
             g.config_service.save_config(SiteConfig(), None)
 
@@ -181,6 +181,7 @@ def test_models():
             g.board_service.add_board(b_board)
 
         from unichan.lib import roles
+        from unichan.lib.models import Moderator
 
         existing_moderator = g.moderator_service.find_moderator_username('florens')
         if not existing_moderator:

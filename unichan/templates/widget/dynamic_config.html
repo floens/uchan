@@ -2,7 +2,7 @@
     <form action="{{ update_url }}" method="post">
         <fieldset>
             <legend>Configuration</legend>
-            <input type="hidden" name="token" value="{{ csrf_token() }}">
+            {{ csrf_html() }}
 
             {% for config_item in config.configs %}
                 <label>

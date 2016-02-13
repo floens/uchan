@@ -5,6 +5,26 @@
 {% block content %}
     <h2>Moderators</h2>
 
+    <form action="{{ url_for('.mod_moderator_add') }}" method="POST">
+        <fieldset>
+            <legend>Add moderator</legend>
+            {{ csrf_html() }}
+
+            <label>Name
+                <small>a-zA-Z0-9_ max 50 chars</small>
+                <br>
+                <input type="text" name="moderator_name">
+            </label>
+            <br>
+
+            <label>Password<br>
+                <input type="password" name="moderator_password">
+            </label>
+            <br>
+            <input type="submit" value="Add">
+        </fieldset>
+    </form>
+
     <table>
         <thead>
         <tr>

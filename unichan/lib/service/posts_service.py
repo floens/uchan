@@ -3,7 +3,6 @@ import time
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 
-import config
 from unichan import g
 from unichan.database import get_db
 from unichan.filter.post_parser import validate_post, parse_post

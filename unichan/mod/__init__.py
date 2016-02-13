@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import Blueprint, abort, request, url_for, redirect
+from flask import Blueprint, request, url_for, redirect, render_template
 
 from unichan.lib import roles
 from unichan.lib.moderator_request import request_has_role, get_authed
@@ -23,7 +23,7 @@ def mod_role_restrict(role):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not request_has_role(role):
-                return mod_abort_redirect()
+                return render_template('error.html', message='No permission')
 
             return f(*args, **kwargs)
 

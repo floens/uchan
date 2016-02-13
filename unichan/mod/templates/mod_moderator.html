@@ -9,7 +9,7 @@
 
     Admin of boards:<br>
     <form action="{{ url_for('.mod_moderator_board_remove', moderator_id=moderator.id) }}" method="POST">
-        <input name="token" type="hidden" value="{{ csrf_token() }}">
+        {{ csrf_html() }}
 
         <ul>
             {% for board in moderator.boards %}
@@ -24,13 +24,38 @@
     <form action="{{ url_for('.mod_moderator_board_add', moderator_id=moderator.id) }}" method="POST">
         <fieldset>
             <legend>Add board to moderator</legend>
-            <input name="token" type="hidden" value="{{ csrf_token() }}">
+            {{ csrf_html() }}
 
             <label>Board name<br>
                 <input type="text" name="board_name" style="width: 100px;">
             </label>
             <input type="submit" value="Submit">
         </fieldset>
+    </form>
+
+    <form action="{{ url_for('.mod_moderator_password', moderator_id=moderator.id) }}" method="POST">
+        <fieldset>
+            <legend>Change password</legend>
+            {{ csrf_html() }}
+
+            <label>Old password<br>
+                <input type="password" name="old_password">
+            </label>
+            <br>
+            <label>New password<br>
+                <input type="password" name="new_password">
+            </label>
+            <br>
+            <input type="submit" value="Change">
+        </fieldset>
+    </form>
+
+    <br>
+    <br>
+
+    <form action="{{ url_for('.mod_moderator_delete') }}" method="POST">
+        {{ csrf_html() }}
+        <button name="moderator_id" value="{{ moderator.id }}">Delete moderator</button>
     </form>
 
 {% endblock %}
