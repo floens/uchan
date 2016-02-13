@@ -18,7 +18,7 @@ def mod_site():
     if request.method == 'GET':
         session_count = get_db().query(Session).count()
 
-        return render_template('mod_site.html', site_config=site_config, session_count=session_count)
+        return render_template('mod_site.html', site_config_config=site_config, session_count=session_count)
     else:
         form = request.form
 

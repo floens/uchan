@@ -9,7 +9,7 @@ class Thread(ModelBase):
 
     id = Column(Integer(), primary_key=True)
 
-    board_id = Column(Integer(), ForeignKey('board.id'), nullable=False)
+    board_id = Column(Integer(), ForeignKey('board.id'), nullable=False, index=True)
     # board is a backref property
 
     last_modified = Column(BigInteger(), nullable=False)

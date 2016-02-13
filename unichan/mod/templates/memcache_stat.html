@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "mod_base.html" %}
 
 {% block title %}Memcached stats{% endblock %}
 
@@ -8,7 +8,7 @@
     {% for server in stats %}
         <h3>{{ server[0] }}</h3>
 
-        <table style="border: 1px solid black;">
+        <table class="datatable">
             <thead>
             <tr>
                 <th>Name</th>

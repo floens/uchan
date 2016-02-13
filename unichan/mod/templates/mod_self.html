@@ -1,9 +1,18 @@
-{% extends "base.html" %}
+{% extends "mod_base.html" %}
 
 {% block title %}Modify account{% endblock %}
 
 {% block content %}
     <h2>Modify account</h2>
+
+    Boards you're assigned to:<br>
+    <ul>
+        {% for board in moderator.boards %}
+            <li>
+                <a href="{{ url_for('board', board_name=board.name) }}">/{{ board.name }}/</a>
+            </li>
+        {% endfor %}
+    </ul>
 
     <br>
     <form action="{{ url_for('.mod_self_password') }}" method="POST">

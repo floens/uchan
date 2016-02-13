@@ -1,6 +1,5 @@
 import random
 import string
-import time
 from functools import wraps
 from urllib.parse import urlparse
 
@@ -9,8 +8,6 @@ from markupsafe import escape, Markup
 
 import config
 from unichan import g, app
-from unichan.lib.cache.posts_cache import PostCacheProxy
-from unichan.lib.models import Post
 
 
 @app.context_processor

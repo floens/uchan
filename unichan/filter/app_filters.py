@@ -3,6 +3,7 @@ import time
 from markupsafe import Markup, escape
 
 from unichan import app
+from unichan.filter.post_parser import parse_post
 
 
 @app.template_filter()
@@ -25,3 +26,8 @@ def keep_newlines(raw):
     value = value.replace('\n', '<br>\n')
 
     return Markup(value)
+
+
+@app.template_filter()
+def post_text(text):
+    return parse_post(text)

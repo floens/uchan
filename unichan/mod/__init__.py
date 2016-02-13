@@ -5,7 +5,7 @@ from flask import Blueprint, request, url_for, redirect, render_template
 from unichan.lib import roles
 from unichan.lib.moderator_request import request_has_role, get_authed
 
-mod = Blueprint('mod', __name__, url_prefix='/mod', template_folder='templates')
+mod = Blueprint('mod', __name__, url_prefix='/mod', template_folder='templates', static_folder='static')
 
 
 def mod_abort_redirect():

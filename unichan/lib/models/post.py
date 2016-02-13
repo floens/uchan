@@ -9,7 +9,7 @@ class Post(ModelBase):
 
     id = Column(Integer(), primary_key=True)
 
-    thread_id = Column(Integer(), ForeignKey('thread.id'))
+    thread_id = Column(Integer(), ForeignKey('thread.id'), index=True)
     # thread is a backref property
 
     report = relationship('Report', backref='post', cascade='all, delete-orphan')

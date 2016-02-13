@@ -102,8 +102,10 @@ class PostsService:
                 if moderator is None:
                     raise Exception('Moderator not found')
 
-            moderator_can_delete = moderator is not None and g.moderator_service.moderates_board(moderator,
-                                                                                                 post.thread.board)
+            moderator_can_delete = False
+            if moderator is not None:
+                moderator_can_delete = g.moderator_service.can_delete(moderator, post)
+
             can_delete = moderator_can_delete or (details.password is not None and details.password == post.password)
             if can_delete:
                 self.delete_post(post)
@@ -111,7 +113,7 @@ class PostsService:
                 raise BadRequestError('Password invalid')
         elif details.mode == ManagePostDetails.REPORT:
             report = Report(post_id=post.id)
-            self.add_report(report)
+            g.moderator_service.add_report(report)
         else:
             raise Exception()
 
@@ -171,20 +173,3 @@ class PostsService:
 
     def on_post_deleted(self, post):
         print('post {} deleted'.format(post.id))
-
-    def add_report(self, report):
-        db = get_db()
-
-        exiting_report = None
-        try:
-            exiting_report = db.query(Report).filter_by(post_id=report.post_id).one()
-        except NoResultFound:
-            pass
-
-        if exiting_report is not None:
-            exiting_report.count += 1
-        else:
-            report.count = 1
-            db.add(report)
-
-        db.commit()

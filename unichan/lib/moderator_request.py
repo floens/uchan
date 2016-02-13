@@ -3,6 +3,7 @@
 from flask import session
 
 from unichan import g
+from unichan.lib import ArgumentError
 
 
 def get_authed():
@@ -11,8 +12,11 @@ def get_authed():
 
 def get_authed_moderator():
     if not get_authed():
-        return None
-    return g.moderator_service.find_moderator_id(session['mod_auth_id'])
+        raise ArgumentError('Not authed')
+    mod = g.moderator_service.find_moderator_id(session['mod_auth_id'])
+    if mod is None:
+        raise ArgumentError('Mod not found')
+    return mod
 
 
 def request_has_role(role):

@@ -6,8 +6,8 @@ from unichan.database import ModelBase
 board_moderator_table = Table(
         'boardmoderator',
         ModelBase.metadata,
-        Column('board_id', Integer, ForeignKey('board.id')),
-        Column('moderator_id', Integer, ForeignKey('moderator.id'))
+        Column('board_id', Integer, ForeignKey('board.id'), index=True),
+        Column('moderator_id', Integer, ForeignKey('moderator.id'), index=True)
 )
 
 

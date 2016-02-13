@@ -1,13 +1,20 @@
 import string
+import time
 
 import bcrypt
+from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 
 from unichan.database import get_db
 from unichan.lib import ArgumentError
 from unichan.lib import roles
-from unichan.lib.models import Moderator
+from unichan.lib.models import Moderator, Report, Post, Thread, Board
+from unichan.lib.models.board import board_moderator_table
+
+
+def now():
+    return int(time.time() * 1000)
 
 
 class ModeratorService:
@@ -18,6 +25,39 @@ class ModeratorService:
 
     def __init__(self, cache):
         self.cache = cache
+
+    def add_report(self, report):
+        db = get_db()
+
+        exiting_report = None
+        try:
+            exiting_report = db.query(Report).filter_by(post_id=report.post_id).one()
+        except NoResultFound:
+            pass
+
+        if exiting_report is not None:
+            exiting_report.count += 1
+        else:
+            report.count = 1
+            db.add(report)
+
+        report.date = now()
+
+        db.commit()
+
+    def get_reports(self, moderator):
+        db = get_db()
+
+        # Query that gets all reports for the moderator id and sorts by date desc
+        reports = db.query(Report).filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
+                                          Thread.board_id == Board.id, Board.id == board_moderator_table.c.board_id,
+                                          board_moderator_table.c.moderator_id == moderator.id) \
+            .order_by(desc(Report.date)).all()
+
+        return reports
+
+    def can_delete(self, moderator, post):
+        return self.moderates_board(moderator, post.thread.board)
 
     def check_username_validity(self, username):
         if not 0 < len(username) <= self.USERNAME_MAX_LENGTH:

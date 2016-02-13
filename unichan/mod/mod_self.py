@@ -1,4 +1,4 @@
-from flask import render_template, abort, request, flash, redirect, url_for
+from flask import render_template, request, flash, redirect, url_for
 
 from unichan import g
 from unichan.lib import ArgumentError

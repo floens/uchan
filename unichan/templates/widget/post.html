@@ -21,7 +21,12 @@
             {% endif %}
         </div>
         <div class="text">
-            {{ post_item.html|safe }}
+            {# Render both the cached version and the model #}
+            {% if post_item.html %}
+                {{ post_item.html|safe }}
+            {% else %}
+                {{ post_item.text|post_text }}
+            {% endif %}
         </div>
 
         {% if thread %}
