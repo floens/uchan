@@ -48,11 +48,16 @@ class ModeratorService:
     def get_reports(self, moderator):
         db = get_db()
 
-        # Query that gets all reports for the moderator id and sorts by date desc
-        reports = db.query(Report).filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
-                                          Thread.board_id == Board.id, Board.id == board_moderator_table.c.board_id,
-                                          board_moderator_table.c.moderator_id == moderator.id) \
-            .order_by(desc(Report.date)).all()
+        reports_query = db.query(Report)
+        # Show all reports when the moderator has the admin role
+        if not self.has_role(moderator, roles.ROLE_ADMIN):
+            # Filter that gets all reports for the moderator id
+            reports_query = reports_query.filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
+                                                 Thread.board_id == Board.id, Board.id == board_moderator_table.c.board_id,
+                                                 board_moderator_table.c.moderator_id == moderator.id)
+
+        reports_query = reports_query.order_by(desc(Report.date))
+        reports = reports_query.all()
 
         return reports
 
