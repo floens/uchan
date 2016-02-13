@@ -62,7 +62,10 @@ class ModeratorService:
         return reports
 
     def can_delete(self, moderator, post):
-        return self.moderates_board(moderator, post.thread.board)
+        if self.has_role(moderator, roles.ROLE_ADMIN):
+            return True
+        else:
+            return self.moderates_board(moderator, post.thread.board)
 
     def check_username_validity(self, username):
         if not 0 < len(username) <= self.USERNAME_MAX_LENGTH:
