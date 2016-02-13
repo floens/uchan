@@ -86,13 +86,10 @@ class ModeratorService:
 
         self.check_password(moderator, old_password)
 
-        if not self.check_password_validity(new_password):
-            raise ArgumentError('Invalid new password')
+        self._update_password(moderator, new_password)
 
-        moderator.password = self.hash_password(new_password)
-
-        db = get_db()
-        db.commit()
+    def change_password_admin(self, moderator, new_password):
+        self._update_password(moderator, new_password)
 
     def check_password(self, moderator, password):
         moderator_hashed_password = moderator.password
@@ -102,3 +99,12 @@ class ModeratorService:
 
     def hash_password(self, password):
         return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+
+    def _update_password(self, moderator, new_password):
+        if not self.check_password_validity(new_password):
+            raise ArgumentError('Invalid new password')
+
+        moderator.password = self.hash_password(new_password)
+
+        db = get_db()
+        db.commit()

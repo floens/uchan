@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Modify account{% endblock %}
+
+{% block content %}
+    <h2>Modify account</h2>
+
+    <br>
+    <form action="{{ url_for('.mod_self_password') }}" method="POST">
+        <fieldset>
+            <legend>Change password</legend>
+            {{ csrf_html() }}
+
+            <label>Old password<br>
+                <input type="password" name="old_password">
+            </label>
+            <br>
+            <label>New password<br>
+                <input type="password" name="new_password">
+            </label>
+            <br>
+            <input type="submit" value="Change">
+        </fieldset>
+    </form>
+
+    <br>
+    <br>
+
+{% endblock %}

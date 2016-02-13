@@ -37,7 +37,8 @@ def inject_variables():
     if get_authed():
         mod_links = [
             ('auth', url_for('.mod_auth')),
-            ('mod posts', url_for('.mod_post'))
+            ('mod posts', url_for('.mod_post')),
+            ('mod account', url_for('.mod_self'))
         ]
 
         if request_has_role(roles.ROLE_ADMIN):
@@ -52,4 +53,9 @@ def inject_variables():
         return {}
 
 
-import unichan.mod.views
+import unichan.mod.mod_auth
+import unichan.mod.mod_post
+import unichan.mod.mod_self
+import unichan.mod.mod_board
+import unichan.mod.mod_moderator
+import unichan.mod.mod_site
