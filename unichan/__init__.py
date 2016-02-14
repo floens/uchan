@@ -4,7 +4,6 @@ from flask import Flask, render_template
 
 import config
 from unichan.database import clean_up
-from unichan.lib import BadRequestError
 from unichan.web import CustomSessionInterface
 
 
@@ -25,6 +24,7 @@ class Globals():
         self.moderator_service = None
         self.config_service = None
         self.file_service = None
+        self.ban_service = None
 
 
 g = Globals()
@@ -76,6 +76,8 @@ def create_web_app(app, cache):
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
 
+    from unichan.lib import BadRequestError
+
     # Setup error handlers
     def bad_request(e):
         if isinstance(e, BadRequestError):
@@ -102,6 +104,7 @@ class CustomCeleryLoader(AppLoader):
 
 def init():
     global g, app, celery
+    assert isinstance(g, Globals)
 
     from werkzeug.contrib.cache import MemcachedCache
     from unichan.lib.cache import CacheWrapper
@@ -125,6 +128,7 @@ def init():
     import unichan.view.board
     import unichan.view.post
     import unichan.view.thread
+    import unichan.view.banned
 
     # Import jinja filters
     import unichan.filter.app_filters
@@ -166,6 +170,9 @@ def init():
         raise Exception('Unknown file cdn type')
 
     g.file_service = FileService(config.UPLOAD_QUEUE_PATH, cdn)
+
+    from unichan.lib.service import BanService
+    g.ban_service = BanService()
 
     # database.metadata_create_all()
     # test_models()

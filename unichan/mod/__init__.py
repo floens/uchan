@@ -42,6 +42,7 @@ def inject_variables():
         ]
 
         if request_has_role(roles.ROLE_ADMIN):
+            mod_links.append(('mod bans', url_for('.mod_bans')))
             mod_links.append(('stats', url_for('.mod_stat')))
             mod_links.append(('memcache stats', url_for('.mod_memcache_stat')))
             mod_links.append(('mod moderators', url_for('.mod_moderators')))
@@ -59,3 +60,4 @@ import unichan.mod.mod_self
 import unichan.mod.mod_board
 import unichan.mod.mod_moderator
 import unichan.mod.mod_site
+import unichan.mod.mod_bans

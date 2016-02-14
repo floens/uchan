@@ -12,7 +12,7 @@ class Thread(ModelBase):
     board_id = Column(Integer(), ForeignKey('board.id'), nullable=False, index=True)
     # board is a backref property
 
-    last_modified = Column(BigInteger(), nullable=False)
+    last_modified = Column(BigInteger(), nullable=False, index=True)
     refno_counter = Column(Integer(), nullable=False, default=1)
 
     posts = relationship('Post', order_by='Post.id', backref='thread', cascade='all, delete-orphan')

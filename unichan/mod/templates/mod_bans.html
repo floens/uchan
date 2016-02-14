@@ -1,0 +1,61 @@
+{% extends "mod_base.html" %}
+
+{% block title %}Mod bans{% endblock %}
+
+{% block content %}
+    <h2>Bans</h2>
+
+    <form action="{{ url_for('.mod_ban_add') }}" method="POST">
+        <fieldset>
+            <legend>Add ban</legend>
+            {{ csrf_html() }}
+
+            <label>Ban ip4
+                <small>ex. 10.0.0.1</small>
+                <br>
+                <input type="text" name="ban_ip4">
+            </label>
+            <br>
+            <label>Ban ip4 end
+                <small>ex. 10.0.0.1 optional</small>
+                <br>
+                <input type="text" name="ban_ip4_end">
+            </label>
+            <br>
+            <label>Ban reason
+                <small>optional</small>
+                <br>
+                <input type="text" name="ban_reason">
+            </label>
+            <br>
+            <input type="submit" value="Add">
+        </fieldset>
+    </form>
+
+    <table class="datatable">
+        <thead>
+        <tr>
+            <th>ip</th>
+            <th>from</th>
+            <th>until</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for ban in bans %}
+            <tr>
+                <td>{{ ip4_to_str(ban.ip4) }}</td>
+                <td>{{ ban.date|ban_time }}</td>
+                <td>
+                    {% if ban.length > 0 %}
+                        {{ (ban.date + ban.length)|ban_time }} - <b>{{ (ban.date + ban.length)|ban_remaining }} remaining</b>
+                    {% else %}
+                        Does not expire
+                    {% endif %}
+                </td>
+                {#                <td>[<a href="{{ url_for('.mod_board', board_name=board.name) }}">Modify</a>]</td>#}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_banned %}You are banned!{% else %}Not banned{% endif %}{% endblock %}
+
+{% block content %}
+    {% if is_banned %}
+        <div class="message">
+            <h2>You are banned!</h2>
+
+            {% for ban in bans %}
+                You have been banned from <b>{% if ban.board is not none %}/{{ ban.board.name }}/{% else %}all boards{% endif %}</b>:<br>
+                <br>
+                <b>{% if ban.reason %}{{ ban.reason }}{% else %}No reason available.{% endif %}</b><br>
+                <br>
+                You were banned on {{ ban.date|ban_time }}<br>
+                {% if ban.length > 0 %}
+                    This ban will lift on {{ (ban.date + ban.length)|ban_time }} which is {{ (ban.date + ban.length)|ban_remaining }} from now.
+                {% else %}
+                    This ban will not expire.
+                {% endif %}
+
+                {% if not loop.last %}
+                    <hr class="content-divider">
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="message">
+            <h2>You are not banned</h2>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Index{% endblock %}
+{% block title %}Error{% endblock %}
 
 {% block content %}
-    <h2>Error:<br></h2>
-    <div class="error-message">{{ message }}</div>
-    <div class="jsonly">
-        <br>
-        [<a href="javascript:history.back();">Back</a>]
+    <div class="message">
+        <h2>Error:</h2>
+        <div class="error-message">{{ message }}</div>
+        <div class="jsonly">
+            <br>
+            [<a href="javascript:history.back();">Back</a>]
+        </div>
     </div>
 {% endblock %}

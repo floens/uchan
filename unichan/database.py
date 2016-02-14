@@ -44,7 +44,7 @@ def init_db():
     _sessionconstruct = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=_engine))
 
     # Import our models. If you add new models, import them here.
-    from unichan.lib.models import Post, Thread, Board, Session, Report, Moderator, Config, File
+    from unichan.lib.models import Post, Thread, Board, Session, Report, Moderator, Config, File, Ban
 
 
 def metadata_create_all():

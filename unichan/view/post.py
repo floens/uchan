@@ -28,6 +28,13 @@ def post():
     if not board_name:
         abort(400)
 
+    board = g.board_service.find_board(board_name)
+    if not board:
+        abort(404)
+
+    if g.ban_service.is_request_banned(board):
+        raise BadRequestError('You are banned')
+
     text = form.get('text', None)
     name = form.get('name', None)
     subject = form.get('subject', None)

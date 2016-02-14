@@ -3,9 +3,12 @@
 {% block title %}Message{% endblock %}
 
 {% block content %}
-    <div class="message">{{ message }}</div>
-    <div class="jsonly">
-        <br>
-        [<a href="javascript:history.back();">Back</a>]
+    <div class="message">
+        <h2>{{ message }}</h2>
+
+        <div class="jsonly">
+            <br>
+            [<a href="javascript:history.back();">Back</a>]
+        </div>
     </div>
 {% endblock %}

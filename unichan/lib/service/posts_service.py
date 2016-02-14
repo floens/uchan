@@ -1,5 +1,3 @@
-import time
-
 from sqlalchemy.orm import lazyload
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -8,10 +6,7 @@ from unichan.database import get_db
 from unichan.lib import BadRequestError, ArgumentError
 from unichan.lib.models import Post, Report, Thread, File
 from unichan.lib.tasks.post_task import ManagePostDetails
-
-
-def now():
-    return int(time.time() * 1000)
+from unichan.lib.utils import now
 
 
 class PostsService:

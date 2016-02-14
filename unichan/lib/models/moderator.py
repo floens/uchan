@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, LargeBinary
 from sqlalchemy import Integer
 from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.orm import relationship
 
 from unichan.database import ModelBase
 from unichan.lib.models import MutableList
@@ -15,3 +16,6 @@ class Moderator(ModelBase):
     # boards is a backref property
 
     roles = Column(MutableList.as_mutable(ARRAY(String)), index=True)
+
+    # Bans given by this moderator
+    given_bans = relationship('Ban', backref='moderator')

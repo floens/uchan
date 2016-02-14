@@ -1,5 +1,4 @@
 import string
-import time
 
 import bcrypt
 from sqlalchemy import desc
@@ -11,10 +10,7 @@ from unichan.lib import ArgumentError
 from unichan.lib import roles
 from unichan.lib.models import Moderator, Report, Post, Thread, Board
 from unichan.lib.models.board import board_moderator_table
-
-
-def now():
-    return int(time.time() * 1000)
+from unichan.lib.utils import now
 
 
 class ModeratorService:
