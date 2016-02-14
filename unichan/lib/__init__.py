@@ -6,6 +6,4 @@ class BadRequestError(Exception):
 class ArgumentError(ValueError):
     def __init__(self, *args):
         ValueError.__init__(self, *args)
-        self.message = ''
-        if args:
-            self.message = args[0]
+        self.message = args[0] if args else ''

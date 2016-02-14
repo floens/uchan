@@ -1,6 +1,8 @@
-unichan.db
+/unichan.db
 /config.py
 /config_celery.py
+/media/
+/upload_queue/
 
 .idea
 *.iml

@@ -2,13 +2,16 @@ from unichan import celery, g
 
 
 class PostDetails:
-    def __init__(self, board_name, thread_id, text, name, subject, password):
+    def __init__(self, board_name, thread_id, text, name, subject, password, has_file):
         self.board_name = board_name
         self.thread_id = thread_id
         self.text = text
         self.name = name
         self.subject = subject
         self.password = password
+        self.has_file = has_file
+
+        self.uploaded_file = None
 
 
 @celery.task

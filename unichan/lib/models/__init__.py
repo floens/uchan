@@ -27,3 +27,4 @@ from .post import Post
 from .report import Report
 from .session import Session
 from .thread import Thread
+from .file import File

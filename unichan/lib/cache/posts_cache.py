@@ -41,6 +41,17 @@ class PostCacheProxy(CacheDict):
         self.html = parse_post(post.text)
         self.refno = post.refno
 
+        self.has_file = post.file is not None
+        if self.has_file:
+            self.file_location = g.file_service.resolve_to_uri(post.file.location)
+            self.file_thumbnail_location = g.file_service.resolve_to_uri(post.file.thumbnail_location)
+            self.file_name = post.file.original_name
+            self.file_width = post.file.width
+            self.file_height = post.file.height
+            self.file_size = post.file.size
+            self.file_thumbnail_width = post.file.thumbnail_width
+            self.file_thumbnail_height = post.file.thumbnail_height
+
 
 class PostsCache:
     CACHE_ENABLED = True
@@ -84,7 +95,12 @@ class PostsCache:
                 thread_cached = self.find_thread_cached(thread.id)
                 original_length = len(thread_cached.posts)
 
-                thread_cached.posts = [thread_cached.posts[0]] + thread_cached.posts[1:][-PostsCache.BOARD_SNIPPET_COUNT:]
+                op = thread_cached.posts[0]
+                snippets = thread_cached.posts[-PostsCache.BOARD_SNIPPET_COUNT:]
+                if snippets and snippets[0].id == op.id:
+                    snippets = snippets[1:]
+
+                thread_cached.posts = [op] + snippets
                 thread_cached.omitted_count = original_length - 1 - 5
                 threads.append(thread_cached)
 
@@ -112,4 +128,3 @@ class PostsCache:
 
     def invalidate_board(self, board_name):
         self.invalidate_board_page_cache(board_name)
-        # Todo invalidate threads

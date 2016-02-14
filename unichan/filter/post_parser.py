@@ -2,20 +2,7 @@ import re
 
 from markupsafe import escape, Markup
 
-from unichan.lib import ArgumentError
-
 POST_REFNO_PATTERN = re.compile('&gt;&gt;(\\d{1,16})')
-
-
-def validate_post(raw):
-    if not raw:
-        raise ArgumentError('No text')
-
-    if len(raw) > 2000:
-        raise ArgumentError('Text too long')
-
-    if len(raw.splitlines()) > 25:
-        raise ArgumentError('Too many lines')
 
 
 def parse_post(raw):

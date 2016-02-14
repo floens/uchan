@@ -1,7 +1,7 @@
 from flask import request, abort, redirect, url_for, render_template
 
-from unichan import app
-from unichan.lib import BadRequestError
+from unichan import app, g
+from unichan.lib import BadRequestError, ArgumentError
 from unichan.lib.moderator_request import get_authed_moderator, get_authed
 from unichan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task
 from unichan.view import check_csrf_referer
@@ -35,9 +35,38 @@ def post():
     if not password:
         password = None
 
-    board_name, thread_id = post_task.delay(PostDetails(board_name, thread_id, text, name, subject, password)).get()
+    file = request.files.get('file', None)
+    has_file = file is not None and file.filename
 
-    return redirect(url_for('view_thread', board_name=board_name, thread_id=thread_id))
+    # Quick validation of the post
+    post_details = PostDetails(board_name, thread_id, text, name, subject, password, has_file)
+    try:
+        g.posts_service.validate_post_details(post_details)
+    except ArgumentError as e:
+        raise BadRequestError(e.message)
+
+    upload_queue_files = None
+    try:
+        # If a image was uploaded validate it and upload it to the cdn
+        # Then if that's complete, send a task off to the workers to insert the details in the db
+        if has_file:
+            thumbnail_size = 128 if thread_id else 256
+            try:
+                post_details.uploaded_file, upload_queue_files = g.file_service.handle_upload(file, thumbnail_size)
+            except ArgumentError as e:
+                raise BadRequestError(e.message)
+
+        # Queue the post task
+        try:
+            board_name, thread_id, post_refno = post_task.delay(post_details).get()
+        except ArgumentError as e:
+            raise BadRequestError(e.message)
+    finally:
+        if upload_queue_files is not None:
+            # Clean up the files in the upload queue
+            g.file_service.clean_up_queue(upload_queue_files)
+
+    return redirect(url_for('view_thread', board_name=board_name, thread_id=thread_id) + '#p' + str(post_refno))
 
 
 @app.route('/post_manage', methods=['POST'])

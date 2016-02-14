@@ -1,5 +1,5 @@
 {% macro render(board, thread=None) %}
-    <form class="post-form" action="{{ url_for('post') }}" method="post">
+    <form class="post-form" action="{{ url_for('post') }}" method="post" enctype="multipart/form-data">
         <fieldset>
             {% if thread %}
                 <legend>Reply to thread</legend>
@@ -27,6 +27,14 @@
                 Text<br>
                 <textarea name="text" rows="8"></textarea>
             </label>
+            <br>
+            <label>
+                File
+                <small>(.jpg .png .gif)</small>
+                <br>
+                <input type="file" name="file">
+            </label>
+            <br>
             <br>
             <input type="submit" value="Submit"/>
 

@@ -1,7 +1,7 @@
 import string
 
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import lazyload
 from sqlalchemy.orm.exc import NoResultFound
 
 from unichan import g
@@ -23,7 +23,7 @@ class BoardService:
         try:
             q = get_db().query(Board)
             if include_threads:
-                q = q.options(joinedload('threads'))
+                q = q.options(lazyload('threads'))
             board = q.filter_by(name=board_name).one()
 
             return board

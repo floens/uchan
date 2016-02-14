@@ -2,6 +2,7 @@ from celery import Celery
 from celery.loaders.app import AppLoader
 from flask import Flask, render_template
 
+import config
 from unichan.database import clean_up
 from unichan.lib import BadRequestError
 from unichan.web import CustomSessionInterface
@@ -23,6 +24,7 @@ class Globals():
         self.board_service = None
         self.moderator_service = None
         self.config_service = None
+        self.file_service = None
 
 
 g = Globals()
@@ -155,6 +157,15 @@ def init():
 
     from unichan.lib.cache import SiteCache
     g.site_cache = SiteCache(g.cache)
+
+    from unichan.lib.service import FileService, LocalCdn
+
+    if config.FILE_CDN_TYPE == 'local':
+        cdn = LocalCdn(config.LOCAL_CDN_PATH, config.LOCAL_CDN_WEB_PATH)
+    else:
+        raise Exception('Unknown file cdn type')
+
+    g.file_service = FileService(config.UPLOAD_QUEUE_PATH, cdn)
 
     # database.metadata_create_all()
     # test_models()

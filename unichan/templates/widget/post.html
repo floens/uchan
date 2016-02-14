@@ -7,9 +7,7 @@
                 </span>
                 <br>
             {% endif %}
-            {% if thread_view %}
-                <a href="#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
-            {% endif %}
+            {% if thread_view %}<a href="#p{{ post_item.refno }}" class="refno">{% endif %}#{{ post_item.refno }}{% if thread_view %}</a>{% endif %}
             <span class="name">
                 {{ post_item.name }}
             </span>
@@ -21,6 +19,11 @@
                 <input type="checkbox" name="post_id" value="{{ post_item.id }}">
             </span>
             {% endif %}
+
+            {% if post_item.has_file %}
+                <br>
+                File: {{ post_item.file_name ~ ' (' ~ post_item.file_size|filesizeformat ~ ', ' ~ post_item.file_width ~ 'x' ~ post_item.file_height ~ ')' }}
+            {% endif %}
         </div>
         <div class="text">
             {# Render both the cached version and the model #}
@@ -30,7 +33,11 @@
                 {{ post_item.text|post_text }}
             {% endif %}
         </div>
-
+        {% if post_item.has_file %}
+            <a href="{{ post_item.file_location }}">
+                <img src="{{ post_item.file_thumbnail_location }}" width="{{ post_item.file_thumbnail_width }}" height="{{ post_item.file_thumbnail_height }}">
+            </a>
+        {% endif %}
         {% if thread %}
             <div class="boardinfo">
                 {% if thread.omitted_count > 0 %}

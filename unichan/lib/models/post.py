@@ -14,6 +14,8 @@ class Post(ModelBase):
 
     report = relationship('Report', backref='post', cascade='all, delete-orphan')
 
+    file = relationship('File', backref='post', uselist=False, lazy='joined', cascade='all, delete-orphan')
+
     date = Column(BigInteger(), nullable=False)
     name = Column(String())
     subject = Column(String())
