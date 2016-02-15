@@ -21,6 +21,12 @@
 
     {{ post_form_widget.render(board) }}
 
+    <br>
+
+    {% for i in range(board_config.pages) %}
+        [<a href="{{ url_for('board', board_name=board.name, page=i if i > 0 else None) }}">{{ i + 1 }}</a>]
+    {% endfor %}
+
     <hr class="content-divider">
 
     {% for thread in threads %}

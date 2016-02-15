@@ -216,7 +216,7 @@ class PostsService:
     def on_post_created(self, post, board, board_config_cached):
         pages = board_config_cached.board_config.pages
         per_page = board_config_cached.board_config.per_page
-        max = per_page * pages
+        max = (per_page * pages) - 1
 
         db = get_db()
 

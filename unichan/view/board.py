@@ -15,4 +15,7 @@ def board(board_name, page=0):
     if not board_config_cached:
         raise Exception('Board config cache None while board cache not')
 
+    if page < 0 or page >= board_config_cached.board_config.pages:
+        abort(404)
+
     return render_template('board.html', board=board_cached.board, threads=board_cached.threads, board_config=board_config_cached.board_config)
