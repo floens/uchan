@@ -1,6 +1,7 @@
 from celery import Celery
 from celery.loaders.app import AppLoader
 from flask import Flask, render_template
+from werkzeug.contrib.fixers import ProxyFix
 
 import config
 from unichan.database import clean_up
@@ -71,6 +72,9 @@ def setup_logger():
 
 
 def create_web_app(app, cache):
+    if config.USE_PROXY_FIXER:
+        app.wsgi_app = ProxyFix(app.wsgi_app, config.PROXY_FIXER_NUM_PROXIES)
+
     app.config.from_object('config')
 
     app.jinja_env.trim_blocks = True

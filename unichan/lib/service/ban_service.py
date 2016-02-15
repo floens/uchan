@@ -1,19 +1,43 @@
+from sqlalchemy.orm.exc import NoResultFound
+
 from unichan import g
 from unichan.database import get_db
 from unichan.lib import ArgumentError
-from unichan.lib.models import Ban
-from unichan.lib.proxy_request import get_ip4
+from unichan.lib.models import Ban, Post
+from unichan.lib.proxy_request import get_request_ip4_str
 from unichan.lib.utils import now
 
 
 class BanService:
+    """Takes care of bans and post cooldowns"""
+
+    NEW_THREAD_COOLDOWN = 600 * 1000
+    NEW_POST_COOLDOWN = 60 * 1000
+
     def __init__(self):
         pass
 
-    def is_request_banned(self, board=None):
-        ip4 = self.get_request_ip4()
+    def is_request_banned(self, ip4, board=None):
         bans = self.find_bans(ip4)
         return len(bans) > 0
+
+    def is_request_suspended(self, ip4, board, thread):
+        timeout = self.NEW_THREAD_COOLDOWN if thread is None else self.NEW_POST_COOLDOWN
+        from_time = now() - timeout
+
+        posts = self.find_post_by_ip4(ip4, from_time, thread)
+        return len(posts) > 0
+
+    def find_post_by_ip4(self, ip4, from_time, for_thread=None):
+        db = get_db()
+        query = db.query(Post).filter((Post.ip4 == ip4) & (Post.date >= from_time))
+        if for_thread is not None:
+            query = query.filter_by(thread_id=for_thread.id)
+        else:
+            query = query.filter_by(refno=1)
+        posts = query.all()
+        print(posts)
+        return posts
 
     def get_request_bans(self):
         ip4 = self.get_request_ip4()
@@ -21,7 +45,7 @@ class BanService:
 
     def get_request_ip4(self):
         try:
-            ip4 = self.parse_ip4(get_ip4())
+            ip4 = self.parse_ip4(get_request_ip4_str())
         except ValueError:
             g.logger.exception('Failed to parse request ip4')
             raise ArgumentError('Invalid request')
@@ -58,6 +82,13 @@ class BanService:
         db = get_db()
         db.delete(ban)
         db.commit()
+
+    def find_ban_id(self, id):
+        db = get_db()
+        try:
+            return db.query(Ban).filter_by(id=id).one()
+        except NoResultFound:
+            return None
 
     def get_all_bans(self):
         db = get_db()

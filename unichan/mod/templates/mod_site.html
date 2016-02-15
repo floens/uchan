@@ -7,6 +7,9 @@
 {% block content %}
     <h2>Modify site</h2>
 
+    Detected ip: <b>{{ current_ip4_str }}</b><br>
+    <br>
+
     {{ dynamic_config_widget.render(site_config_config, url_for('.mod_site'), 'mod_site_') }}
 
     <br>

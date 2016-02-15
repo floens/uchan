@@ -79,7 +79,15 @@ class UploadQueueFiles:
 
 
 class FileService:
+    # Extensions that will be converted
+    CONVERT_EXTENSIONS = [('jpeg', 'jpg')]
+
+    # Extensions that are allowed
     ALLOWED_EXTENSIONS = ['jpg', 'png', 'gif']
+
+    # Actual file types that are allowed, should correspond to allowed extensions
+    ALLOWED_FORMATS = ['JPEG', 'PNG', 'GIF']
+
     GENERATED_FILE_NAME_LENGTH = 16
     MAX_FILE_NAME_LENGTH = 32
     THUMBNAIL_POSTFIX = '_t'
@@ -97,7 +105,7 @@ class FileService:
     def handle_upload(self, file, thumbnail_size):
         extension = self._get_extension(file.filename)
         if not extension:
-            raise ArgumentError('Invalid file extension')
+            raise ArgumentError('Invalid file format')
 
         user_file_name = file.filename
         if not user_file_name or len(user_file_name) > self.MAX_FILE_NAME_LENGTH:
@@ -141,6 +149,9 @@ class FileService:
         try:
             file_size = os.stat(local_path).st_size
             image = Image.open(local_path)
+            if image.format not in self.ALLOWED_FORMATS:
+                raise ArgumentError('Invalid file format')
+
             width, height = image.size
             image.thumbnail((thumbnail_size, thumbnail_size))
             thumbnail_width, thumbnail_height = image.size
@@ -164,6 +175,12 @@ class FileService:
     def _get_extension(self, filename):
         if '.' in filename:
             ext = filename.rsplit('.', 1)[1]
+
+            for k, v in self.CONVERT_EXTENSIONS:
+                if ext == k:
+                    ext = v
+                    break
+
             if ext in self.ALLOWED_EXTENSIONS:
                 return ext
         return None

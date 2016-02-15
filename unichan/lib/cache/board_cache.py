@@ -40,7 +40,7 @@ class BoardCache:
                 return None
 
             config = g.config_service.load_config_dict(board.config)
-            board_config_cache = BoardConfigCacheProxy(config)
+            board_config_cache = BoardConfigCacheProxy(config).convert()
             self.cache.set(key, board_config_cache)
         return board_config_cache
 
@@ -55,7 +55,7 @@ class BoardCache:
         all_boards_cache = self.cache.get(key, True)
         if not all_boards_cache:
             all_boards = g.board_service.get_all_boards()
-            all_boards_cache = AllBoardsCacheProxy([BoardCacheProxy(i) for i in all_boards])
+            all_boards_cache = AllBoardsCacheProxy([BoardCacheProxy(i).convert() for i in all_boards]).convert()
             self.cache.set(key, all_boards_cache, timeout=3600)
         return all_boards_cache
 

@@ -1,4 +1,16 @@
 import json
+from collections import Iterable
+
+
+def make_attr_dict(value):
+    if isinstance(value, list):
+        value = [make_attr_dict(i) for i in value]
+    elif isinstance(value, dict):
+        if not isinstance(value, CacheDict):
+            value = CacheDict(value)
+        for key in value:
+            value[key] = make_attr_dict(value[key])
+    return value
 
 
 class CacheWrapper:
@@ -18,16 +30,9 @@ class CacheWrapper:
         else:
             data = json.loads(res)
             if convert:
-                return self.make_attr_dict(data)
+                return make_attr_dict(data)
             else:
                 return data
-
-    def make_attr_dict(self, value):
-        value = CacheDict(value)
-        for key in value:
-            if isinstance(value[key], dict):
-                value[key] = self.make_attr_dict(value[key])
-        return value
 
     def delete(self, key):
         # logger.debug('delete {}'.format(key))
@@ -40,8 +45,14 @@ class CacheDict(dict):
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        try:
+            super().__init__(*args, **kwargs)
+        except ValueError:
+            pass
         self.__dict__ = self
+
+    def convert(self):
+        return make_attr_dict(self)
 
 
 from unichan.lib.cache.board_cache import BoardCache

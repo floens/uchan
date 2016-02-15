@@ -3,7 +3,8 @@ from flask import request, abort, redirect, url_for, render_template
 from unichan import app, g
 from unichan.lib import BadRequestError, ArgumentError
 from unichan.lib.moderator_request import get_authed_moderator, get_authed
-from unichan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task
+from unichan.lib.service.posts_service import RequestBannedException, RequestSuspendedException
+from unichan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task, post_check_task
 from unichan.view import check_csrf_referer
 
 
@@ -14,6 +15,7 @@ def post():
     if not check_csrf_referer(request):
         abort(400)
 
+    # Gather params
     thread_id_raw = form.get('thread', None)
     thread_id = None
     if thread_id_raw is not None:
@@ -28,13 +30,6 @@ def post():
     if not board_name:
         abort(400)
 
-    board = g.board_service.find_board(board_name)
-    if not board:
-        abort(404)
-
-    if g.ban_service.is_request_banned(board):
-        raise BadRequestError('You are banned')
-
     text = form.get('text', None)
     name = form.get('name', None)
     subject = form.get('subject', None)
@@ -45,10 +40,18 @@ def post():
     file = request.files.get('file', None)
     has_file = file is not None and file.filename
 
-    # Quick validation of the post
-    post_details = PostDetails(board_name, thread_id, text, name, subject, password, has_file)
+    # ip4 of the request
+    ip4 = g.ban_service.get_request_ip4()
+
+    post_details = PostDetails(board_name, thread_id, text, name, subject, password, has_file, ip4)
+
+    # Queue the post check task
     try:
-        g.posts_service.validate_post_details(post_details)
+        post_check_task.delay(post_details).get()
+    except RequestBannedException:
+        raise BadRequestError('You are banned')
+    except RequestSuspendedException:
+        raise BadRequestError('You must wait before posting again')
     except ArgumentError as e:
         raise BadRequestError(e.message)
 
@@ -91,7 +94,9 @@ def post_manage():
     if not password:
         password = None
 
-    details = ManagePostDetails(post_id)
+    ip4 = g.ban_service.get_request_ip4()
+
+    details = ManagePostDetails(post_id, ip4)
     mode_string = form.get('mode')
     success_message = 'Success!'
     if mode_string == 'delete':
@@ -110,7 +115,7 @@ def post_manage():
 
     try:
         manage_post_task.delay(details).get()
-    except BadRequestError as e:
-        return render_template('error.html', message=e.args[0])
+    except RequestBannedException:
+        raise BadRequestError('You are banned')
 
     return render_template('message.html', message=success_message)

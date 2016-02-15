@@ -29,9 +29,17 @@ def mod_bans():
 def mod_ban_add():
     ip4_raw = request.form['ban_ip4']
     ip4_end_raw = request.form.get('ban_ip4_end', None)
-    reason = request.form['ban_reason']
-    if len(reason) > 100:
+    ban_length = request.form.get('ban_length', type=int)
+    if ban_length is None or ban_length < 0:
         abort(400)
+    if ban_length > 24 * 31:
+        flash('Ban too long')
+        return redirect(url_for('.mod_bans'))
+
+    reason = request.form['ban_reason']
+    if len(reason) > 250:
+        flash('Ban reason too long')
+        return redirect(url_for('.mod_bans'))
 
     try:
         ip4 = g.ban_service.parse_ip4(ip4_raw)
@@ -48,13 +56,30 @@ def mod_ban_add():
         ban.ip4_end = ip4_end
     ban.reason = reason
     ban.date = now()
-    # ban.length = timedelta(days=1, hours=1).total_seconds() * 1000/
-    ban.length = 0
+    ban.length = ban_length * 60 * 60 * 1000
 
     try:
         g.ban_service.add_ban(ban)
         flash('Ban added')
     except ArgumentError as e:
         flash(e.message)
+
+    return redirect(url_for('.mod_bans'))
+
+
+@mod.route('/mod_ban/delete', methods=['POST'])
+@mod_role_restrict(roles.ROLE_ADMIN)
+@with_token()
+def mod_ban_delete():
+    ban_id = request.form.get('ban_id', type=int)
+    if not ban_id:
+        abort(400)
+
+    ban = g.ban_service.find_ban_id(ban_id)
+    if not ban:
+        abort(404)
+
+    g.ban_service.delete_ban(ban)
+    flash('Ban deleted')
 
     return redirect(url_for('.mod_bans'))

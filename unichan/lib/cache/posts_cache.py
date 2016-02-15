@@ -68,7 +68,7 @@ class PostsCache:
             thread = g.posts_service.find_thread(thread_id, True)
             if not thread:
                 return None
-            thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board), [PostCacheProxy(i) for i in thread.posts])
+            thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board).convert(), [PostCacheProxy(i).convert() for i in thread.posts]).convert()
             if PostsCache.CACHE_ENABLED:
                 self.cache.set(key, thread_cache, timeout=self.TIMEOUT)
                 # time.sleep(1)
@@ -106,17 +106,17 @@ class PostsCache:
 
             threads = sorted(threads, key=lambda t: t.last_modified, reverse=True)
 
-            board_cache = BoardPageCacheProxy(BoardCacheProxy(board), threads)
+            board_cache = BoardPageCacheProxy(BoardCacheProxy(board), threads).convert()
             if PostsCache.CACHE_ENABLED:
                 self.cache.set(key, board_cache, timeout=self.TIMEOUT)
                 # time.sleep(1)
 
         if page is None:
-            return BoardPageCacheProxy(board_cache.board, board_cache.threads)
+            return BoardPageCacheProxy(board_cache.board, board_cache.threads).convert()
         else:
             per_page = 4
             pages = 2
-            return BoardPageCacheProxy(board_cache.board, board_cache.threads[page * per_page: (page + 1) * per_page])
+            return BoardPageCacheProxy(board_cache.board, board_cache.threads[page * per_page: (page + 1) * per_page]).convert()
 
     def invalidate_board_page_cache(self, board_name):
         key = self.get_board_page_cache_key(board_name)

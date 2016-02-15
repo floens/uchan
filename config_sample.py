@@ -1,9 +1,13 @@
 # App
+# For logs and the like
 APP_NAME = 'uchan'
-SITE_NAME = 'µchan'
+
+# Url the site is reachable at
+# This needs to match the referer when posting
 SITE_URL = 'http://127.0.0.1'
 
-DEBUG = True
+# Enable flask debugging. NEVER enable on production.
+DEBUG = False
 
 # The temporary dir in which files are placed that are received from the client.
 # The temporary files will be deleted after a post unless the python process crashes.
@@ -19,7 +23,17 @@ LOCAL_CDN_PATH = '/var/www/uchan_media/'
 # Absolute base url of where the client should request the file
 LOCAL_CDN_WEB_PATH = 'https://cdn.example.com/media/'
 
-# Flask
+# Enable the cooldowns specified in the BanService. Turning off is useful for developing.
+ENABLE_COOLDOWN_CHECKING = True
+
+# Enable this when serving behind a proxy (almost always)
+# Do not use this middleware in non-proxy setups for security reasons.
+USE_PROXY_FIXER = True
+# The number of proxies this instance is behind
+# This needs to be set to prevent ip spoofing by malicious clients appending their own forwarded-for header
+# See `werkzeug.contrib.fixers.ProxyFix` for more info.
+PROXY_FIXER_NUM_PROXIES = 1
+
 # Keep this the same as your nginx client_max_body_size config
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 

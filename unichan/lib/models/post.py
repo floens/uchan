@@ -22,3 +22,4 @@ class Post(ModelBase):
     text = Column(String(), index=True)
     refno = Column(Integer(), nullable=False, index=True)
     password = Column(String())
+    ip4 = Column(Integer(), nullable=False, index=True)

@@ -1,12 +1,24 @@
 from sqlalchemy.orm import lazyload
 from sqlalchemy.orm.exc import NoResultFound
 
+import config
 from unichan import g
 from unichan.database import get_db
+from unichan.lib import roles
 from unichan.lib import BadRequestError, ArgumentError
 from unichan.lib.models import Post, Report, Thread, File
 from unichan.lib.tasks.post_task import ManagePostDetails
 from unichan.lib.utils import now
+
+
+class RequestBannedException(ArgumentError):
+    def __init__(self, *args):
+        ArgumentError.__init__(self, *args)
+
+
+class RequestSuspendedException(ArgumentError):
+    def __init__(self, *args):
+        ArgumentError.__init__(self, *args)
 
 
 class PostsService:
@@ -16,8 +28,34 @@ class PostsService:
     MAX_TEXT_LENGTH = 2000
     MAX_TEXT_LINES = 25
 
+    def handle_post_check(self, post_details):
+        board, thread = self.get_board_thread(post_details)
+
+        if g.ban_service.is_request_banned(post_details.ip4, board):
+            raise RequestBannedException()
+
+        if config.ENABLE_COOLDOWN_CHECKING and g.ban_service.is_request_suspended(post_details.ip4, board, thread):
+            raise RequestSuspendedException()
+
+        if not post_details.text.strip():
+            # Allow no text when an image is attached
+            if not post_details.has_file:
+                raise ArgumentError('No text')
+
+        if len(post_details.text) > self.MAX_TEXT_LENGTH:
+            raise ArgumentError('Text too long')
+
+        if len(post_details.text.splitlines()) > self.MAX_TEXT_LINES:
+            raise ArgumentError('Too many lines')
+
+        if post_details.name and len(post_details.name) > self.MAX_NAME_LENGTH:
+            raise ArgumentError('Name too long')
+
+        if post_details.password and len(post_details.password) > self.MAX_PASSWORD_LENGTH:
+            raise ArgumentError('Password too long')
+
     def handle_post(self, post_details):
-        board, to_thread = self.validate_post_details(post_details)
+        board, to_thread = self.get_board_thread(post_details)
 
         db = get_db()
 
@@ -36,6 +74,7 @@ class PostsService:
         if post_details.password:
             post.password = post_details.password
         post.date = now()
+        post.ip4 = post_details.ip4
 
         db.add(post)
 
@@ -80,6 +119,19 @@ class PostsService:
 
             return board_name, thread_id, post_refno
 
+    def get_board_thread(self, post_details):
+        board = g.board_service.find_board(post_details.board_name)
+        if not board:
+            raise ArgumentError('Board not found')
+
+        thread = None
+        if post_details.thread_id is not None:
+            thread = g.posts_service.find_thread(post_details.thread_id)
+            if thread is None:
+                raise ArgumentError('Thread not found')
+
+        return board, thread
+
     def attach_file(self, post, uploaded_file):
         file = File()
         file.location = uploaded_file.location
@@ -94,54 +146,26 @@ class PostsService:
         db = get_db()
         db.add(file)
 
-    def validate_post_details(self, post_details):
-        board = g.board_service.find_board(post_details.board_name)
-        if not board:
-            raise BadRequestError('Board not found')
-
-        thread_id = post_details.thread_id
-        to_thread = None
-        if thread_id is not None:
-            to_thread = self.find_thread(thread_id)
-            if to_thread is None:
-                raise BadRequestError('Thread not found')
-
-        if not post_details.text.strip():
-            # Allow no text when an image is attached
-            if not post_details.has_file:
-                raise ArgumentError('No text')
-
-        if len(post_details.text) > self.MAX_TEXT_LENGTH:
-            raise ArgumentError('Text too long')
-
-        if len(post_details.text.splitlines()) > self.MAX_TEXT_LINES:
-            raise ArgumentError('Too many lines')
-
-        if post_details.name and len(post_details.name) > self.MAX_NAME_LENGTH:
-            raise ArgumentError('Name too long')
-
-        if post_details.password and len(post_details.password) > self.MAX_PASSWORD_LENGTH:
-            raise ArgumentError('Password too long')
-
-        return board, to_thread
-
     def handle_manage_post(self, details):
         post = self.find_post(details.post_id)
         if not post:
             raise BadRequestError('Post not found')
 
+        board = post.thread.board
+
+        moderator = None
+        if details.mod_id is not None:
+            moderator = g.moderator_service.find_moderator_id(details.mod_id)
+            if moderator is None:
+                raise Exception('Moderator not found')
+
+        if moderator is None or not g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
+            if g.ban_service.is_request_banned(details.ip4, board):
+                raise RequestBannedException()
+
         if details.mode == ManagePostDetails.DELETE:
-            moderator = None
-            if details.mod_id is not None:
-                moderator = g.moderator_service.find_moderator_id(details.mod_id)
-                if moderator is None:
-                    raise Exception('Moderator not found')
-
-            moderator_can_delete = False
-            if moderator is not None:
-                moderator_can_delete = g.moderator_service.can_delete(moderator, post)
-
-            can_delete = moderator_can_delete or (details.password is not None and details.password == post.password)
+            can_delete = (moderator is not None and g.moderator_service.can_delete(moderator, post)) or \
+                         (details.password is not None and details.password == post.password)
             if can_delete:
                 self.delete_post(post)
             else:

@@ -4,7 +4,8 @@ from unichan import g, app
 from unichan.database import get_db
 from unichan.lib import roles, ArgumentError
 from unichan.lib.configs import SiteConfig
-from unichan.lib.models import Board, Post, Thread, Session
+from unichan.lib.models import Board, Post, Thread, Session, Ban, Report, Moderator, File, Config
+from unichan.lib.proxy_request import get_request_ip4_str
 from unichan.mod import mod, mod_role_restrict
 from unichan.view import check_csrf_token, with_token
 
@@ -18,7 +19,9 @@ def mod_site():
     if request.method == 'GET':
         session_count = get_db().query(Session).count()
 
-        return render_template('mod_site.html', site_config_config=site_config, session_count=session_count)
+        current_ip4_str = get_request_ip4_str()
+
+        return render_template('mod_site.html', site_config_config=site_config, session_count=session_count, current_ip4_str=current_ip4_str)
     else:
         form = request.form
 
@@ -49,9 +52,15 @@ def mod_stat():
     db = get_db()
 
     stats = {
-        'board_count': db.query(Board).count(),
-        'thread_count': db.query(Thread).count(),
-        'post_count': db.query(Post).count()
+        'board count': db.query(Board).count(),
+        'thread count': db.query(Thread).count(),
+        'post count': db.query(Post).count(),
+        'ban count': db.query(Ban).count(),
+        'report count': db.query(Report).count(),
+        'session count': db.query(Session).count(),
+        'moderator count': db.query(Moderator).count(),
+        'file count': db.query(File).count(),
+        'config count': db.query(Config).count()
     }
 
     return render_template('stat.html', stats=stats)
