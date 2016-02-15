@@ -32,7 +32,7 @@
         <hr class="content-divider">
     {% endfor %}
 
-    {% for i in range(2) %}
+    {% for i in range(board_config.pages) %}
         [<a href="{{ url_for('board', board_name=board.name, page=i if i > 0 else None) }}">{{ i + 1 }}</a>]
     {% endfor %}
 

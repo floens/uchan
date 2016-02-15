@@ -92,7 +92,7 @@ class PostsService:
             board.threads.append(thread)
             db.add(thread)
 
-            self.on_post_created(post, board)
+            self.on_post_created(post, board, board_config_cached)
             db.commit()
             g.posts_cache.invalidate_board_page_cache(board.name)
             g.posts_cache.invalidate_thread_cache(thread.id)
@@ -106,13 +106,13 @@ class PostsService:
 
             thread_len = db.query(Post).filter_by(thread_id=thread_id).count()
 
-            if not sage and thread_len < board_config_cached.board_config['bump_limit']:
+            if not sage and thread_len < board_config_cached.board_config.bump_limit:
                 to_thread.last_modified = now()
 
             post_refno = post.refno = to_thread.refno_counter
             to_thread.posts.append(post)
 
-            self.on_post_created(post, board)
+            self.on_post_created(post, board, board_config_cached)
             db.commit()
             g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread_id)
@@ -201,7 +201,6 @@ class PostsService:
             g.posts_cache.invalidate_thread_cache(post.thread.id)
 
             db = get_db()
-            self.on_post_deleted(post)
             db.delete(post)
             db.commit()
 
@@ -211,24 +210,16 @@ class PostsService:
         g.posts_cache.invalidate_thread_cache(thread.id)
 
         db = get_db()
-        for post in thread.posts:
-            self.on_post_deleted(post)
         db.delete(thread)
         db.commit()
 
-    def on_post_created(self, post, board=None):
-        per_page = 4
-        pages = 2
+    def on_post_created(self, post, board, board_config_cached):
+        pages = board_config_cached.board_config.pages
+        per_page = board_config_cached.board_config.per_page
         max = per_page * pages
-
-        if board is None:
-            board = post.thread.board
 
         db = get_db()
 
         overflowed_threads = db.query(Thread).order_by(Thread.last_modified.desc()).filter_by(board_id=board.id)[max:]
         for overflowed_thread in overflowed_threads:
             self.delete_thread(overflowed_thread)
-
-    def on_post_deleted(self, post):
-        print('post {} deleted'.format(post.id))

@@ -114,9 +114,11 @@ class PostsCache:
         if page is None:
             return BoardPageCacheProxy(board_cache.board, board_cache.threads).convert()
         else:
-            per_page = 4
-            pages = 2
-            return BoardPageCacheProxy(board_cache.board, board_cache.threads[page * per_page: (page + 1) * per_page]).convert()
+            board_config = g.board_cache.find_board_config_cached(board_name)
+            per_page = board_config.board_config.per_page
+            from_index = page * per_page
+            to_index = (page + 1) * per_page
+            return BoardPageCacheProxy(board_cache.board, board_cache.threads[from_index:to_index]).convert()
 
     def invalidate_board_page_cache(self, board_name):
         key = self.get_board_page_cache_key(board_name)
