@@ -8,6 +8,9 @@ from unichan.view import with_token
 
 
 def get_moderator_or_abort(moderator_id):
+    if not moderator_id or moderator_id > 2 ** 32:
+        abort(400)
+
     moderator = g.moderator_service.find_moderator_id(moderator_id)
     if not moderator:
         abort(404)
@@ -42,9 +45,9 @@ def mod_moderator_add():
 
     try:
         g.moderator_service.create_moderator(moderator, moderator_password)
+        flash('Moderator added')
     except ArgumentError as e:
         flash(e.message)
-    flash('Moderator added')
 
     return redirect(url_for('.mod_moderators'))
 
@@ -53,7 +56,7 @@ def mod_moderator_add():
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
 def mod_moderator_delete():
-    moderator = get_moderator_or_abort(request.form['moderator_id'])
+    moderator = get_moderator_or_abort(request.form.get('moderator_id', type=int))
 
     g.moderator_service.delete_moderator(moderator)
     flash('Moderator deleted')
@@ -112,6 +115,10 @@ def mod_moderator_password(moderator_id):
     moderator = get_moderator_or_abort(moderator_id)
 
     new_password = request.form['new_password']
+
+    if not g.moderator_service.check_password_validity(new_password):
+        flash('Invalid password')
+        return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
 
     try:
         g.moderator_service.change_password_admin(moderator, new_password)

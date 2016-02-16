@@ -25,7 +25,7 @@ def post():
     if thread_id_raw is not None:
         try:
             thread_id = int(thread_id_raw)
-            if thread_id <= 0:
+            if thread_id <= 0 or thread_id > 2 * 32:
                 abort(400)
         except ValueError:
             abort(400)
@@ -35,8 +35,14 @@ def post():
         abort(400)
 
     text = form.get('text', None)
+    if not text:
+        text = None
     name = form.get('name', None)
+    if not name:
+        name = None
     subject = form.get('subject', None)
+    if not subject:
+        subject = None
     password = form.get('password', None)
     if not password:
         password = None
@@ -94,11 +100,11 @@ def post_manage():
         abort(400)
 
     post_id = form.get('post_id', type=int)
-    if not post_id or post_id <= 0:
+    if post_id is None or post_id <= 0 or post_id > 2 * 32:
         raise BadRequestError('No post selected')
 
     password = form.get('password', None)
-    if not password:
+    if not password or len(password) > g.posts_service.MAX_PASSWORD_LENGTH:
         password = None
 
     ip4 = g.ban_service.get_request_ip4()

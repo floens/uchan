@@ -8,6 +8,9 @@ from unichan.view import check_csrf_token, with_token
 
 
 def get_board_or_abort(board_name):
+    if not board_name or len(board_name) > g.board_service.BOARD_NAME_MAX_LENGTH:
+        abort(400)
+
     board = g.board_service.find_board(board_name)
     if not board:
         abort(404)

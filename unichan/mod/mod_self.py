@@ -22,6 +22,10 @@ def mod_self_password():
     old_password = request.form['old_password']
     new_password = request.form['new_password']
 
+    if not g.moderator_service.check_password_validity(new_password):
+        flash('Invalid password')
+        return redirect(url_for('.mod_self'))
+
     try:
         g.moderator_service.change_password(moderator, old_password, new_password)
         flash('Changed password')

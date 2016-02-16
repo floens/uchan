@@ -24,6 +24,7 @@ class RequestSuspendedException(ArgumentError):
 class PostsService:
     MAX_NAME_LENGTH = 35
     MAX_SUBJECT_LENGTH = 100
+    MIN_PASSWORD_LENGTH = 5
     MAX_PASSWORD_LENGTH = 25
     MAX_TEXT_LENGTH = 2000
     MAX_TEXT_LINES = 25
@@ -37,22 +38,27 @@ class PostsService:
         if config.ENABLE_COOLDOWN_CHECKING and g.ban_service.is_request_suspended(post_details.ip4, board, thread):
             raise RequestSuspendedException()
 
-        if not post_details.text.strip():
+        if not post_details.text or not post_details.text.strip():
             # Allow no text when an image is attached
             if not post_details.has_file:
                 raise ArgumentError('No text')
 
-        if len(post_details.text) > self.MAX_TEXT_LENGTH:
-            raise ArgumentError('Text too long')
+        if post_details.text is not None:
+            if len(post_details.text) > self.MAX_TEXT_LENGTH:
+                raise ArgumentError('Text too long')
 
-        if len(post_details.text.splitlines()) > self.MAX_TEXT_LINES:
-            raise ArgumentError('Too many lines')
+            if len(post_details.text.splitlines()) > self.MAX_TEXT_LINES:
+                raise ArgumentError('Too many lines')
 
-        if post_details.name and len(post_details.name) > self.MAX_NAME_LENGTH:
+        if post_details.name is not None and len(post_details.name) > self.MAX_NAME_LENGTH:
             raise ArgumentError('Name too long')
 
-        if post_details.password and len(post_details.password) > self.MAX_PASSWORD_LENGTH:
-            raise ArgumentError('Password too long')
+        if post_details.password is not None:
+            if len(post_details.password) < self.MIN_PASSWORD_LENGTH:
+                raise ArgumentError('Password too short, min' + str(self.MIN_PASSWORD_LENGTH))
+
+            if len(post_details.password) > self.MAX_PASSWORD_LENGTH:
+                raise ArgumentError('Password too long, max ' + str(self.MAX_PASSWORD_LENGTH))
 
     def handle_post(self, post_details):
         board, to_thread = self.get_board_thread(post_details)
@@ -63,15 +69,18 @@ class PostsService:
         board_config_cached = g.board_cache.find_board_config_cached(board.name)
 
         post = Post()
-        post.text = post_details.text.strip()
-        if post_details.name:
+        if post_details.text is not None:
+            post.text = post_details.text.strip()
+        else:
+            post.text = ''
+        if post_details.name is not None:
             post.name = post_details.name
         else:
             post.name = site_config_cached.default_name
         sage = post.name.lower() == 'sage'
-        if to_thread is None and post_details.subject:
+        if to_thread is None and post_details.subject is not None:
             post.subject = post_details.subject
-        if post_details.password:
+        if post_details.password is not None:
             post.password = post_details.password
         post.date = now()
         post.ip4 = post_details.ip4

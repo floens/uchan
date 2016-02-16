@@ -16,6 +16,7 @@ from unichan.lib.utils import now
 class ModeratorService:
     USERNAME_MAX_LENGTH = 50
     USERNAME_ALLOWED_CHARS = string.ascii_letters + string.digits + '_'
+    PASSWORD_MIN_LENGTH = 6
     PASSWORD_MAX_LENGTH = 50
     PASSWORD_ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation + '_'
 
@@ -73,7 +74,7 @@ class ModeratorService:
         return True
 
     def check_password_validity(self, password):
-        if not 0 < len(password) <= self.PASSWORD_MAX_LENGTH:
+        if password is None or len(password) < self.PASSWORD_MIN_LENGTH or len(password) >= self.PASSWORD_MAX_LENGTH:
             return False
 
         if not all(c in self.PASSWORD_ALLOWED_CHARS for c in password):
@@ -95,6 +96,7 @@ class ModeratorService:
         try:
             db.commit()
         except IntegrityError:
+            db.rollback()
             raise ArgumentError('Duplicate username')
 
     def delete_moderator(self, moderator):

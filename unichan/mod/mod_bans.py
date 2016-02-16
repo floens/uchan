@@ -9,6 +9,9 @@ from unichan.view import with_token
 
 
 def get_moderator_or_abort(moderator_id):
+    if moderator_id <= 0 or moderator_id > 2 * 32:
+        abort(400)
+
     moderator = g.moderator_service.find_moderator_id(moderator_id)
     if not moderator:
         abort(404)
@@ -28,7 +31,15 @@ def mod_bans():
 @with_token()
 def mod_ban_add():
     ip4_raw = request.form['ban_ip4']
+    if not ip4_raw or len(ip4_raw) > 25:
+        abort(400)
+
     ip4_end_raw = request.form.get('ban_ip4_end', None)
+    if not ip4_end_raw:
+        ip4_end_raw = None
+    if ip4_end_raw is not None and (len(ip4_end_raw) == 0 or len(ip4_end_raw) > 25):
+        abort(400)
+
     ban_length = request.form.get('ban_length', type=int)
     if ban_length is None or ban_length < 0:
         abort(400)
@@ -72,7 +83,7 @@ def mod_ban_add():
 @with_token()
 def mod_ban_delete():
     ban_id = request.form.get('ban_id', type=int)
-    if not ban_id:
+    if not ban_id or ban_id < 0:
         abort(400)
 
     ban = g.ban_service.find_ban_id(ban_id)
