@@ -23,6 +23,8 @@ class SiteConfig(DynamicConfig):
 
         self.configs.append(DynamicConfigItem('index_text', 'Index text', 'Welcome!', str, maximum=1000))
         self.configs.append(DynamicConfigItem('motd', 'MOTD', '', str, maximum=500))
-        self.configs.append(DynamicConfigItem('default_name', 'Default posting name', 'Anonymous', str, maximum=25))
-        self.configs.append(DynamicConfigItem('boards_top', 'Show board list at top', True, bool))
         self.configs.append(DynamicConfigItem('footer_text', 'Footer text', 'Page served by µchan', str, maximum=100))
+        self.configs.append(DynamicConfigItem('boards_top', 'Show board list at top', True, bool))
+        self.configs.append(DynamicConfigItem('default_name', 'Default posting name', 'Anonymous', str, maximum=25))
+        self.configs.append(DynamicConfigItem('posting_enabled', 'Is posting enabled?', True, bool))
+        self.configs.append(DynamicConfigItem('file_posting_enabled', 'Is file posting enabled?', True, bool))

@@ -15,6 +15,10 @@ def post():
     if not check_csrf_referer(request):
         abort(400)
 
+    site_config = g.site_cache.find_site_config_cached()
+    if not site_config.posting_enabled:
+        raise BadRequestError('Posting is disabled')
+
     # Gather params
     thread_id_raw = form.get('thread', None)
     thread_id = None
@@ -38,7 +42,10 @@ def post():
         password = None
 
     file = request.files.get('file', None)
-    has_file = file is not None and file.filename
+    has_file = file is not None and file.filename is not None and len(file.filename) > 0
+
+    if has_file and not site_config.file_posting_enabled:
+        raise BadRequestError('File posting is disabled')
 
     # ip4 of the request
     ip4 = g.ban_service.get_request_ip4()

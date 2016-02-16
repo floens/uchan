@@ -15,6 +15,11 @@
     <br>
     <br>
 
+    <hr class="content-divider">
+
+    <br>
+    <br>
+
     <form action="{{ url_for('.mod_board_delete') }}" method="POST">
         {{ csrf_html() }}
         <button name="board_name" value="{{ board.name }}">Delete board</button>

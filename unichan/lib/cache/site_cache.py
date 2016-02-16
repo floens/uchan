@@ -13,7 +13,7 @@ class SiteCache:
         site_config_cache = self.cache.get('config_site', True)
         if site_config_cache is None:
             site_config = g.config_service.get_config_by_type(SiteConfig.TYPE)
-            site_config_cache = CacheDict(g.config_service.load_config_dict(site_config))
+            site_config_cache = CacheDict(g.config_service.load_config_dict(site_config)).convert()
 
             self.cache.set('config_site', site_config_cache, timeout=self.SITE_CONFIG_TIMEOUT)
         return site_config_cache
