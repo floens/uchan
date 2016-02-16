@@ -8,13 +8,17 @@ def view_thread(board_name, thread_id):
     if thread_id <= 0 or thread_id > 2 ** 32:
         abort(400)
 
+    board_config_cached = g.board_cache.find_board_config_cached(board_name)
+    if not board_config_cached:
+        abort(400)
+
     thread_cached = g.posts_cache.find_thread_cached(thread_id)
 
     if thread_cached:
         if thread_cached.board.name != board_name:
             abort(404)
         else:
-            return render_template('thread.html', thread=thread_cached)
+            return render_template('thread.html', thread=thread_cached, board_config=board_config_cached.board_config)
     else:
         abort(404)
 

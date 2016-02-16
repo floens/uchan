@@ -1,4 +1,4 @@
-{% macro render(board, thread=None) %}
+{% macro render(board, thread=None, file_field=True) %}
     <form class="post-form" action="{{ url_for('post') }}" method="post" enctype="multipart/form-data">
         <fieldset>
             {% if thread %}
@@ -28,13 +28,15 @@
                 <textarea name="text" rows="8"></textarea>
             </label>
             <br>
-            <label>
-                File
-                <small>(.jpg .png .gif)</small>
+            {% if file_field %}
+                <label>
+                    File
+                    <small>(.jpg .png .gif)</small>
+                    <br>
+                    <input type="file" name="file">
+                </label>
                 <br>
-                <input type="file" name="file">
-            </label>
-            <br>
+            {% endif %}
             <br>
             <input type="submit" value="Submit"/>
 

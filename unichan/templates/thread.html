@@ -27,7 +27,7 @@
 
     <hr class="content-divider">
 
-    {{ post_form_widget.render(thread.board, thread) }}
+    {{ post_form_widget.render(thread.board, thread, file_field=board_config.file_posting_enabled) }}
     <br>
     [<a href="{{ url_for('board', board_name=thread.board.name) }}">Back</a>]
 {% endblock %}

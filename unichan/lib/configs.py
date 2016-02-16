@@ -13,6 +13,7 @@ class BoardConfig(DynamicConfig):
         self.configs.append(DynamicConfigItem('description', 'Description', 'No description given', str, maximum=100))
         self.configs.append(DynamicConfigItem('bump_limit', 'Max count of posts in a thread that will bump',
                                               300, int, minimum=100, maximum=500))
+        self.configs.append(DynamicConfigItem('file_posting_enabled', 'File posting enabled', True, bool))
 
 
 class SiteConfig(DynamicConfig):
@@ -26,5 +27,5 @@ class SiteConfig(DynamicConfig):
         self.configs.append(DynamicConfigItem('footer_text', 'Footer text', 'Page served by µchan', str, maximum=100))
         self.configs.append(DynamicConfigItem('boards_top', 'Show board list at top', True, bool))
         self.configs.append(DynamicConfigItem('default_name', 'Default posting name', 'Anonymous', str, maximum=25))
-        self.configs.append(DynamicConfigItem('posting_enabled', 'Is posting enabled?', True, bool))
-        self.configs.append(DynamicConfigItem('file_posting_enabled', 'Is file posting enabled?', True, bool))
+        self.configs.append(DynamicConfigItem('posting_enabled', 'Posting enabled', True, bool))
+        self.configs.append(DynamicConfigItem('file_posting_enabled', 'File posting enabled', True, bool))

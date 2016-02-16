@@ -9,7 +9,7 @@ from unichan import g
 def board(board_name, page=None):
     board_config_cached = g.board_cache.find_board_config_cached(board_name)
     if not board_config_cached:
-        raise Exception('Board config cache None while board cache not')
+        abort(404)
 
     if page == 1:
         return redirect(url_for('board', board_name=board_name))

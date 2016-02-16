@@ -38,6 +38,10 @@ class PostsService:
         if config.ENABLE_COOLDOWN_CHECKING and g.ban_service.is_request_suspended(post_details.ip4, board, thread):
             raise RequestSuspendedException()
 
+        board_config_cached = g.board_cache.find_board_config_cached(board.name)
+        if post_details.has_file and not board_config_cached.board_config.file_posting_enabled:
+            raise ArgumentError('File posting is disabled')
+
         if not post_details.text or not post_details.text.strip():
             # Allow no text when an image is attached
             if not post_details.has_file:
