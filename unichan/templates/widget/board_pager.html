@@ -1,0 +1,12 @@
+{% macro render(board_name, pages, index) %}
+    {% for i in range(1, pages + 1) %}
+        {% if i == index + 1 %}
+            [{{ i }}]
+        {% else %}
+            [<a href="{{ url_for('board', board_name=board_name, page=i if i > 1 else None) }}">{{ i }}</a>]
+        {% endif %}
+    {% endfor %}
+    {% if index < pages - 1 %}
+        [<a href="{{ url_for('board', board_name=board_name, page=index + 2) }}">Next</a>]
+    {% endif %}
+{% endmacro %}

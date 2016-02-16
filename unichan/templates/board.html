@@ -5,6 +5,7 @@
 {% import "widget/post.html" as post_widget %}
 {% import "widget/post_form.html" as post_form_widget %}
 {% import "widget/post_manage.html" as post_manage_widget %}
+{% import "widget/board_pager.html" as board_pager_widget %}
 
 {% block content %}
     <div class="board-header">
@@ -23,9 +24,7 @@
 
     <br>
 
-    {% for i in range(board_config.pages) %}
-        [<a href="{{ url_for('board', board_name=board.name, page=i if i > 0 else None) }}">{{ i + 1 }}</a>]
-    {% endfor %}
+    {{ board_pager_widget.render(board.name, board_config.pages, page_index) }}
 
     <hr class="content-divider">
 
@@ -38,8 +37,6 @@
         <hr class="content-divider">
     {% endfor %}
 
-    {% for i in range(board_config.pages) %}
-        [<a href="{{ url_for('board', board_name=board.name, page=i if i > 0 else None) }}">{{ i + 1 }}</a>]
-    {% endfor %}
+    {{ board_pager_widget.render(board.name, board_config.pages, page_index) }}
 
 {% endblock %}
