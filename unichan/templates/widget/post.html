@@ -22,7 +22,7 @@
 
             {% if post_item.has_file %}
                 <br>
-                File: {{ post_item.file_name ~ ' (' ~ post_item.file_size|filesizeformat ~ ', ' ~ post_item.file_width ~ 'x' ~ post_item.file_height ~ ')' }}
+                File: <a href="{{ post_item.file_location }}">{{ post_item.file_name }}</a> {{ '(' ~ post_item.file_size|filesizeformat ~ ', ' ~ post_item.file_width ~ 'x' ~ post_item.file_height ~ ')' }}
             {% endif %}
         </div>
         <div class="text">
