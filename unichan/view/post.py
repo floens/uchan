@@ -25,7 +25,7 @@ def post():
     if thread_id_raw is not None:
         try:
             thread_id = int(thread_id_raw)
-            if thread_id <= 0 or thread_id > 2 * 32:
+            if thread_id <= 0 or thread_id > 2 ** 32:
                 abort(400)
         except ValueError:
             abort(400)
@@ -100,7 +100,7 @@ def post_manage():
         abort(400)
 
     post_id = form.get('post_id', type=int)
-    if post_id is None or post_id <= 0 or post_id > 2 * 32:
+    if post_id is None or post_id <= 0 or post_id > 2 ** 32:
         raise BadRequestError('No post selected')
 
     password = form.get('password', None)

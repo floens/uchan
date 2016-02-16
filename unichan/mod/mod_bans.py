@@ -9,7 +9,7 @@ from unichan.view import with_token
 
 
 def get_moderator_or_abort(moderator_id):
-    if moderator_id <= 0 or moderator_id > 2 * 32:
+    if moderator_id <= 0 or moderator_id > 2 ** 32:
         abort(400)
 
     moderator = g.moderator_service.find_moderator_id(moderator_id)
