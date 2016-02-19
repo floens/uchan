@@ -103,6 +103,24 @@ body {
     color: #789922;
 }
 
+.post .text .spoiler {
+    background-color: black;
+    color: #000;
+    text-decoration: none;
+}
+
+.post .text .spoiler:hover {
+    color: #fff;
+}
+
+.post .text h3 {
+    margin: 0.5em 0 0.5em 0;
+}
+
+.post .text .red {
+    color: #ff0000;
+}
+
 .post .boardinfo {
     margin: 20px 0 0 0;
     color: #5a5a5a;

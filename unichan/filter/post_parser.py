@@ -17,20 +17,70 @@ def parse_post(raw):
         if line:
             was_empty_line = False
 
-            # If the line started with a > wrap the line around a quote span
-            if line.startswith('&gt;'):
-                line = '<span class="quote">' + line + '</span>'
-
-            # Replace any >>123 with <a href="#p123">&gt;&gt;123</a>
-            line = POST_REFNO_PATTERN.sub('<a href="#p\\1">&gt;&gt;\\1</a>', line)
-
-            lines.append(line)
+            lines.append(parse_post_line(line))
         else:
             # Allow one empty line at max
             if not was_empty_line:
-                lines.append('')
+                lines.append('<br>')
                 was_empty_line = True
 
-    value = '<br>'.join(lines)
+    value = ''.join(lines)
 
+    value = parse_post_whole(value)
+
+    # Mark as safe html
     return Markup(value)
+
+
+CODE_RE = re.compile(r'(\[code\])(.+?(?=\[/code\]))(\[/code\])', re.S | re.I)
+SPOILER_RE = re.compile(r'(\[s\])(.+?(?=\[/s\]))(\[/s\])', re.S | re.I)
+
+STRIKETHROUGH_RE = re.compile(r'(~~)(.+?(?=~~))(~~)', re.S)
+
+STRONG_RE = re.compile(r'(\*\*)(.+?(?=\*\*))(\*\*)', re.S)
+STRONG2_RE = re.compile(r'(__)(.+?(?=__))(__)', re.S)
+
+EMPHASIS_RE = re.compile(r'(\*)([^\*]+)(\*)', re.S)
+EMPHASIS2_RE = re.compile(r'(_)([^_]+)(_)', re.S)
+
+
+def parse_post_whole(text):
+    if '[code]' in text:
+        text = CODE_RE.sub('<code>\\2</code>', text)
+
+    if '[s]' in text:
+        text = SPOILER_RE.sub('<span class="spoiler">\\2</span>', text)
+
+    return text
+
+
+def parse_post_line(line):
+    with_break = True
+
+    line = STRONG_RE.sub('<b>\\2</b>', line)
+    line = STRONG2_RE.sub('<b>\\2</b>', line)
+
+    line = EMPHASIS_RE.sub('<em>\\2</em>', line)
+    line = EMPHASIS2_RE.sub('<em>\\2</em>', line)
+
+    line = STRIKETHROUGH_RE.sub('<s>\\2</s>', line)
+
+    if line.startswith('# '):
+        with_break = False
+        line = '<h3> ' + line[2:] + '</h3>'
+
+    if line.startswith('## '):
+        with_break = False
+        line = '<h3 class="red"> ' + line[3:] + '</h3>'
+
+    # If the line started with a > wrap the line around a quote span
+    if line.startswith('&gt;'):
+        line = '<span class="quote">' + line + '</span>'
+
+    # Replace any >>123 with <a href="#p123">&gt;&gt;123</a>
+    line = POST_REFNO_PATTERN.sub('<a href="#p\\1">&gt;&gt;\\1</a>', line)
+
+    if with_break:
+        line += '<br>'
+
+    return line
