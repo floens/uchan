@@ -44,6 +44,8 @@ class CacheWrapper(MemcachedCache):
         super().delete(key)
 
     def _normalize_timeout(self, timeout):
+        if timeout is None:
+            return self.default_timeout
         # Allow zero to mean the same as does not expire
         if timeout == 0:
             return 0
