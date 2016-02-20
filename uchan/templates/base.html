@@ -51,7 +51,7 @@
     {% block content %}{% endblock %}
 
     <div class="footer">
-        {{ site_config.footer_text }}
+        {{ site_config.footer_text|keep_newlines }}
     </div>
 </div>
 

@@ -4,8 +4,8 @@ from sqlalchemy.orm.exc import NoResultFound
 import config
 from uchan import g
 from uchan.database import get_db
-from uchan.lib import roles
 from uchan.lib import BadRequestError, ArgumentError
+from uchan.lib import roles
 from uchan.lib.models import Post, Report, Thread, File
 from uchan.lib.tasks.post_task import ManagePostDetails
 from uchan.lib.utils import now

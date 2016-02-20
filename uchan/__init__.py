@@ -119,7 +119,6 @@ def init():
     global g, app, celery
     assert isinstance(g, Globals)
 
-    from werkzeug.contrib.cache import MemcachedCache
     from uchan.lib.cache import CacheWrapper
     g.cache = CacheWrapper(servers=config.MEMCACHED_SERVERS)
 

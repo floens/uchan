@@ -3,5 +3,5 @@
 {% block title %}Index{% endblock %}
 
 {% block content %}
-    {{ site_config.index_text }}
+    {{ site_config.index_text|keep_newlines }}
 {% endblock %}
