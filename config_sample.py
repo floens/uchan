@@ -26,6 +26,12 @@ LOCAL_CDN_WEB_PATH = 'https://cdn.example.com/media/'
 # Enable the cooldowns specified in the BanService. Turning off is useful for developing.
 ENABLE_COOLDOWN_CHECKING = True
 
+# Memcached servers to use
+MEMCACHED_SERVERS = ['127.0.0.1:11211']
+# Fail when connecting to the memcached server fails
+# Only disable when developing, running without memcached destroys performance.
+NO_MEMCACHED_PENALTY = True
+
 # Enable this when serving behind a proxy (almost always)
 # Do not use this middleware in non-proxy setups for security reasons.
 USE_PROXY_FIXER = True

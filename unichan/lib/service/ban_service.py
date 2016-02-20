@@ -36,7 +36,6 @@ class BanService:
         else:
             query = query.filter_by(refno=1)
         posts = query.all()
-        print(posts)
         return posts
 
     def get_request_bans(self):

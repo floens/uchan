@@ -112,7 +112,7 @@ def init():
 
     from werkzeug.contrib.cache import MemcachedCache
     from unichan.lib.cache import CacheWrapper
-    g.memcached_cache = MemcachedCache()
+    g.memcached_cache = MemcachedCache(servers=config.MEMCACHED_SERVERS)
     g.cache = CacheWrapper(g.memcached_cache)
 
     import unichan.database as database

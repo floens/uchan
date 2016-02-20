@@ -1,6 +1,8 @@
 import json
 from collections import Iterable
 
+import config
+
 
 def make_attr_dict(value):
     if isinstance(value, list):
@@ -20,7 +22,8 @@ class CacheWrapper:
     def set(self, key, value, **kwargs):
         # g.logger.debug('set {} {}'.format(key, value))
 
-        self.cache.set(key, json.dumps(value), **kwargs)
+        if not self.cache.set(key, json.dumps(value), **kwargs) and config.NO_MEMCACHED_PENALTY:
+            raise Exception('Could not set value to cache')
 
     def get(self, key, convert=False):
         # g.logger.debug('get {}'.format(key))
