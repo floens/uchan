@@ -89,9 +89,19 @@ def create_web_app(app, cache):
 
         return e if type(e) is str else ''
 
+    @app.errorhandler(500)
+    def server_error_handler(error):
+        g.logger.exception(error)
+        return app.send_static_file('500.html'), 500
+
+    @app.errorhandler(404)
+    def server_error_handler(error):
+        g.logger.exception(error)
+        return app.send_static_file('404.html'), 404
+
     @app.errorhandler(BadRequestError)
     def bad_request_handler(error):
-        return render_template('error.html', message=bad_request(error))
+        return render_template('error.html', message=bad_request(error)), 400
 
     # Setup session handling
     app.session_interface = CustomSessionInterface(cache)
