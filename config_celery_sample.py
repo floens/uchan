@@ -1,5 +1,5 @@
 # Celery
-BROKER_URL = 'amqp://guest@127.0.0.1//'
+BROKER_URL = 'amqp://uchan:yourpassword@yourhostname/uchanvhost'
 CELERY_RESULT_BACKEND = 'rpc://'
 
 # Move to JSON when exceptions are properly handled

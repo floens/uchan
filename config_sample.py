@@ -32,13 +32,15 @@ USE_PROXY_FIXER = True
 # The number of proxies this instance is behind
 # This needs to be set to prevent ip spoofing by malicious clients appending their own forwarded-for header
 # See `werkzeug.contrib.fixers.ProxyFix` for more info.
-PROXY_FIXER_NUM_PROXIES = 1
+# Two for a nginx > varnish > uwsgi setup
+PROXY_FIXER_NUM_PROXIES = 2
 
 # Keep this the same as your nginx client_max_body_size config
 MAX_CONTENT_LENGTH = 5 * 1024 * 1024
 
-DATABASE_CONNECT_STRING = 'postgresql+psycopg2://postgres:postgres@127.0.0.1:5432/unichan'
-DATABASE_POOL_SIZE = 5
+DATABASE_CONNECT_STRING = 'postgresql+psycopg2://uchan:uchan@/uchan'
+# Check this with your uwsgi total thread count + worker count and the postgres max_connections
+DATABASE_POOL_SIZE = 4
 
 # Generate with `import os` `os.urandom(32)`
 SECRET_KEY = None
