@@ -68,6 +68,10 @@ body {
     margin-left: 50px;
 }
 
+.post.divider {
+    border-bottom: 1px solid #d4dce8;
+}
+
 .post:target, .post.highlight {
     background-color: #fff4e2;
 }

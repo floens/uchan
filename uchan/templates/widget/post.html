@@ -1,5 +1,5 @@
-{% macro render(post_item, thread=None, snippet=False, thread_view=False) %}
-    <div class="post{{ ' snippet' if snippet else '' }}" id="p{{ post_item.refno }}">
+{% macro render(post_item, thread=None, snippet=False, thread_view=False, with_divider=False) %}
+    <div class="post{{ ' snippet' if snippet else '' }}{{ ' divider' if with_divider else '' }}" id="p{{ post_item.refno }}">
         <div class="header">
             {% if post_item.subject %}
                 <span class="subject">

@@ -59,7 +59,7 @@ class PostsService:
 
         if post_details.password is not None:
             if len(post_details.password) < self.MIN_PASSWORD_LENGTH:
-                raise ArgumentError('Password too short, min' + str(self.MIN_PASSWORD_LENGTH))
+                raise ArgumentError('Password too short, min ' + str(self.MIN_PASSWORD_LENGTH))
 
             if len(post_details.password) > self.MAX_PASSWORD_LENGTH:
                 raise ArgumentError('Password too long, max ' + str(self.MAX_PASSWORD_LENGTH))

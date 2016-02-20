@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Board /{{ board.name }}/{% endblock %}
+{% block title %}Board /{{ board.name }}/ - {{ board_config.full_name }}{% endblock %}
 
 {% import "widget/post.html" as post_widget %}
 {% import "widget/post_form.html" as post_form_widget %}
@@ -32,7 +32,7 @@
         {{ post_widget.render(thread.posts[0], thread) }}
 
         {% for post_snippet in thread.posts[1:] %}
-            {{ post_widget.render(post_snippet, None, True, False) }}
+            {{ post_widget.render(post_snippet, thread=None, snippet=True, thread_view=False, with_divider=not loop.last) }}
         {% endfor %}
         <hr class="content-divider">
     {% endfor %}
