@@ -1,5 +1,7 @@
 import json
-from collections import Iterable
+from time import time
+
+from werkzeug.contrib.cache import MemcachedCache
 
 import config
 
@@ -15,19 +17,19 @@ def make_attr_dict(value):
     return value
 
 
-class CacheWrapper:
-    def __init__(self, cache):
-        self.cache = cache
+class CacheWrapper(MemcachedCache):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def set(self, key, value, **kwargs):
         # g.logger.debug('set {} {}'.format(key, value))
 
-        if not self.cache.set(key, json.dumps(value), **kwargs) and config.NO_MEMCACHED_PENALTY:
+        if not super().set(key, json.dumps(value), **kwargs) and config.NO_MEMCACHED_PENALTY:
             raise Exception('Could not set value to cache')
 
     def get(self, key, convert=False):
         # g.logger.debug('get {}'.format(key))
-        res = self.cache.get(key)
+        res = super().get(key)
         if res is None:
             return None
         else:
@@ -39,7 +41,13 @@ class CacheWrapper:
 
     def delete(self, key):
         # logger.debug('delete {}'.format(key))
-        self.cache.delete(key)
+        super().delete(key)
+
+    def _normalize_timeout(self, timeout):
+        # Allow zero to mean the same as does not expire
+        if timeout == 0:
+            return 0
+        return int(time()) + timeout
 
 
 class CacheDict(dict):

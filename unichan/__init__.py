@@ -15,7 +15,6 @@ class Globals():
         self.celery = None
         self.database = None
 
-        self.memcached_cache = None
         self.cache = None
         self.posts_cache = None
         self.board_cache = None
@@ -112,8 +111,7 @@ def init():
 
     from werkzeug.contrib.cache import MemcachedCache
     from unichan.lib.cache import CacheWrapper
-    g.memcached_cache = MemcachedCache(servers=config.MEMCACHED_SERVERS)
-    g.cache = CacheWrapper(g.memcached_cache)
+    g.cache = CacheWrapper(servers=config.MEMCACHED_SERVERS)
 
     import unichan.database as database
     g.database = database

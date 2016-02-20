@@ -54,9 +54,7 @@ class PostCacheProxy(CacheDict):
 
 
 class PostsCache:
-    CACHE_ENABLED = True
     BOARD_SNIPPET_COUNT = 5
-    TIMEOUT = 15 * 60
 
     def __init__(self, cache):
         self.cache = cache
@@ -69,9 +67,7 @@ class PostsCache:
             if not thread:
                 return None
             thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board).convert(), [PostCacheProxy(i).convert() for i in thread.posts]).convert()
-            if PostsCache.CACHE_ENABLED:
-                self.cache.set(key, thread_cache, timeout=self.TIMEOUT)
-                # time.sleep(1)
+            self.cache.set(key, thread_cache, timeout=0)
         return thread_cache
 
     def invalidate_thread_cache(self, thread_id):
@@ -107,9 +103,7 @@ class PostsCache:
             threads = sorted(threads, key=lambda t: t.last_modified, reverse=True)
 
             board_cache = BoardPageCacheProxy(BoardCacheProxy(board), threads).convert()
-            if PostsCache.CACHE_ENABLED:
-                self.cache.set(key, board_cache, timeout=self.TIMEOUT)
-                # time.sleep(1)
+            self.cache.set(key, board_cache, timeout=0)
 
         if page is None:
             return BoardPageCacheProxy(board_cache.board, board_cache.threads).convert()
