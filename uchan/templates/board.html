@@ -29,7 +29,7 @@
     <hr class="content-divider">
 
     {% for thread in threads %}
-        {{ post_widget.render(thread.posts[0], thread) }}
+        {{ post_widget.render(thread.posts[0], thread, with_divider=thread.posts|length > 1) }}
 
         {% for post_snippet in thread.posts[1:] %}
             {{ post_widget.render(post_snippet, thread=None, snippet=True, thread_view=False, with_divider=not loop.last) }}
