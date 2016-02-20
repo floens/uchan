@@ -176,42 +176,5 @@ def init():
     from unichan.lib.service import BanService
     g.ban_service = BanService()
 
-    # database.metadata_create_all()
-    # test_models()
-
-
-def test_models():
-    try:
-        from unichan import g
-
-        from unichan.lib.configs import BoardConfig, SiteConfig
-
-        if g.config_service.get_config_by_type(SiteConfig.TYPE) is None:
-            g.config_service.save_config(SiteConfig(), None)
-
-        from unichan.lib.models import Board
-        b_board = g.board_service.find_board('b')
-        if not b_board:
-            a_board = Board()
-            a_board.name = 'a'
-            g.board_service.add_board(a_board)
-
-            b_board = Board()
-            b_board.name = 'b'
-            g.board_service.add_board(b_board)
-
-        from unichan.lib import roles
-        from unichan.lib.models import Moderator
-
-        existing_moderator = g.moderator_service.find_moderator_username('florens')
-        if not existing_moderator:
-            moderator = Moderator()
-            moderator.roles = [roles.ROLE_ADMIN]
-            moderator.username = 'florens'
-
-            g.moderator_service.create_moderator(moderator, 'passwd')
-    finally:
-        clean_up()
-
 
 init()
