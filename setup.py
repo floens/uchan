@@ -2,26 +2,26 @@ from getpass import getpass
 
 
 def init_models():
-    from unichan import database
+    from uchan import database
 
     database.metadata_create_all()
 
-    from unichan import g
+    from uchan import g
 
-    from unichan.lib.configs import SiteConfig
+    from uchan.lib.configs import SiteConfig
 
     if g.config_service.get_config_by_type(SiteConfig.TYPE) is None:
         g.config_service.save_config(SiteConfig(), None)
 
-    from unichan.lib.models import Board
+    from uchan.lib.models import Board
     b_board = g.board_service.find_board('a')
     if not b_board:
         a_board = Board()
         a_board.name = 'a'
         g.board_service.add_board(a_board)
 
-    from unichan.lib import roles
-    from unichan.lib.models import Moderator
+    from uchan.lib import roles
+    from uchan.lib.models import Moderator
 
     print('Creating a new moderator')
     username = input('username: ')

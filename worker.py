@@ -1,6 +1,6 @@
 import sys
 
-import unichan
+import uchan
 
 if __name__ == '__main__':
-    unichan.celery.worker_main(sys.argv)
+    uchan.celery.worker_main(sys.argv)

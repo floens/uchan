@@ -87,7 +87,7 @@ install `rabbitmq-server`
 
 start it
 
-add unichan user: `sudo rabbitmqctl add_user uchan <password>`
+add uchan user: `sudo rabbitmqctl add_user uchan <password>`
 
 `sudo rabbitmqctl add_user uchan password`
 `sudo rabbitmqctl add_vhost uchanvhost`
@@ -118,9 +118,9 @@ Environment=CELERYD_LOG_FILE=/var/log/uchanworker/%%n.log
 Environment=CELERYD_LOG_LEVEL=INFO
 Environment=CELERYD_CONCURRENCY=8
 
-ExecStart=/home/uchan/uchan/env/bin/celery multi start uchanworker -c ${CELERYD_CONCURRENCY} -A unichan:celery --logfile=${CELERYD_LOG_FILE} --loglevel=${CELERYD_LOG_LEVEL} --pidfile=${CELERYD_PID_FILE}
+ExecStart=/home/uchan/uchan/env/bin/celery multi start uchanworker -c ${CELERYD_CONCURRENCY} -A uchan:celery --logfile=${CELERYD_LOG_FILE} --loglevel=${CELERYD_LOG_LEVEL} --pidfile=${CELERYD_PID_FILE}
 ExecStop=/home/uchan/uchan/env/bin/celery multi stopwait uchanworker --pidfile=${CELERYD_PID_FILE}
-ExecReload=/home/uchan/uchan/env/bin/celery multi restart uchanworker -c ${CELERYD_CONCURRENCY} -A unichan:celery --logfile=${CELERYD_LOG_FILE} --loglevel=${CELERYD_LOG_LEVEL} --pidfile=${CELERYD_PID_FILE}
+ExecReload=/home/uchan/uchan/env/bin/celery multi restart uchanworker -c ${CELERYD_CONCURRENCY} -A uchan:celery --logfile=${CELERYD_LOG_FILE} --loglevel=${CELERYD_LOG_LEVEL} --pidfile=${CELERYD_PID_FILE}
 
 [Install]
 WantedBy=multi-user.target
@@ -173,11 +173,12 @@ server {
   }
 
   location /static {
-    alias /home/uchan/uchan/unichan/static;
+    alias /home/uchan/uchan/uchan/static;
+    expires 31d;
   }
 
   location /favicon.ico {
-    alias /home/uchan/uchan/unichan/static/favicon.ico;
+    alias /home/uchan/uchan/uchan/static/favicon.ico;
   }
 
   location /media/ {
@@ -237,7 +238,7 @@ disable-loggin
 
 plugin = python3
 virtualenv = /home/uchan/uchan/env
-module = unichan
+module = uchan
 callable = app
 
 processes = 8

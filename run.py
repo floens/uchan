@@ -1,4 +1,4 @@
-import unichan
+import uchan
 
 if __name__ == '__main__':
-    unichan.app.run()
+    uchan.app.run()

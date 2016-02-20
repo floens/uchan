@@ -8,5 +8,5 @@ CELERY_ACCEPT_CONTENT = ['pickle']
 CELERY_RESULT_SERIALIZER = 'pickle'
 
 CELERY_IMPORTS = [
-    'unichan.lib.tasks.post_task'
+    'uchan.lib.tasks.post_task'
 ]
