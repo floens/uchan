@@ -207,14 +207,12 @@ class PostsService:
             g.moderator_service.add_report(report)
         elif details.mode == ManagePostDetails.TOGGLE_STICKY:
             if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
-                thread.sticky = not thread.sticky
-                get_db().commit()
+                self.toggle_thread_sticky(thread)
             else:
                 raise BadRequestError()
         elif details.mode == ManagePostDetails.TOGGLE_LOCKED:
             if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
-                thread.locked = not thread.locked
-                get_db().commit()
+                self.toggle_thread_locked(thread)
             else:
                 raise BadRequestError()
         else:
@@ -229,6 +227,22 @@ class PostsService:
             return thread
         except NoResultFound:
             return None
+
+    def toggle_thread_sticky(self, thread):
+        thread.sticky = not thread.sticky
+        # Invalidate caches
+        g.posts_cache.invalidate_board_page_cache(thread.board.name)
+        g.posts_cache.invalidate_thread_cache(thread.id)
+        db = get_db()
+        db.commit()
+
+    def toggle_thread_locked(self, thread):
+        thread.locked = not thread.locked
+        # Invalidate caches
+        g.posts_cache.invalidate_board_page_cache(thread.board.name)
+        g.posts_cache.invalidate_thread_cache(thread.id)
+        db = get_db()
+        db.commit()
 
     def find_post(self, post_id):
         try:
