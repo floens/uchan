@@ -28,13 +28,16 @@ def post_task(post_details):
 class ManagePostDetails:
     DELETE = 1
     REPORT = 2
+    TOGGLE_STICKY = 3
+    TOGGLE_LOCKED = 4
 
-    def __init__(self, post_id, ip4):
+    def __init__(self, thread_id, post_id, ip4):
+        self.thread_id = thread_id
         self.post_id = post_id
+        self.ip4 = ip4
         self.mod_id = None
         self.mode = None
         self.password = None
-        self.ip4 = ip4
 
 
 @celery.task

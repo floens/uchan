@@ -1,4 +1,4 @@
-{% macro render(post_item, thread=None, snippet=False, thread_view=False, with_divider=False) %}
+{% macro render(post_item, thread=None, snippet=False, thread_view=False, with_divider=False, is_locked=False, is_sticky=False) %}
     <div class="post{{ ' snippet' if snippet else '' }}{{ ' divider' if with_divider else '' }}" id="p{{ post_item.refno }}">
         <div class="header">
             {% if post_item.subject %}
@@ -14,6 +14,8 @@
             <span class="date">
                 {{ post_item.date|post_time }}
             </span>
+            {% if is_locked %}<b>[locked]</b> {% endif %}
+            {% if is_sticky %}<b>[sticky]</b>{% endif %}
             {% if thread_view %}
                 <span class="manage">
                 <input type="checkbox" name="post_id" value="{{ post_item.id }}">

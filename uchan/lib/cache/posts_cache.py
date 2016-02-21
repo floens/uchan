@@ -25,6 +25,8 @@ class ThreadCacheProxy(CacheDict):
         super().__init__()
         self.id = thread.id
         self.last_modified = thread.last_modified
+        self.locked = thread.locked
+        self.sticky = thread.sticky
         self.board = board
         self.posts = posts
 
@@ -86,6 +88,7 @@ class PostsCache:
             if not board:
                 return None
 
+            stickies = []
             threads = []
             for thread in board.threads:
                 thread_cached = self.find_thread_cached(thread.id)
@@ -98,11 +101,15 @@ class PostsCache:
 
                 thread_cached.posts = [op] + snippets
                 thread_cached.omitted_count = original_length - 1 - 5
-                threads.append(thread_cached)
+                if thread_cached.sticky:
+                    stickies.append(thread_cached)
+                else:
+                    threads.append(thread_cached)
 
+            stickies = sorted(stickies, key=lambda t: t.last_modified, reverse=False)
             threads = sorted(threads, key=lambda t: t.last_modified, reverse=True)
 
-            board_cache = BoardPageCacheProxy(BoardCacheProxy(board), threads).convert()
+            board_cache = BoardPageCacheProxy(BoardCacheProxy(board), stickies + threads).convert()
             self.cache.set(key, board_cache, timeout=0)
 
         if page is None:

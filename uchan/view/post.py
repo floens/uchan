@@ -100,8 +100,12 @@ def post_manage():
         abort(400)
 
     post_id = form.get('post_id', type=int)
-    if post_id is None or post_id <= 0 or post_id > 2 ** 32:
-        raise BadRequestError('No post selected')
+    if post_id is not None and (post_id <= 0 or post_id > 2 ** 32):
+        abort(404)
+
+    thread_id = form.get('thread_id', type=int)
+    if thread_id is None or thread_id <= 0 or thread_id > 2 ** 32:
+        abort(400)
 
     password = form.get('password', None)
     if not password or len(password) > g.posts_service.MAX_PASSWORD_LENGTH:
@@ -109,7 +113,7 @@ def post_manage():
 
     ip4 = g.ban_service.get_request_ip4()
 
-    details = ManagePostDetails(post_id, ip4)
+    details = ManagePostDetails(thread_id, post_id, ip4)
     mode_string = form.get('mode')
     success_message = 'Success!'
     if mode_string == 'delete':
@@ -119,6 +123,12 @@ def post_manage():
     elif mode_string == 'report':
         details.mode = ManagePostDetails.REPORT
         success_message = 'Post reported'
+    elif mode_string == 'toggle_sticky':
+        details.mode = ManagePostDetails.TOGGLE_STICKY
+        success_message = 'Toggled sticky'
+    elif mode_string == 'toggle_locked':
+        details.mode = ManagePostDetails.TOGGLE_LOCKED
+        success_message = 'Toggled locked'
     else:
         abort(400)
 

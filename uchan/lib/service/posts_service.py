@@ -32,6 +32,9 @@ class PostsService:
     def handle_post_check(self, post_details):
         board, thread = self.get_board_thread(post_details)
 
+        if thread.locked:
+            raise ArgumentError('Thread is locked')
+
         if g.ban_service.is_request_banned(post_details.ip4, board):
             raise RequestBannedException()
 
@@ -160,23 +163,33 @@ class PostsService:
         db.add(file)
 
     def handle_manage_post(self, details):
+        thread = self.find_thread(details.thread_id)
+        if thread is None:
+            raise BadRequestError('Thread not found')
+
         post = self.find_post(details.post_id)
-        if not post:
-            raise BadRequestError('Post not found')
 
-        board = post.thread.board
+        board = thread.board
 
+        # Get moderator if mod_id was set
         moderator = None
         if details.mod_id is not None:
             moderator = g.moderator_service.find_moderator_id(details.mod_id)
             if moderator is None:
                 raise Exception('Moderator not found')
 
+        # You cannot manage when you are banned
         if moderator is None or not g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
             if g.ban_service.is_request_banned(details.ip4, board):
                 raise RequestBannedException()
 
         if details.mode == ManagePostDetails.DELETE:
+            if post is None:
+                if not details.post_id:
+                    raise BadRequestError('No post selected')
+                else:
+                    raise BadRequestError('Post not found')
+
             can_delete = (moderator is not None and g.moderator_service.can_delete(moderator, post)) or \
                          (details.password is not None and details.password == post.password)
             if can_delete:
@@ -184,8 +197,26 @@ class PostsService:
             else:
                 raise BadRequestError('Password invalid')
         elif details.mode == ManagePostDetails.REPORT:
+            if post is None:
+                if not details.post_id:
+                    raise BadRequestError('No post selected')
+                else:
+                    raise BadRequestError('Post not found')
+
             report = Report(post_id=post.id)
             g.moderator_service.add_report(report)
+        elif details.mode == ManagePostDetails.TOGGLE_STICKY:
+            if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
+                thread.sticky = not thread.sticky
+                get_db().commit()
+            else:
+                raise BadRequestError()
+        elif details.mode == ManagePostDetails.TOGGLE_LOCKED:
+            if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
+                thread.locked = not thread.locked
+                get_db().commit()
+            else:
+                raise BadRequestError()
         else:
             raise Exception()
 

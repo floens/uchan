@@ -1,6 +1,8 @@
 from flask import render_template, abort, redirect, url_for
 
 from uchan import app, g
+from uchan.lib import roles
+from uchan.lib.moderator_request import get_authed, get_authed_moderator
 
 
 @app.route('/<board_name>/view/<int:thread_id>')
@@ -14,11 +16,10 @@ def view_thread(board_name, thread_id):
 
     thread_cached = g.posts_cache.find_thread_cached(thread_id)
 
-    if thread_cached:
-        if thread_cached.board.name != board_name:
-            abort(404)
-        else:
-            return render_template('thread.html', thread=thread_cached, board_config=board_config_cached.board_config)
+    if thread_cached and thread_cached.board.name == board_name:
+        show_moderator_buttons = get_authed() and g.moderator_service.has_role(get_authed_moderator(), roles.ROLE_ADMIN)
+
+        return render_template('thread.html', thread=thread_cached, board_config=board_config_cached.board_config, show_moderator_buttons=show_moderator_buttons)
     else:
         abort(404)
 
