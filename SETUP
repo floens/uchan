@@ -213,8 +213,19 @@ backend default {
 }
 ```
 Port might by any random port that uwsgi listens on.
-The varnish config doesn't need any configuration changes just yet, but it will later on.
 
+We want to cache all GET non-cookie requests for 15s, except for the /banned/ page,
+because the banned page can be different even without cookies.
+```
+sub vcl_recv {
+  if (req.url ~ "^/banned/") {
+    return (pass);
+  }
+}
+
+```
+In varnish.params:
+VARNISH_TTL=15
 
 UWSGI
 install uwsgi and the python 3.4 plugin for uwsgi
