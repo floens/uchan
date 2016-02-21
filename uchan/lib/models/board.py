@@ -18,6 +18,6 @@ class Board(ModelBase):
     name = Column(String(128), unique=True, index=True, nullable=False)
     config_id = Column(Integer, ForeignKey('config.id'), nullable=False, index=True)
 
-    config = relationship('Config')
+    config = relationship('Config', cascade='all')
     threads = relationship('Thread', backref='board', cascade='all, delete-orphan')
     moderators = relationship('Moderator', secondary=board_moderator_table, backref='boards')
