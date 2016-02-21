@@ -94,6 +94,11 @@ body {
     color: #018a00;
 }
 
+.post .header .name .trip {
+    font-weight: normal;
+    font-size: 0.9em;
+}
+
 .post .header .date {
 }
 

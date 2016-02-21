@@ -48,3 +48,14 @@ def keep_newlines(raw):
 @app.template_filter()
 def post_text(text):
     return parse_post(text)
+
+
+@app.template_filter()
+def post_name(name):
+    value = str(escape(name))
+
+    if '!' in value:
+        one, two = value.split('!', maxsplit=1)
+        value = one + '<span class="trip">!' + two + '</span>'
+
+    return Markup(value)

@@ -6,6 +6,7 @@ from uchan import g
 from uchan.database import get_db
 from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib import roles
+from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.models import Post, Report, Thread, File
 from uchan.lib.tasks.post_task import ManagePostDetails
 from uchan.lib.utils import now
@@ -80,11 +81,26 @@ class PostsService:
             post.text = post_details.text.strip()
         else:
             post.text = ''
+
+        sage = False
+        post.name = site_config_cached.default_name
         if post_details.name is not None:
-            post.name = post_details.name
-        else:
-            post.name = site_config_cached.default_name
-        sage = post.name.lower() == 'sage'
+            stripped_name = post_details.name.strip()
+            if stripped_name:
+                if '#' in post_details.name:
+                    raw_name, password = stripped_name.split('#', maxsplit=1)
+                    raw_name = raw_name.replace('!', '')
+                    if raw_name is not None and password:
+                        # Styling is applied later
+                        post.name = raw_name + ' !' + generate_crypt_code(password)
+                elif stripped_name.lower() == 'sage':
+                    sage = True
+                    post.name = site_config_cached.default_name
+                else:
+                    name = stripped_name.replace('!', '')
+                    if name:
+                        post.name = name
+
         if to_thread is None and post_details.subject is not None:
             post.subject = post_details.subject
         if post_details.password is not None:

@@ -9,7 +9,7 @@
             {% endif %}
             {% if thread_view %}<a href="#p{{ post_item.refno }}" class="refno">{% endif %}#{{ post_item.refno }}{% if thread_view %}</a>{% endif %}
             <span class="name">
-                {{ post_item.name }}
+                {{ post_item.name|post_name }}
             </span>
             <span class="date">
                 {{ post_item.date|post_time }}
