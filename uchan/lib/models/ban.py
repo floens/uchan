@@ -7,9 +7,9 @@ class Ban(ModelBase):
     __tablename__ = 'ban'
 
     id = Column(Integer(), primary_key=True)
-    ip4 = Column(Integer(), nullable=False, index=True)
+    ip4 = Column(BigInteger(), nullable=False, index=True)
     # Not null implies a range ban
-    ip4_end = Column(Integer(), nullable=True, index=True)
+    ip4_end = Column(BigInteger(), nullable=True, index=True)
     reason = Column(String(), nullable=False)
     date = Column(BigInteger(), nullable=False)
     # Use a length of 0 for permanent bans
