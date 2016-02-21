@@ -11,6 +11,7 @@ from uchan.web import CustomSessionInterface
 class Globals():
     def __init__(self):
         self.logger = None
+        self.mod_logger = None
         self.app = None
         self.celery = None
         self.database = None
@@ -45,7 +46,7 @@ class CustomFlaskApp(Flask):
                 self.session_interface.delete_session(session_item.session_id)
 
 
-def setup_logger():
+def setup_logger(globals):
     import config
 
     global app
@@ -66,8 +67,14 @@ def setup_logger():
         log_handler.setLevel(logging.INFO)
         app.logger.setLevel(logging.INFO)
 
-    logger = app.logger
-    return logger
+    globals.logger = app.logger
+
+    mod_log_handler = RotatingFileHandler('log/mod.log', maxBytes=5000000, backupCount=5)
+    mod_log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s"))
+
+    globals.mod_logger = logging.getLogger('mod log')
+    globals.mod_logger.addHandler(mod_log_handler)
+    globals.mod_logger.setLevel(logging.INFO)
 
 
 def create_web_app(app, cache):
@@ -151,7 +158,7 @@ def init():
     from uchan.api import api
     app.register_blueprint(api)
 
-    g.logger = setup_logger()
+    setup_logger(g)
 
     # Setup singletons
     from uchan.lib.service import PostsService

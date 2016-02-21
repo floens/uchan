@@ -29,6 +29,7 @@ def mod_self_password():
     try:
         g.moderator_service.change_password(moderator, old_password, new_password)
         flash('Changed password')
+        g.mod_logger.info('{} changed their password'.format(moderator.username))
     except ArgumentError as e:
         flash(e.message)
 

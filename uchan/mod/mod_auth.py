@@ -3,6 +3,7 @@ from flask import request, redirect, url_for, render_template, abort, flash
 from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, get_authed_moderator
+from uchan.lib.proxy_request import get_request_ip4_str
 from uchan.mod import mod
 from uchan.view import check_csrf_token
 
@@ -20,6 +21,7 @@ def mod_auth():
 
         if get_authed():
             if request.form.get('deauth') == 'yes':
+                g.mod_logger.info('{} logged out'.format(get_authed_moderator().username))
                 unset_mod_authed()
         else:
             username = request.form['username']
@@ -33,12 +35,15 @@ def mod_auth():
                 moderator = mod_service.find_moderator_username(username)
                 if not moderator:
                     flash('Invalid username or password')
+                    g.mod_logger.info('{} log in username failed'.format(get_request_ip4_str()))
                 else:
                     try:
                         mod_service.check_password(moderator, password)
                         set_mod_authed(moderator)
                         flash('Logged in')
+                        g.mod_logger.info('{} {} logged in'.format(moderator.username, get_request_ip4_str()))
                     except ArgumentError:
+                        g.mod_logger.info('{} {} log in password failed'.format(moderator.username, get_request_ip4_str()))
                         flash('Invalid username or password')
 
         return redirect(url_for('.mod_auth'))

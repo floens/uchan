@@ -109,11 +109,3 @@ class BanService:
                 ip_nums.append(n)
 
         return (ip_nums[0] << 24) + (ip_nums[1] << 16) + (ip_nums[2] << 8) + ip_nums[3]
-
-    def ip4_to_str(self, ip4):
-        outputs = []
-        for i in range(4):
-            n = (ip4 >> (3 - i) * 8) & 255
-            outputs.append(str(n))
-
-        return '.'.join(outputs)

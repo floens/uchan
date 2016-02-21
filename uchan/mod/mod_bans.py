@@ -3,7 +3,8 @@ from flask import render_template, abort, request, flash, redirect, url_for
 from uchan import g
 from uchan.lib import roles, ArgumentError
 from uchan.lib.models import Ban
-from uchan.lib.utils import now
+from uchan.lib.moderator_request import get_authed_moderator
+from uchan.lib.utils import now, ip4_to_str
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
 
@@ -23,7 +24,7 @@ def get_moderator_or_abort(moderator_id):
 def mod_bans():
     bans = g.ban_service.get_all_bans()
 
-    return render_template('mod_bans.html', bans=bans, ip4_to_str=g.ban_service.ip4_to_str)
+    return render_template('mod_bans.html', bans=bans, ip4_to_str=ip4_to_str)
 
 
 @mod.route('/mod_ban/add', methods=['POST'])
@@ -72,6 +73,9 @@ def mod_ban_add():
     try:
         g.ban_service.add_ban(ban)
         flash('Ban added')
+        moderator = get_authed_moderator()
+        g.mod_logger.info('{} added ban {} from {} to {} for {} hours reason: {}'.format(
+                moderator.username, ban.id, ip4_to_str(ip4), ip4_to_str(ip4_end) if ip4_end is not None else '-', ban_length, reason))
     except ArgumentError as e:
         flash(e.message)
 
@@ -92,5 +96,7 @@ def mod_ban_delete():
 
     g.ban_service.delete_ban(ban)
     flash('Ban deleted')
+    moderator = get_authed_moderator()
+    g.mod_logger.info('{} removed ban {}'.format(moderator.username, ban_id))
 
     return redirect(url_for('.mod_bans'))

@@ -9,7 +9,7 @@ from uchan.lib import roles
 from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.models import Post, Report, Thread, File
 from uchan.lib.tasks.post_task import ManagePostDetails
-from uchan.lib.utils import now
+from uchan.lib.utils import now, ip4_to_str
 
 
 class RequestBannedException(ArgumentError):
@@ -33,7 +33,7 @@ class PostsService:
     def handle_post_check(self, post_details):
         board, thread = self.get_board_thread(post_details)
 
-        if thread.locked:
+        if thread is not None and thread.locked:
             raise ArgumentError('Thread is locked')
 
         if g.ban_service.is_request_banned(post_details.ip4, board):
@@ -125,8 +125,9 @@ class PostsService:
             db.add(thread)
 
             self.on_post_created(post, board, board_config_cached)
+            g.mod_logger.info('{} made a new thread to /{}/'.format(ip4_to_str(post_details.ip4), board_name))
             db.commit()
-            g.posts_cache.invalidate_board_page_cache(board.name)
+            g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread.id)
 
             return board_name, thread.id, 1
@@ -145,6 +146,7 @@ class PostsService:
             to_thread.posts.append(post)
 
             self.on_post_created(post, board, board_config_cached)
+            g.mod_logger.info('{} made a new reply to /{}/{} #{}'.format(ip4_to_str(post_details.ip4), board_name, thread_id, post.refno))
             db.commit()
             g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread_id)
@@ -209,8 +211,10 @@ class PostsService:
             can_delete = (moderator is not None and g.moderator_service.can_delete(moderator, post)) or \
                          (details.password is not None and details.password == post.password)
             if can_delete:
+                g.mod_logger.info('{} deleted post {}'.format(moderator.username if moderator else ip4_to_str(details.ip4), post.id))
                 self.delete_post(post)
             else:
+                g.mod_logger.info('{} failed to deleted post with an invalid password {}'.format(ip4_to_str(details.ip4), post.id))
                 raise BadRequestError('Password invalid')
         elif details.mode == ManagePostDetails.REPORT:
             if post is None:
@@ -220,14 +224,19 @@ class PostsService:
                     raise BadRequestError('Post not found')
 
             report = Report(post_id=post.id)
+            g.mod_logger.info('{} reported post {}'.format(ip4_to_str(details.ip4), post.id))
             g.moderator_service.add_report(report)
         elif details.mode == ManagePostDetails.TOGGLE_STICKY:
             if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
+                g.mod_logger.info('{} {} sticky on /{}/{}'.format(
+                        moderator.username, 'disabled' if thread.sticky else 'enabled', thread.board.name, thread.id))
                 self.toggle_thread_sticky(thread)
             else:
                 raise BadRequestError()
         elif details.mode == ManagePostDetails.TOGGLE_LOCKED:
             if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
+                g.mod_logger.info('{} {} lock on /{}/{}'.format(
+                        moderator.username, 'disabled' if thread.locked else 'enabled', thread.board.name, thread.id))
                 self.toggle_thread_locked(thread)
             else:
                 raise BadRequestError()

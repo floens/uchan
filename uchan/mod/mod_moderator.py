@@ -3,6 +3,7 @@ from flask import request, redirect, url_for, render_template, abort, flash
 from uchan import g
 from uchan.lib import roles, ArgumentError
 from uchan.lib.models import Moderator
+from uchan.lib.moderator_request import get_authed_moderator
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
 
@@ -46,6 +47,7 @@ def mod_moderator_add():
     try:
         g.moderator_service.create_moderator(moderator, moderator_password)
         flash('Moderator added')
+        g.mod_logger.info('{} added moderator {}'.format(get_authed_moderator().username, moderator.username))
     except ArgumentError as e:
         flash(e.message)
 
@@ -58,8 +60,10 @@ def mod_moderator_add():
 def mod_moderator_delete():
     moderator = get_moderator_or_abort(request.form.get('moderator_id', type=int))
 
+    username = moderator.username
     g.moderator_service.delete_moderator(moderator)
     flash('Moderator deleted')
+    g.mod_logger.info('{} deleted moderator {}'.format(get_authed_moderator().username, username))
 
     return redirect(url_for('.mod_moderators'))
 
