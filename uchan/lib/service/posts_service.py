@@ -125,8 +125,8 @@ class PostsService:
             db.add(thread)
 
             self.on_post_created(post, board, board_config_cached)
-            g.mod_logger.info('{} made a new thread to /{}/'.format(ip4_to_str(post_details.ip4), board_name))
             db.commit()
+            g.mod_logger.info('{} made a new thread to /{}/{}'.format(ip4_to_str(post_details.ip4), board_name, thread.id))
             g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread.id)
 
