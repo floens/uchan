@@ -41,17 +41,11 @@ def mod_ban_add():
     if ip4_end_raw is not None and (len(ip4_end_raw) == 0 or len(ip4_end_raw) > 25):
         abort(400)
 
-    ban_length = request.form.get('ban_length', type=int)
-    if ban_length is None or ban_length < 0:
+    ban_length_hours = request.form.get('ban_length', type=int)
+    if ban_length_hours is None or ban_length_hours < 0:
         abort(400)
-    if ban_length > 24 * 31:
-        flash('Ban too long')
-        return redirect(url_for('.mod_bans'))
 
     reason = request.form['ban_reason']
-    if len(reason) > 250:
-        flash('Ban reason too long')
-        return redirect(url_for('.mod_bans'))
 
     try:
         ip4 = g.ban_service.parse_ip4(ip4_raw)
@@ -67,15 +61,14 @@ def mod_ban_add():
     if ip4_end is not None:
         ban.ip4_end = ip4_end
     ban.reason = reason
-    ban.date = now()
-    ban.length = ban_length * 60 * 60 * 1000
+    ban.length = ban_length_hours * 60 * 60 * 1000
 
     try:
         g.ban_service.add_ban(ban)
         flash('Ban added')
         moderator = get_authed_moderator()
         g.mod_logger.info('{} added ban {} from {} to {} for {} hours reason: {}'.format(
-                moderator.username, ban.id, ip4_to_str(ip4), ip4_to_str(ip4_end) if ip4_end is not None else '-', ban_length, reason))
+                moderator.username, ban.id, ip4_to_str(ip4), ip4_to_str(ip4_end) if ip4_end is not None else '-', ban_length_hours, reason))
     except ArgumentError as e:
         flash(e.message)
 

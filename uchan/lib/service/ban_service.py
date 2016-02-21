@@ -13,6 +13,8 @@ class BanService:
 
     NEW_THREAD_COOLDOWN = 600 * 1000
     NEW_POST_COOLDOWN = 60 * 1000
+    MAX_BAN_TIME = 24 * 31 * 60 * 60 * 1000
+    MAX_REASON_LENGTH = 250
 
     def __init__(self):
         pass
@@ -73,6 +75,18 @@ class BanService:
         return now() <= ban.date + ban.length
 
     def add_ban(self, ban):
+        if ban.length > self.MAX_BAN_TIME:
+            raise ArgumentError('Ban too long')
+
+        if ban.ip4_end is not None:
+            if ban.ip4_end <= ban.ip4:
+                raise ArgumentError('ip4 end must be bigger than ip4')
+
+        if ban.reason and len(ban.reason) > self.MAX_REASON_LENGTH:
+            raise ArgumentError('Ban reason text too long')
+
+        ban.date = now()
+
         db = get_db()
         db.add(ban)
         db.commit()

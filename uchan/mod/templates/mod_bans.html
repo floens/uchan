@@ -50,6 +50,7 @@
                 <th>to ip</th>
                 <th>from</th>
                 <th>until</th>
+                <th>reason</th>
                 <th></th>
             </tr>
             </thead>
@@ -66,6 +67,7 @@
                             Does not expire
                         {% endif %}
                     </td>
+                    <td>{{ ban.reason }}</td>
                     <td>
                         <button name="ban_id" value="{{ ban.id }}">Delete</button>
                     </td>
