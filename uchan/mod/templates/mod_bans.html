@@ -62,7 +62,12 @@
                     <td>{{ ban.date|ban_time }}</td>
                     <td>
                         {% if ban.length > 0 %}
-                            {{ (ban.date + ban.length)|ban_time }} - <b>{{ (ban.date + ban.length)|ban_remaining }} remaining</b>
+                            {{ (ban.date + ban.length)|ban_time }} -
+                            {% if (ban.date + ban.length) - now < 0 %}
+                                <b>Expired, not viewed</b>
+                            {% else %}
+                                <b>{{ (ban.date + ban.length)|ban_remaining }} remaining</b>
+                            {% endif %}
                         {% else %}
                             Does not expire
                         {% endif %}

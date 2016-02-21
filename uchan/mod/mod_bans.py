@@ -24,7 +24,8 @@ def get_moderator_or_abort(moderator_id):
 def mod_bans():
     bans = g.ban_service.get_all_bans()
 
-    return render_template('mod_bans.html', bans=bans, ip4_to_str=ip4_to_str)
+    n = now()
+    return render_template('mod_bans.html', bans=bans, ip4_to_str=ip4_to_str, now=n)
 
 
 @mod.route('/mod_ban/add', methods=['POST'])
