@@ -1,4 +1,4 @@
-from flask import render_template, abort, redirect, url_for
+from flask import render_template, abort
 
 from uchan import app
 from uchan import g

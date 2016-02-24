@@ -1,5 +1,3 @@
-from werkzeug.contrib.cache import SimpleCache
-
 from uchan import g
 from uchan.filter.app_filters import page_formatting
 from uchan.lib.cache import CacheDict, LocalCache
@@ -31,14 +29,14 @@ class PageCache:
         key = self.get_page_key(link_name)
 
         local_cached = self.local_cache.get(key)
-        if local_cached:
+        if local_cached is not None:
             return local_cached
 
         page_cache = self.cache.get(key, True)
         if page_cache is None:
             page_cache = self.invalidate_page_cache(link_name)
 
-        if page_cache:
+        if page_cache is not None:
             self.local_cache.set(key, page_cache)
 
         return page_cache
@@ -58,14 +56,14 @@ class PageCache:
         key = self.get_pages_type_key(page_type)
 
         local_cached = self.local_cache.get(key)
-        if local_cached:
+        if local_cached is not None:
             return local_cached
 
         pages_cache = self.cache.get(key, True)
         if not pages_cache:
             pages_cache = self.invalidate_pages_with_type(page_type)
 
-        if pages_cache:
+        if pages_cache is not None:
             self.local_cache.set(key, pages_cache)
 
         return pages_cache

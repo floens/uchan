@@ -1,5 +1,5 @@
 from uchan import g
-from uchan.lib.cache import CacheDict
+from uchan.lib.cache import CacheDict, LocalCache
 
 
 class AllBoardsCacheProxy(CacheDict):
@@ -30,9 +30,15 @@ class BoardCache:
 
     def __init__(self, cache):
         self.cache = cache
+        self.local_cache = LocalCache()
 
     def find_board_config_cached(self, board_name):
         key = self.get_board_config_key(board_name)
+
+        local_cached = self.local_cache.get(key)
+        if local_cached is not None:
+            return local_cached
+
         board_config_cache = self.cache.get(key, True)
         if board_config_cache is None:
             board = g.board_service.find_board(board_name)
@@ -42,6 +48,10 @@ class BoardCache:
             config = g.config_service.load_config_dict(board.config)
             board_config_cache = BoardConfigCacheProxy(config).convert()
             self.cache.set(key, board_config_cache)
+
+        if board_config_cache is not None:
+            self.local_cache.set(key, board_config_cache)
+
         return board_config_cache
 
     def get_board_config_key(self, board_name):
@@ -52,11 +62,20 @@ class BoardCache:
 
     def all_boards(self):
         key = 'all_boards'
+
+        local_cached = self.local_cache.get(key)
+        if local_cached is not None:
+            return local_cached
+
         all_boards_cache = self.cache.get(key, True)
         if not all_boards_cache:
             all_boards = g.board_service.get_all_boards()
             all_boards_cache = AllBoardsCacheProxy([BoardCacheProxy(i).convert() for i in all_boards]).convert()
             self.cache.set(key, all_boards_cache, timeout=3600)
+
+        if all_boards_cache is not None:
+            self.local_cache.set(key, all_boards_cache)
+
         return all_boards_cache
 
     def invalidate_all_boards(self):
