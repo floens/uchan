@@ -49,7 +49,7 @@ class PageCache:
         if not page:
             return None
         page_cache = PageCacheProxy(page)
-        self.cache.set(self.get_page_key(link_name), page_cache)
+        self.cache.set(self.get_page_key(link_name), page_cache, timeout=0)
         return page_cache
 
     def find_pages_for_type_cached(self, page_type):
@@ -76,5 +76,5 @@ class PageCache:
         if pages is None:
             return None
         pages_cache = PagesCacheProxy(pages)
-        self.cache.set(self.get_pages_type_key(page_type), pages_cache)
+        self.cache.set(self.get_pages_type_key(page_type), pages_cache, timeout=0)
         return pages_cache

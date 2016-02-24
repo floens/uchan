@@ -71,7 +71,7 @@ class BoardCache:
         if not all_boards_cache:
             all_boards = g.board_service.get_all_boards()
             all_boards_cache = AllBoardsCacheProxy([BoardCacheProxy(i).convert() for i in all_boards]).convert()
-            self.cache.set(key, all_boards_cache, timeout=3600)
+            self.cache.set(key, all_boards_cache, timeout=0)
 
         if all_boards_cache is not None:
             self.local_cache.set(key, all_boards_cache)
