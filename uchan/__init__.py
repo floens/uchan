@@ -5,7 +5,6 @@ from werkzeug.contrib.fixers import ProxyFix
 
 import config
 from uchan.database import clean_up
-from uchan.web import CustomSessionInterface
 
 
 class Globals():
@@ -112,6 +111,7 @@ def create_web_app(app, cache):
         return render_template('error.html', message=bad_request(error)), 400
 
     # Setup session handling
+    from uchan.web import CustomSessionInterface
     app.session_interface = CustomSessionInterface(cache)
 
     return app
