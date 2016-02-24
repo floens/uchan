@@ -6,7 +6,7 @@ from uchan import g
 
 @app.route('/page/<link_name>/')
 def view_page(link_name):
-    page = g.page_service.get_page_for_link_name(link_name)
+    page = g.page_cache.find_page_cached(link_name)
     if not page:
         abort(404)
 

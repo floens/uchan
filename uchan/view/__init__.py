@@ -19,7 +19,8 @@ def inject_variables():
     if site_config_cached.boards_top:
         all_boards = g.board_cache.all_boards()
 
-    footer_pages = g.page_service.get_pages_for_type(PageService.TYPE_FOOTER_PAGE)
+    footer_pages_cached = g.page_cache.find_pages_for_type_cached(PageService.TYPE_FOOTER_PAGE)
+    footer_pages = footer_pages_cached.pages if footer_pages_cached else []
 
     return dict(all_boards=all_boards, site_config=site_config_cached, footer_pages=footer_pages)
 

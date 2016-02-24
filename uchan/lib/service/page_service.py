@@ -2,6 +2,8 @@ import string
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
+
+from uchan import g
 from uchan.database import get_db
 from uchan.lib import ArgumentError
 from uchan.lib.models import Page
@@ -11,15 +13,15 @@ class PageService:
     TYPE_FRONT_PAGE = 'front_page'
     TYPE_FOOTER_PAGE = 'footer_page'
 
-    TYPES = [TYPE_FRONT_PAGE, TYPE_FOOTER_PAGE]
+    TYPES = [TYPE_FOOTER_PAGE, TYPE_FRONT_PAGE]
 
     TITLE_MAX_LENGTH = 20
     CONTENT_MAX_LENGTH = 10000
     LINK_NAME_MAX_LENGTH = 20
     LINK_NAME_ALLOWED_CHARS = string.ascii_letters + string.digits + '_'
 
-    def __init__(self, cache):
-        self.cache = cache
+    def __init__(self):
+        pass
 
     def check_title_validity(self, title):
         if not 0 < len(title) <= self.TITLE_MAX_LENGTH:
@@ -86,10 +88,15 @@ class PageService:
             db.rollback()
             raise ArgumentError('Duplicate link name')
 
+        g.page_cache.invalidate_pages_with_type(page.type)
+
     def delete_page(self, page):
         db = get_db()
         db.delete(page)
         db.commit()
+
+        g.page_cache.invalidate_page_cache(page.link_name)
+        g.page_cache.invalidate_pages_with_type(page.type)
 
     def update_page(self, page):
         db = get_db()
@@ -105,6 +112,9 @@ class PageService:
 
         db.merge(page)
         db.commit()
+
+        g.page_cache.invalidate_page_cache(page.link_name)
+        g.page_cache.invalidate_pages_with_type(page.type)
 
     def find_page_id(self, id):
         db = get_db()

@@ -20,8 +20,8 @@ class ModeratorService:
     PASSWORD_MAX_LENGTH = 50
     PASSWORD_ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation + '_'
 
-    def __init__(self, cache):
-        self.cache = cache
+    def __init__(self):
+        pass
 
     def add_report(self, report):
         db = get_db()

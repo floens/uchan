@@ -19,6 +19,7 @@ class Globals():
         self.posts_cache = None
         self.board_cache = None
         self.site_cache = None
+        self.page_cache = None
         self.posts_service = None
         self.board_service = None
         self.moderator_service = None
@@ -77,7 +78,7 @@ def setup_logger(globals):
     globals.mod_logger.setLevel(logging.INFO)
 
 
-def create_web_app(app, cache):
+def create_web_app(app):
     if config.USE_PROXY_FIXER:
         app.wsgi_app = ProxyFix(app.wsgi_app, config.PROXY_FIXER_NUM_PROXIES)
 
@@ -110,10 +111,6 @@ def create_web_app(app, cache):
     def bad_request_handler(error):
         return render_template('error.html', message=bad_request(error)), 400
 
-    # Setup session handling
-    from uchan.web import CustomSessionInterface
-    app.session_interface = CustomSessionInterface(cache)
-
     return app
 
 
@@ -127,9 +124,6 @@ def init():
     global g, app, celery
     assert isinstance(g, Globals)
 
-    from uchan.lib.cache import CacheWrapper
-    g.cache = CacheWrapper(servers=config.MEMCACHED_SERVERS)
-
     import uchan.database as database
     g.database = database
     database.init_db()
@@ -139,8 +133,16 @@ def init():
 
     # Import it here so that the templates resolve correctly
     app = g.app = CustomFlaskApp(__name__)
-    create_web_app(g.app, g.cache)
+    create_web_app(g.app)
+
     database.register_teardown(g.app)
+
+    from uchan.lib.cache import CacheWrapper
+    g.cache = CacheWrapper(servers=config.MEMCACHED_SERVERS)
+
+    # Setup session handling
+    from uchan.web import CustomSessionInterface
+    app.session_interface = CustomSessionInterface(g.cache)
 
     # Import views here
     import uchan.view.index
@@ -174,7 +176,7 @@ def init():
     g.board_service = BoardService()
 
     from uchan.lib.service import ModeratorService
-    g.moderator_service = ModeratorService(g.cache)
+    g.moderator_service = ModeratorService()
 
     from uchan.lib.service import ConfigService
     g.config_service = ConfigService()
@@ -195,7 +197,9 @@ def init():
     g.ban_service = BanService()
 
     from uchan.lib.service import PageService
-    g.page_service = PageService(g.cache)
+    from uchan.lib.cache import PageCache
+    g.page_service = PageService()
+    g.page_cache = PageCache(g.cache)
 
 
 init()

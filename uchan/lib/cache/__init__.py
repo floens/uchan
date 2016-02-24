@@ -4,6 +4,7 @@ from time import time
 from werkzeug.contrib.cache import MemcachedCache
 
 import config
+from uchan.lib.utils import now
 
 
 def make_attr_dict(value):
@@ -68,6 +69,29 @@ class CacheDict(dict):
         return make_attr_dict(self)
 
 
+class LocalCache:
+    """
+    Super simple local cache with no pruning based on a dict.
+    Don't do anything special.
+    """
+
+    def __init__(self):
+        self.items = {}
+
+    def set(self, key, value, timeout=15000):
+        self.items[key] = (now() + timeout, value)
+
+    def get(self, key):
+        try:
+            expires, item = self.items[key]
+            if now() < expires:
+                return item
+        except KeyError:
+            pass
+        return None
+
+
 from uchan.lib.cache.board_cache import BoardCache
 from uchan.lib.cache.posts_cache import PostsCache
 from uchan.lib.cache.site_cache import SiteCache
+from uchan.lib.cache.page_cache import PageCache
