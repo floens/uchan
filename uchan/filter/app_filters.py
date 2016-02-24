@@ -2,9 +2,8 @@ import time
 from datetime import timedelta
 
 from markupsafe import Markup, escape
-
 from uchan import app
-from uchan.filter.post_parser import parse_post
+from uchan.filter.text_parser import parse_text
 from uchan.lib.utils import now
 
 
@@ -33,7 +32,12 @@ def ban_remaining(t):
     days = remaining // day_ms
     hours = (remaining - (days * day_ms)) // (timedelta(hours=1).total_seconds() * 1000)
 
-    return ('{} day{} and '.format(int(days), '' if days == 1 else '') if days > 0 else '') + '{} hour{}'.format(int(hours + 1), '' if hours == 1 else '')
+    text = ''
+    if days > 0:
+        text += '{} day{} and '.format(int(days), '' if days == 1 else 's')
+    hours_rounded = int(hours + 1)
+    text += '{} hour{}'.format(hours_rounded, '' if hours_rounded == 1 else 's')
+    return text
 
 
 @app.template_filter()
@@ -46,8 +50,13 @@ def keep_newlines(raw):
 
 
 @app.template_filter()
+def page_formatting(text):
+    return parse_text(text, linkify=True)
+
+
+@app.template_filter()
 def post_text(text):
-    return parse_post(text)
+    return parse_text(text)
 
 
 @app.template_filter()

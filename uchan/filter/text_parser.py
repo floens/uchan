@@ -5,7 +5,7 @@ from markupsafe import escape, Markup
 POST_REFNO_PATTERN = re.compile('&gt;&gt;(\\d{1,16})')
 
 
-def parse_post(raw):
+def parse_text(raw, linkify=False):
     # Any html chars are now replaced with their escaped version
     # e.g. > became &gt;
     # keep this in mind when parsing
@@ -17,7 +17,7 @@ def parse_post(raw):
         if line:
             was_empty_line = False
 
-            lines.append(parse_post_line(line))
+            lines.append(parse_text_line(line, linkify))
         else:
             # Allow one empty line at max
             if not was_empty_line:
@@ -26,7 +26,7 @@ def parse_post(raw):
 
     value = ''.join(lines)
 
-    value = parse_post_whole(value)
+    value = parse_text_whole(value)
 
     # Mark as safe html
     return Markup(value)
@@ -43,8 +43,10 @@ STRONG2_RE = re.compile(r'(__)(.+?(?=__))(__)', re.S)
 EMPHASIS_RE = re.compile(r'(\*)([^\*]+)(\*)', re.S)
 EMPHASIS2_RE = re.compile(r'(_)([^_]+)(_)', re.S)
 
+LINK_RE = re.compile(r'\[([^\]]+)\]\(([^\)]+)\)', re.S)
 
-def parse_post_whole(text):
+
+def parse_text_whole(text):
     if '[code]' in text:
         text = CODE_RE.sub('<code>\\2</code>', text)
 
@@ -54,7 +56,7 @@ def parse_post_whole(text):
     return text
 
 
-def parse_post_line(line):
+def parse_text_line(line, linkify):
     with_break = True
 
     line = STRONG_RE.sub('<b>\\2</b>', line)
@@ -79,6 +81,10 @@ def parse_post_line(line):
 
     # Replace any >>123 with <a href="#p123">&gt;&gt;123</a>
     line = POST_REFNO_PATTERN.sub('<a href="#p\\1">&gt;&gt;\\1</a>', line)
+
+    if linkify:
+        # Replace [text](links)
+        line = LINK_RE.sub('<a href="\\2">\\1</a>', line)
 
     if with_break:
         line += '<br>'

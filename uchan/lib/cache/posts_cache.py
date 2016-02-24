@@ -1,5 +1,5 @@
 from uchan import g
-from uchan.filter.post_parser import parse_post
+from uchan.filter.text_parser import parse_text
 
 from uchan.lib.cache import CacheDict
 
@@ -40,7 +40,7 @@ class PostCacheProxy(CacheDict):
         self.name = post.name
         self.subject = post.subject
         self.text = post.text
-        self.html = parse_post(post.text)
+        self.html = parse_text(post.text)
         self.refno = post.refno
 
         self.has_file = post.file is not None
