@@ -22,7 +22,6 @@ class SiteConfig(DynamicConfig):
     def __init__(self):
         super().__init__()
 
-        self.configs.append(DynamicConfigItem('index_text', 'Index text', 'Welcome!', str, maximum=1000))
         self.configs.append(DynamicConfigItem('motd', 'MOTD', '', str, maximum=500))
         self.configs.append(DynamicConfigItem('footer_text', 'Footer text', 'Page served by µchan', str, maximum=100))
         self.configs.append(DynamicConfigItem('boards_top', 'Show board list at top', True, bool))
