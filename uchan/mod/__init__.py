@@ -47,6 +47,7 @@ def inject_variables():
             mod_links.append(('memcache stats', url_for('.mod_memcache_stat')))
             mod_links.append(('mod moderators', url_for('.mod_moderators')))
             mod_links.append(('mod boards', url_for('.mod_boards')))
+            mod_links.append(('mod pages', url_for('.mod_pages')))
             mod_links.append(('mod site', url_for('.mod_site')))
 
         return dict(mod_links=mod_links)
@@ -61,3 +62,4 @@ import uchan.mod.mod_board
 import uchan.mod.mod_moderator
 import uchan.mod.mod_site
 import uchan.mod.mod_bans
+import uchan.mod.mod_page

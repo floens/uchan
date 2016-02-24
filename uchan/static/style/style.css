@@ -102,30 +102,30 @@ body {
 .post .header .date {
 }
 
-.post .text {
+.styled-text {
     padding: 0.3em 0 0.3em 0;
     word-wrap: break-word;
 }
 
-.post .text .quote {
+.styled-text .quote {
     color: #789922;
 }
 
-.post .text .spoiler {
+.styled-text .spoiler {
     background-color: black;
     color: #000;
     text-decoration: none;
 }
 
-.post .text .spoiler:hover {
+.styled-text .spoiler:hover {
     color: #fff;
 }
 
-.post .text h3 {
+.styled-text h3, .styled-text h2, .styled-text h1 {
     margin: 0.5em 0 0.5em 0;
 }
 
-.post .text .red {
+.styled-text .red {
     color: #ff0000;
 }
 
@@ -141,6 +141,10 @@ body {
     color: #5a5a5a;
 }
 
+.footer-pages {
+    font-size: 13px;
+}
+
 .message {
     border: 1px solid #B1B1B1;
     background-color: #fff4e2;
@@ -149,6 +153,10 @@ body {
     padding: 20px;
 }
 
-.message h2 {
+.message h3, .message h2, .message h1 {
     margin-top: 0;
+}
+
+.page {
+
 }

@@ -51,6 +51,15 @@
     {% block content %}{% endblock %}
 
     <div class="footer">
+        <div class="footer-pages">
+            {% for footer_page in footer_pages %}
+                <a href="{{ url_for('view_page', link_name=footer_page.link_name) }}">{{ footer_page.title }}</a>
+                {% if not loop.last %}
+                    &bull;
+                {% endif %}
+            {% endfor %}
+        </div>
+        <br>
         {{ site_config.footer_text|page_formatting }}
     </div>
 </div>

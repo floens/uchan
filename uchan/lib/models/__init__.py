@@ -29,3 +29,4 @@ from .session import Session
 from .thread import Thread
 from .file import File
 from .ban import Ban
+from .page import Page

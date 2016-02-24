@@ -27,7 +27,7 @@
                 File: <a href="{{ post_item.file_location }}">{{ post_item.file_name }}</a> {{ '(' ~ post_item.file_size|filesizeformat ~ ', ' ~ post_item.file_width ~ 'x' ~ post_item.file_height ~ ')' }}
             {% endif %}
         </div>
-        <div class="text">
+        <div class="styled-text">
             {# Render both the cached version and the model #}
             {% if post_item.html %}
                 {{ post_item.html|safe }}

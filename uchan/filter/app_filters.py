@@ -51,7 +51,7 @@ def keep_newlines(raw):
 
 @app.template_filter()
 def page_formatting(text):
-    return parse_text(text, linkify=True)
+    return parse_text(text, linkify=True, bigheaders=True)
 
 
 @app.template_filter()

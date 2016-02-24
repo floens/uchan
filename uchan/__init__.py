@@ -26,6 +26,7 @@ class Globals():
         self.config_service = None
         self.file_service = None
         self.ban_service = None
+        self.page_service = None
 
 
 g = Globals()
@@ -147,6 +148,7 @@ def init():
     import uchan.view.post
     import uchan.view.thread
     import uchan.view.banned
+    import uchan.view.page
 
     # Import jinja filters
     import uchan.filter.app_filters
@@ -191,6 +193,9 @@ def init():
 
     from uchan.lib.service import BanService
     g.ban_service = BanService()
+
+    from uchan.lib.service import PageService
+    g.page_service = PageService(g.cache)
 
 
 init()

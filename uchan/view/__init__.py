@@ -8,6 +8,7 @@ from markupsafe import escape, Markup
 
 import config
 from uchan import g, app
+from uchan.lib.service import PageService
 
 
 @app.context_processor
@@ -18,7 +19,9 @@ def inject_variables():
     if site_config_cached.boards_top:
         all_boards = g.board_cache.all_boards()
 
-    return dict(all_boards=all_boards, site_config=site_config_cached)
+    footer_pages = g.page_service.get_pages_for_type(PageService.TYPE_FOOTER_PAGE)
+
+    return dict(all_boards=all_boards, site_config=site_config_cached, footer_pages=footer_pages)
 
 
 @app.route('/favicon.ico')

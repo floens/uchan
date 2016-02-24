@@ -5,7 +5,7 @@ from markupsafe import escape, Markup
 POST_REFNO_PATTERN = re.compile('&gt;&gt;(\\d{1,16})')
 
 
-def parse_text(raw, linkify=False):
+def parse_text(raw, linkify=False, bigheaders=False):
     # Any html chars are now replaced with their escaped version
     # e.g. > became &gt;
     # keep this in mind when parsing
@@ -17,7 +17,7 @@ def parse_text(raw, linkify=False):
         if line:
             was_empty_line = False
 
-            lines.append(parse_text_line(line, linkify))
+            lines.append(parse_text_line(line, linkify, bigheaders))
         else:
             # Allow one empty line at max
             if not was_empty_line:
@@ -56,7 +56,7 @@ def parse_text_whole(text):
     return text
 
 
-def parse_text_line(line, linkify):
+def parse_text_line(line, linkify, bigheaders):
     with_break = True
 
     line = STRONG_RE.sub('<b>\\2</b>', line)
@@ -74,6 +74,15 @@ def parse_text_line(line, linkify):
     if line.startswith('## '):
         with_break = False
         line = '<h3 class="red"> ' + line[3:] + '</h3>'
+
+    if bigheaders:
+        if line.startswith('### '):
+            with_break = False
+            line = '<h2> ' + line[4:] + '</h2>'
+
+        if line.startswith('#### '):
+            with_break = False
+            line = '<h1> ' + line[5:] + '</h1>'
 
     # If the line started with a > wrap the line around a quote span
     if line.startswith('&gt;'):

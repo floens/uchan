@@ -1,0 +1,45 @@
+{% extends "mod_base.html" %}
+
+{% block title %}Modify page{% endblock %}
+
+{% block content %}
+    <h2>Modify page</h2>
+
+    [<a href="{{ url_for('.mod_pages') }}">Back</a>]
+
+    <hr class="content-divider">
+
+    <form action="{{ url_for('.mod_page_update', page_id=page.id) }}" method="POST">
+        <fieldset>
+            <legend>Update page</legend>
+            {{ csrf_html() }}
+
+            <label>Title<br>
+                <input type="text" name="page_title" value="{{ page.title }}">
+            </label>
+            <br>
+
+            <label>Order
+                <small>Non-negative number to order the pages by</small>
+                <br>
+                <input type="text" name="page_order" value="{{ page.order }}">
+            </label>
+            <br>
+
+            <label>Content<br>
+                <textarea name="page_content" cols="60" rows="10">{{ page.content }}</textarea><br>
+            </label>
+            <br>
+
+            <input type="submit" value="Update">
+        </fieldset>
+    </form>
+
+    <hr class="content-divider">
+
+    <form action="{{ url_for('.mod_page_delete') }}" method="POST">
+        {{ csrf_html() }}
+        <button name="page_id" value="{{ page.id }}">Delete page</button>
+    </form>
+
+{% endblock %}
