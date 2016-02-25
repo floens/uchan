@@ -3,7 +3,7 @@ from sqlalchemy import Integer
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
-from uchan.database import ModelBase
+from uchan.lib.database import ModelBase
 from uchan.lib.models import MutableList
 
 

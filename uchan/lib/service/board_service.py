@@ -3,11 +3,10 @@ import string
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import lazyload
 from sqlalchemy.orm.exc import NoResultFound
-
 from uchan import g
-from uchan.database import get_db
 from uchan.lib import ArgumentError
 from uchan.lib.configs import BoardConfig
+from uchan.lib.database import get_db
 from uchan.lib.models import Board
 
 

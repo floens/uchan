@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, String
 
-from uchan.database import ModelBase
+from uchan.lib.database import ModelBase
 
 
 class File(ModelBase):

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 
-from uchan.database import ModelBase
+from uchan.lib.database import ModelBase
 
 
 class Page(ModelBase):

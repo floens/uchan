@@ -1,12 +1,11 @@
+import config
 from sqlalchemy.orm import lazyload
 from sqlalchemy.orm.exc import NoResultFound
-
-import config
 from uchan import g
-from uchan.database import get_db
 from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib import roles
 from uchan.lib.crypt_code_compat import generate_crypt_code
+from uchan.lib.database import get_db
 from uchan.lib.models import Post, Report, Thread, File
 from uchan.lib.tasks.post_task import ManagePostDetails
 from uchan.lib.utils import now, ip4_to_str

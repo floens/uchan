@@ -4,10 +4,9 @@ import bcrypt
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
-
-from uchan.database import get_db
 from uchan.lib import ArgumentError
 from uchan.lib import roles
+from uchan.lib.database import get_db
 from uchan.lib.models import Moderator, Report, Post, Thread, Board
 from uchan.lib.models.board import board_moderator_table
 from uchan.lib.utils import now

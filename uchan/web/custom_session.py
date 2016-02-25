@@ -4,12 +4,11 @@ from uuid import uuid4
 
 from flask.sessions import SessionInterface, SessionMixin
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.datastructures import CallbackDict
-
-from uchan.database import get_db
 from uchan.lib.cache import CacheDict
+from uchan.lib.database import get_db
 from uchan.lib.models import Session
 from uchan.lib.utils import now
+from werkzeug.datastructures import CallbackDict
 
 
 class CustomSession(CallbackDict, SessionMixin):

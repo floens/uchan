@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, ForeignKey, BigInteger
 
-from uchan.database import ModelBase
+from uchan.lib.database import ModelBase
 
 
 class Report(ModelBase):

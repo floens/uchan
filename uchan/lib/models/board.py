@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Table, ForeignKey
 from sqlalchemy.orm import relationship
 
-from uchan.database import ModelBase
+from uchan.lib.database import ModelBase
 
 board_moderator_table = Table(
         'boardmoderator',

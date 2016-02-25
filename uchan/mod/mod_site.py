@@ -1,9 +1,8 @@
 from flask import request, render_template, abort, flash, redirect, url_for, session
-
 from uchan import g, app
-from uchan.database import get_db
 from uchan.lib import roles, ArgumentError
 from uchan.lib.configs import SiteConfig
+from uchan.lib.database import get_db
 from uchan.lib.models import Board, Post, Thread, Session, Ban, Report, Moderator, File, Config
 from uchan.lib.proxy_request import get_request_ip4_str
 from uchan.mod import mod, mod_role_restrict

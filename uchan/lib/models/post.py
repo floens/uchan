@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, BigInteger, ForeignKey
 from sqlalchemy.orm import relationship
 
-from uchan.database import ModelBase
+from uchan.lib.database import ModelBase
 
 
 class Post(ModelBase):

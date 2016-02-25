@@ -2,7 +2,7 @@ from getpass import getpass
 
 
 def init_models():
-    from uchan import database
+    from uchan.lib import database
 
     database.metadata_create_all()
 

@@ -1,8 +1,7 @@
 from sqlalchemy.orm.exc import NoResultFound
-
 from uchan import g
-from uchan.database import get_db
 from uchan.lib import ArgumentError
+from uchan.lib.database import get_db
 from uchan.lib.models import Ban, Post
 from uchan.lib.proxy_request import get_request_ip4_str
 from uchan.lib.utils import now
