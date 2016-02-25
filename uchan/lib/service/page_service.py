@@ -57,10 +57,6 @@ class PageService:
         db = get_db()
         return db.query(Page).filter_by(type=type).order_by(Page.order).all()
 
-    def get_page_for_type(self, type):
-        pages = self.get_pages_for_type(type)
-        return pages[0] if pages else None
-
     def get_page_for_link_name(self, link_name):
         db = get_db()
 
