@@ -13,20 +13,13 @@ def init_models():
     if g.config_service.get_config_by_type(SiteConfig.TYPE) is None:
         g.config_service.save_config(SiteConfig(), None)
 
-    from uchan.lib.models import Board
-    b_board = g.board_service.find_board('a')
-    if not b_board:
-        a_board = Board()
-        a_board.name = 'a'
-        g.board_service.add_board(a_board)
-
     from uchan.lib import roles
     from uchan.lib.models import Moderator
 
     print('Creating a new moderator')
     username = input('username: ')
 
-    existing_moderator = g.moderator_service.find_moderator_username('admin')
+    existing_moderator = g.moderator_service.find_moderator_username(username)
     if not existing_moderator:
         moderator = Moderator()
         moderator.roles = [roles.ROLE_ADMIN]
