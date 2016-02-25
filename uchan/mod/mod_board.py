@@ -2,6 +2,7 @@ from flask import request, redirect, url_for, render_template, abort, flash
 
 from uchan import g
 from uchan.lib import roles, ArgumentError
+from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Board
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import check_csrf_token, with_token
@@ -41,6 +42,7 @@ def mod_board_add():
     try:
         g.board_service.add_board(board)
         flash('Board added')
+        mod_log('add board /{}/'.format(board_name))
     except ArgumentError as e:
         flash(e.message)
 
@@ -53,8 +55,12 @@ def mod_board_add():
 def mod_board_delete():
     board = get_board_or_abort(request.form['board_name'])
 
-    g.board_service.delete_board(board)
-    flash('Board deleted')
+    try:
+        g.board_service.delete_board(board)
+        flash('Board deleted')
+        mod_log('delete board /{}/'.format(board.name))
+    except ArgumentError as e:
+        flash(e.message)
 
     return redirect(url_for('.mod_boards'))
 
@@ -78,6 +84,7 @@ def mod_board(board_name):
         try:
             g.config_service.save_from_form(board_config, board_config_row, form)
             flash('Board config updated')
+            mod_log('board /{}/ config updated'.format(board_name))
             g.board_cache.invalidate_board_config(board_name)
         except ArgumentError as e:
             flash(str(e))

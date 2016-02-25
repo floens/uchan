@@ -130,6 +130,9 @@ class ModeratorService:
         if not self.role_exists(role):
             raise ArgumentError('Invalid role')
 
+        if self.has_role(moderator, role):
+            raise ArgumentError('Role already added')
+
         moderator.roles.append(role)
 
         db = get_db()

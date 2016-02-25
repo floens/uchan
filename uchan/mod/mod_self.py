@@ -2,6 +2,7 @@ from flask import render_template, request, flash, redirect, url_for
 
 from uchan import g
 from uchan.lib import ArgumentError
+from uchan.lib.mod_log import mod_log
 from uchan.lib.moderator_request import get_authed_moderator
 from uchan.mod import mod
 from uchan.view import with_token
@@ -29,7 +30,7 @@ def mod_self_password():
     try:
         g.moderator_service.change_password(moderator, old_password, new_password)
         flash('Changed password')
-        g.mod_logger.info('{} changed their password'.format(moderator.username))
+        mod_log('password changed')
     except ArgumentError as e:
         flash(e.message)
 

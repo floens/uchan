@@ -3,6 +3,7 @@ from uchan import g, app
 from uchan.lib import roles, ArgumentError
 from uchan.lib.configs import SiteConfig
 from uchan.lib.database import get_db
+from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Board, Post, Thread, Session, Ban, Report, Moderator, File, Config
 from uchan.lib.proxy_request import get_request_ip4_str
 from uchan.mod import mod, mod_role_restrict
@@ -20,7 +21,8 @@ def mod_site():
 
         current_ip4_str = get_request_ip4_str()
 
-        return render_template('mod_site.html', site_config_config=site_config, session_count=session_count, current_ip4_str=current_ip4_str)
+        return render_template('mod_site.html', site_config_config=site_config, session_count=session_count,
+                               current_ip4_str=current_ip4_str)
     else:
         form = request.form
 
@@ -30,6 +32,7 @@ def mod_site():
         try:
             g.config_service.save_from_form(site_config, site_config_row, form, 'mod_site_')
             flash('Site config updated')
+            mod_log('site config updated')
             g.site_cache.invalidate_site_config()
         except ArgumentError as e:
             flash(str(e))
@@ -41,6 +44,7 @@ def mod_site():
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
 def reset_sessions():
+    mod_log('reset sessions')
     app.reset_sessions(get_db(), [session.session_id])
     return redirect(url_for('.mod_site'))
 

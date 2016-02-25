@@ -2,6 +2,7 @@ from flask import request, redirect, url_for, render_template, abort, flash
 
 from uchan import g
 from uchan.lib import roles, ArgumentError
+from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Page
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
@@ -44,6 +45,7 @@ def mod_page_add():
     try:
         g.page_service.create_page(page)
         flash('Page added')
+        mod_log('page {} added'.format(page_link_name))
     except ArgumentError as e:
         flash(e.message)
 
@@ -58,6 +60,7 @@ def mod_page_delete():
 
     g.page_service.delete_page(page)
     flash('Page deleted')
+    mod_log('page {} deleted'.format(page.link_name))
 
     return redirect(url_for('.mod_pages'))
 
@@ -83,6 +86,7 @@ def mod_page_update(page_id):
     try:
         g.page_service.update_page(page)
         flash('Page updated')
+        mod_log('page {} updated'.format(page.link_name))
     except ArgumentError as e:
         flash(e.message)
 

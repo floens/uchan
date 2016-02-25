@@ -2,6 +2,7 @@ from flask import request, redirect, url_for, render_template, abort, flash
 
 from uchan import g
 from uchan.lib import roles, ArgumentError
+from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Moderator
 from uchan.lib.moderator_request import get_authed_moderator, unset_mod_authed
 from uchan.mod import mod, mod_role_restrict
@@ -47,7 +48,7 @@ def mod_moderator_add():
     try:
         g.moderator_service.create_moderator(moderator, moderator_password)
         flash('Moderator added')
-        g.mod_logger.info('{} added moderator {}'.format(get_authed_moderator().username, moderator.username))
+        mod_log('moderator add {} username {}'.format(moderator.id, moderator.username))
     except ArgumentError as e:
         flash(e.message)
 
@@ -68,7 +69,7 @@ def mod_moderator_delete():
     if self_delete:
         unset_mod_authed()
     flash('Moderator deleted')
-    g.mod_logger.info('{} deleted moderator {}'.format(authed_moderator.username, username))
+    mod_log('moderator delete username {}'.format(username), moderator_name=authed_moderator.username)
 
     if self_delete:
         return redirect(url_for('.mod_auth'))
@@ -99,6 +100,7 @@ def mod_moderator_board_add(moderator_id):
     else:
         g.board_service.board_add_moderator(board, moderator)
         flash('Board added to moderator')
+        mod_log('add board to {} /{}/'.format(moderator.username, board_name))
 
     return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
 
@@ -116,6 +118,7 @@ def mod_moderator_board_remove(moderator_id):
     else:
         g.board_service.board_remove_moderator(board, moderator)
         flash('Board removed from moderator')
+        mod_log('remove board from {} /{}/'.format(moderator.username, board_name))
 
     return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
 
@@ -135,6 +138,7 @@ def mod_moderator_password(moderator_id):
     try:
         g.moderator_service.change_password_admin(moderator, new_password)
         flash('Changed password')
+        mod_log('changed password for {}'.format(moderator.username))
     except ArgumentError as e:
         flash(e.message)
 
@@ -154,6 +158,8 @@ def mod_moderator_role_add(moderator_id):
     else:
         try:
             g.moderator_service.add_role(moderator, role)
+            flash('Role added')
+            mod_log('add role {} to {}'.format(role, moderator.username))
         except ArgumentError as e:
             flash(e.message)
 
@@ -173,6 +179,8 @@ def mod_moderator_role_remove(moderator_id):
     else:
         try:
             g.moderator_service.remove_role(moderator, role)
+            flash('Role removed')
+            mod_log('remove role {} from {}'.format(role, moderator.username))
         except ArgumentError as e:
             flash(e.message)
 

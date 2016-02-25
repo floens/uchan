@@ -79,7 +79,7 @@ class CustomSessionInterface(SessionInterface):
                 # if it did contain items, delete it from the db and cookie
                 # there's no point deleting a cookie when it was never saved on the client or on the server
                 if not session.new and session.modified:
-                    self.delete_session(session)
+                    self.delete_session(session.session_id)
                     self.delete_cookie(app, session, response)
             # If it was modified and not empty now
             elif self.should_set_cookie(app, session):
@@ -134,13 +134,13 @@ class CustomSessionInterface(SessionInterface):
     def store_session_cache(self, session):
         self.cache.set(self.prefix + session.session_id, CustomSessionCacheDict(session, session.expires))
 
-    def delete_session(self, session):
+    def delete_session(self, session_id):
         db = get_db()
         try:
-            session_model = db.query(Session).filter_by(session_id=session.session_id).one()
+            session_model = db.query(Session).filter_by(session_id=session_id).one()
             db.delete(session_model)
             db.commit()
         except NoResultFound:
             pass
 
-        self.cache.delete(self.prefix + session.session_id)
+        self.cache.delete(self.prefix + session_id)

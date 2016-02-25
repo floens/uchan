@@ -6,6 +6,7 @@ from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib import roles
 from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.database import get_db
+from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Post, Report, Thread, File
 from uchan.lib.tasks.post_task import ManagePostDetails
 from uchan.lib.utils import now, ip4_to_str
@@ -125,7 +126,7 @@ class PostsService:
 
             self.on_post_created(post, board, board_config_cached)
             db.commit()
-            g.mod_logger.info('{} made a new thread to /{}/{}'.format(ip4_to_str(post_details.ip4), board_name, thread.id))
+            mod_log('new thread /{}/{}'.format(board_name, thread.id), ip4_str=ip4_to_str(post_details.ip4))
             g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread.id)
 
@@ -145,7 +146,7 @@ class PostsService:
             to_thread.posts.append(post)
 
             self.on_post_created(post, board, board_config_cached)
-            g.mod_logger.info('{} made a new reply to /{}/{} #{}'.format(ip4_to_str(post_details.ip4), board_name, thread_id, post.refno))
+            mod_log('new reply /{}/{}#{}'.format(board_name, thread_id, post_refno), ip4_str=ip4_to_str(post_details.ip4))
             db.commit()
             g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread_id)
@@ -190,10 +191,13 @@ class PostsService:
 
         # Get moderator if mod_id was set
         moderator = None
+        moderator_name = None
         if details.mod_id is not None:
             moderator = g.moderator_service.find_moderator_id(details.mod_id)
             if moderator is None:
                 raise Exception('Moderator not found')
+            else:
+                moderator_name = moderator.username
 
         # You cannot manage when you are banned
         if moderator is None or not g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
@@ -210,10 +214,12 @@ class PostsService:
             can_delete = (moderator is not None and g.moderator_service.can_delete(moderator, post)) or \
                          (details.password is not None and details.password == post.password)
             if can_delete:
-                g.mod_logger.info('{} deleted post {}'.format(moderator.username if moderator else ip4_to_str(details.ip4), post.id))
+                mod_log('post {} delete'.format(details.post_id), ip4_str=ip4_to_str(details.ip4),
+                        moderator_name=moderator_name)
                 self.delete_post(post)
             else:
-                g.mod_logger.info('{} failed to deleted post with an invalid password {}'.format(ip4_to_str(details.ip4), post.id))
+                mod_log('post {} delete failed, invalid password'.format(details.post_id),
+                        ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 raise BadRequestError('Password invalid')
         elif details.mode == ManagePostDetails.REPORT:
             if post is None:
@@ -223,19 +229,21 @@ class PostsService:
                     raise BadRequestError('Post not found')
 
             report = Report(post_id=post.id)
-            g.mod_logger.info('{} reported post {}'.format(ip4_to_str(details.ip4), post.id))
+            mod_log('post {} reported'.format(post.id), ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
             g.moderator_service.add_report(report)
         elif details.mode == ManagePostDetails.TOGGLE_STICKY:
             if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
-                g.mod_logger.info('{} {} sticky on /{}/{}'.format(
-                        moderator.username, 'disabled' if thread.sticky else 'enabled', thread.board.name, thread.id))
+                mod_log('sticky on /{}/{} {}'.format(
+                        thread.board.name, thread.id, 'disabled' if thread.sticky else 'enabled'),
+                        ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 self.toggle_thread_sticky(thread)
             else:
                 raise BadRequestError()
         elif details.mode == ManagePostDetails.TOGGLE_LOCKED:
             if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
-                g.mod_logger.info('{} {} lock on /{}/{}'.format(
-                        moderator.username, 'disabled' if thread.locked else 'enabled', thread.board.name, thread.id))
+                mod_log('lock on /{}/{} {}'.format(
+                        thread.board.name, thread.id, 'disabled' if thread.locked else 'enabled'),
+                        ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 self.toggle_thread_locked(thread)
             else:
                 raise BadRequestError()
