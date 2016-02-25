@@ -14,6 +14,15 @@ class BoardService:
     BOARD_NAME_MAX_LENGTH = 20
     BOARD_NAME_ALLOWED_CHARS = string.ascii_lowercase + string.digits + '_'
 
+    DISALLOWED_BOARD_NAMES = [
+        # Names that are routes now
+        'mod', 'post_manage', 'banned', 'post', 'api', 'find_post', 'static', 'page',
+        # names that can be confusing
+        'admin', 'ban', 'bans', 'id', 'moderate', 'auth', 'login', 'logout', 'res', 'thread', 'threads',
+        'board', 'boards', 'report', 'reports', 'user', 'users', 'log', 'logs', 'search', 'config', 'debug', 'create',
+        'delete', 'update', 'faq', 'index', 'read'
+    ]
+
     def get_all_boards(self):
         db = get_db()
         return db.query(Board).order_by(Board.name).all()
@@ -44,6 +53,9 @@ class BoardService:
             return False
 
         if not all(c in self.BOARD_NAME_ALLOWED_CHARS for c in name):
+            return False
+
+        if name in self.DISALLOWED_BOARD_NAMES:
             return False
 
         return True

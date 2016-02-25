@@ -2,7 +2,6 @@ import config
 from celery import Celery
 from celery.loaders.app import AppLoader
 from flask import Flask, render_template
-from uchan.lib.database import clean_up
 from werkzeug.contrib.fixers import ProxyFix
 
 
