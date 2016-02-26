@@ -9,6 +9,10 @@ body {
     font-size: 13px;
 }
 
+.clear {
+    clear: both;
+}
+
 .top-list {
     padding: 5px;
 }
@@ -54,9 +58,18 @@ body {
     padding: 0;
 }
 
-.post-manage-form-container {
-    text-align: right;
+.post-manage-container {
     width: 100%;
+}
+
+.post-manage-container .reply-buttons {
+    float: left;
+    vertical-align: middle;
+    line-height: 21px;
+}
+
+.post-manage-form-container {
+    float: right;
 }
 
 .post {

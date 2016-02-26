@@ -1,0 +1,49 @@
+.qr {
+    position: fixed;
+    display: none;
+    background-color: #D3DBE8;
+    border: 1px solid #777777;
+    left: 0;
+    top: 0;
+}
+
+.qr .handle {
+    display: inline-block;
+    cursor: move;
+    user-select: none;
+    line-height: 18px;
+    vertical-align: middle;
+    width: calc(100% - 4px);
+    margin: 1px;
+    background-color: #AD9CFF;
+    border: 1px solid #000000;
+    text-align: center;
+    font-weight: bold;
+}
+
+.qr input, .qr textarea {
+    border: 1px solid #A9A9A9;
+    width: calc(300px - 6px);
+    padding: 1px;
+    margin: 1px;
+}
+
+.qr input[name="name"] {
+    height: 18px;
+}
+
+.qr textarea[name="comment"] {
+    margin-bottom: 0;
+}
+
+.qr input[type="file"] {
+    width: 200px;
+    border: none;
+}
+
+.qr input[type="submit"] {
+    display: inline-block;
+    line-height: 18px;
+    width: 65px;
+    float: right;
+}
