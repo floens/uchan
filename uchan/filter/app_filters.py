@@ -18,12 +18,12 @@ def pluralize(number, singular='', plural='s'):
 
 @app.template_filter()
 def post_time(t):
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t / 1000))
+    return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(t / 1000))
 
 
 @app.template_filter()
 def ban_time(t):
-    return time.strftime('%Y-%m-%d %H:%M', time.localtime(t / 1000))
+    return time.strftime('%Y-%m-%d %H:%M', time.gmtime(t / 1000))
 
 
 @app.template_filter()

@@ -65,7 +65,7 @@ body, textarea {
     width: 100%;
 }
 
-.post-manage-container .reply-buttons {
+.post-manage-container .thread-controls {
     float: left;
     vertical-align: middle;
     line-height: 21px;
@@ -143,6 +143,10 @@ body, textarea {
 
 .styled-text .red {
     color: #ff0000;
+}
+
+.post .file-link img {
+    margin: 15px 0 0 0;
 }
 
 .post .boardinfo {

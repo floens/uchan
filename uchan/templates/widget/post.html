@@ -1,5 +1,6 @@
 {% macro render(post_item, thread=None, snippet=False, thread_view=False, with_divider=False, is_locked=False, is_sticky=False) %}
-    <div class="post{{ ' snippet' if snippet else '' }}{{ ' divider' if with_divider else '' }}" id="p{{ post_item.refno }}">
+    {# NOTE: keep this in line with the javascript post html builder #}
+    <div class="post{{ ' snippet' if snippet else '' }}{{ ' divider' if with_divider else '' }}" id="p{{ post_item.refno }}" data-date="{{ post_item.date }}">
         <div class="header">
             {% if post_item.subject %}
                 <span class="subject">
@@ -27,16 +28,18 @@
                 File: <a href="{{ post_item.file_location }}">{{ post_item.file_name }}</a> {{ '(' ~ post_item.file_size|filesizeformat ~ ', ' ~ post_item.file_width ~ 'x' ~ post_item.file_height ~ ')' }}
             {% endif %}
         </div>
-        <div class="styled-text">
-            {# Render both the cached version and the model #}
-            {% if post_item.html %}
-                {{ post_item.html|safe }}
-            {% else %}
-                {{ post_item.text|post_text }}
-            {% endif %}
-        </div>
+        {% if post_item.html or post_item.text %}
+            <div class="styled-text">
+                {# Render both the cached version and the model #}
+                {% if post_item.html %}
+                    {{ post_item.html|safe }}
+                {% else %}
+                    {{ post_item.text|post_text }}
+                {% endif %}
+            </div>
+        {% endif %}
         {% if post_item.has_file %}
-            <a href="{{ post_item.file_location }}">
+            <a class="file-link" href="{{ post_item.file_location }}" data-filewidth="{{ post_item.file_width }}" data-fileheight="{{ post_item.file_height }}" data-filename="{{ post_item.file_name }}" data-filesize="{{ post_item.file_size }}">
                 <img src="{{ post_item.file_thumbnail_location }}" width="{{ post_item.file_thumbnail_width }}" height="{{ post_item.file_thumbnail_height }}">
             </a>
         {% endif %}
