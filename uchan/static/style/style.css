@@ -4,8 +4,11 @@ html, body {
 }
 
 body {
-    font-family: arial, helvetica, sans-serif;
     background: #EBF3FF;
+}
+
+body, textarea {
+    font-family: arial, helvetica, sans-serif;
     font-size: 13px;
 }
 
@@ -52,7 +55,7 @@ body {
     font-weight: bold;
 }
 
-.post-form [name="text"] {
+.post-form [name="comment"] {
     width: 100%;
     min-width: 400px;
     padding: 0;

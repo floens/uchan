@@ -2,7 +2,7 @@
     'use strict';
 
     var bindRefnos = function() {
-        var formText = document.querySelector('.post-form [name=text]');
+        var formText = document.querySelector('.post-form [name=comment]');
 
         var refnos = document.querySelectorAll('a.refno');
         for (var i = 0; i < refnos.length; i++) {

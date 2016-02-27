@@ -1,27 +1,57 @@
 .qr {
     position: fixed;
+    left: 0;
+    top: 0;
     display: none;
     background-color: #D3DBE8;
     border: 1px solid #777777;
-    left: 0;
-    top: 0;
 }
 
 .qr .handle {
     display: inline-block;
-    cursor: move;
-    user-select: none;
-    line-height: 18px;
-    vertical-align: middle;
     width: calc(100% - 4px);
     margin: 1px;
+    line-height: 18px;
+    vertical-align: middle;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
     background-color: #AD9CFF;
     border: 1px solid #000000;
+    cursor: move;
+}
+
+.qr .handle-text {
+    display: inline-block;
+    width: calc(100% - 20px);
+    line-height: 20px;
     text-align: center;
     font-weight: bold;
 }
 
-.qr input, .qr textarea {
+.qr .handle-close {
+    display: inline-block;
+    float: right;
+    width: 20px;
+    line-height: 20px;
+    text-align: center;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.qr .error-message {
+    display: none;
+    width: calc(100% - 12px);
+    margin: 1px;
+    padding: 5px;
+    background-color: #ff0000;
+    color: #ffffff;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.qr input[type="text"], .qr textarea {
     border: 1px solid #A9A9A9;
     width: calc(300px - 6px);
     padding: 1px;
@@ -36,14 +66,15 @@
     margin-bottom: 0;
 }
 
-.qr input[type="file"] {
+.qr input[name="file"] {
     width: 200px;
-    border: none;
+    margin: 1px 1px 2px 1px;
 }
 
 .qr input[type="submit"] {
     display: inline-block;
     line-height: 18px;
-    width: 65px;
+    width: 75px;
     float: right;
+    margin: 1px 1px 2px 1px;
 }

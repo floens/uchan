@@ -105,9 +105,23 @@ def create_web_app(app):
         g.logger.exception(error)
         return app.send_static_file('404.html'), 404
 
+    from flask import request, jsonify
+
     @app.errorhandler(BadRequestError)
     def bad_request_handler(error):
-        return render_template('error.html', message=bad_request(error)), 400
+        user_message = bad_request(error)
+
+        if request.is_xhr:
+            xhr_response = {
+                'error': True
+            }
+
+            if user_message:
+                xhr_response['message'] = user_message
+
+            return jsonify(xhr_response), 400
+        else:
+            return render_template('error.html', message=user_message), 400
 
     return app
 

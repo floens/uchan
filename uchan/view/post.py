@@ -1,4 +1,6 @@
-from flask import request, abort, redirect, url_for, render_template
+from time import sleep
+
+from flask import request, abort, redirect, url_for, render_template, jsonify
 
 from uchan import app, g
 from uchan.lib import BadRequestError, ArgumentError
@@ -34,7 +36,7 @@ def post():
     if not board_name:
         abort(400)
 
-    text = form.get('text', None)
+    text = form.get('comment', None)
     if not text:
         text = None
     name = form.get('name', None)
@@ -89,7 +91,14 @@ def post():
             # Clean up the files in the upload queue
             g.file_service.clean_up_queue(upload_queue_files)
 
-    return redirect(url_for('view_thread', board_name=board_name, thread_id=thread_id) + '#p' + str(post_refno))
+    if request.is_xhr:
+        return jsonify({
+            'boardName': board_name,
+            'threadId': thread_id,
+            'postRefno': post_refno
+        })
+    else:
+        return redirect(url_for('view_thread', board_name=board_name, thread_id=thread_id) + '#p' + str(post_refno))
 
 
 @app.route('/post_manage', methods=['POST'])

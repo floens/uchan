@@ -43,10 +43,23 @@
     [<a href="{{ url_for('board', board_name=thread.board.name) }}">Back</a>]
 
     <div class="qr">
-        <span class="handle">Reply</span><br>
-        <input type="text" name="name" placeholder="Name"><br>
-        <textarea name="comment" placeholder="Comment" rows="8"></textarea><br>
-        <input type="file" name="file"><input type="submit" value="Submit"/><br>
+        <form class="qr-form" action="{{ url_for('post') }}" method="post" enctype="multipart/form-data">
+            <span class="handle">
+                <span class="handle-text">Reply</span>
+                <span class="handle-close">&#x2716;</span>
+            </span><br>
+            <input type="text" name="name" placeholder="Name"><br>
+            <textarea name="comment" placeholder="Comment" rows="8"></textarea><br>
+            <input type="file" name="file"><input type="submit" value="Submit"/><br>
+
+            <span class="error-message">Message</span>
+
+            <input type="hidden" name="board" value="{{ thread.board.name }}"/>
+
+            {% if thread %}
+                <input type="hidden" name="thread" value="{{ thread.id }}"/>
+            {% endif %}
+        </form>
     </div>
 {% endblock %}
 
@@ -57,6 +70,14 @@
 
 {% block javascripts %}
     {{ super() }}
+    <script>
+        window.pageDetails = {
+            'mode': 'thread',
+            'boardName': '{{ thread.board.name }}',
+            'threadId': {{ thread.id }},
+            'postEndpoint': '{{ url_for('post') }}'
+        }
+    </script>
     <script src="{{ url_for('static', filename='js/thread.js') }}"></script>
     <script src="{{ url_for('static', filename='js/extra.js') }}"></script>
 {% endblock %}
