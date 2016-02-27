@@ -37,8 +37,6 @@ def api_thread(thread_id):
     if thread_id <= 0:
         abort(400)
 
-    sleep(1)
-
     thread_cached = g.posts_cache.find_thread_cached(thread_id)
     if not thread_cached:
         abort(404)
