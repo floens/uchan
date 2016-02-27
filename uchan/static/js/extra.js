@@ -378,9 +378,9 @@
         }
 
         postHtml += '<a href="#p' + postData.refno + '" class="refno">#' + postData.refno + '</a> ' +
-            '<span class="name">' + escape(postData.name) + '</span> ' +
+            '<span class="name">' + this.getPostNameHtml(postData.name) + '</span> ' +
             '<span class="date">' + this.getPostDateText(postData.date) + '</span> ' +
-            '<span class="manage"><input type="checkbox" name="post_id" value="' + escape(postData.id) + '"></span>';
+            '<span class="manage"><input type="checkbox" name="post_id" value="' + postData.id + '"></span>';
 
         if (file) {
             postHtml += '<br>File: <a href="' + escape(file.location) + '">' + escape(file.name) + '</a> ';
@@ -404,6 +404,15 @@
         return postDiv;
     };
 
+    Watcher.prototype.getPostNameHtml = function(name) {
+        var html = escape(name);
+        var i = html.indexOf('!');
+        if (i >= 0) {
+            html = html.substring(0, i) + '<span class="trip">!' + html.substring(i + 1) + '</span>';
+        }
+        return html;
+    };
+
     Watcher.prototype.getPostFileSizeText = function(bytes) {
         var prefixes = ['kB', 'MB', 'GB', 'TB'];
         if (bytes == 1) {
@@ -418,6 +427,15 @@
                 }
             }
         }
+    };
+
+    Watcher.prototype.getPostDateText = function(postDate) {
+        var date = new Date(postDate);
+
+        // %Y-%m-%d %H:%M:%S
+        var output = date.getUTCFullYear() + '-' + lpad(date.getUTCMonth() + 1, 2, '0') + '-' + lpad(date.getUTCDate(), 2, '0') + ' ';
+        output += lpad(date.getUTCHours(), 2, '0') + ':' + lpad(date.getUTCMinutes(), 2, '0') + ':' + lpad(date.getUTCSeconds(), 2, '0');
+        return output;
     };
 
     Watcher.prototype.bindPosts = function(posts) {
@@ -468,15 +486,6 @@
 
             this.posts.push(postObj);
         }
-    };
-
-    Watcher.prototype.getPostDateText = function(postDate) {
-        var date = new Date(postDate);
-
-        // %Y-%m-%d %H:%M:%S
-        var output = date.getUTCFullYear() + '-' + lpad(date.getUTCMonth() + 1, 2, '0') + '-' + lpad(date.getUTCDate(), 2, '0') + ' ';
-        output += lpad(date.getUTCHours(), 2, '0') + ':' + lpad(date.getUTCMinutes(), 2, '0') + ':' + lpad(date.getUTCSeconds(), 2, '0');
-        return output;
     };
 
     var init = function() {
