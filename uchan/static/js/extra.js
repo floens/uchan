@@ -138,6 +138,17 @@
         }
     };
 
+    QR.prototype.addRefno = function(refno) {
+        var toInsert = '>>' + refno + '\n';
+
+        var position = this.commentElement.selectionStart;
+        var value = this.commentElement.value;
+        this.commentElement.value = value.substring(0, position) + toInsert + value.substring(position);
+        this.commentElement.selectionStart = this.commentElement.selectionEnd = position + toInsert.length;
+
+        this.commentElement.focus();
+    };
+
     QR.prototype.onSubmitEvent = function(event) {
         event.preventDefault();
 
@@ -228,7 +239,17 @@
             var qr = new QR(qrElement, qrDraggable);
             qr.addShowListener(document.querySelector('#open-qr'));
 
-            qr.show();
+            var refnos = document.querySelectorAll('a.refno');
+            for (var i = 0; i < refnos.length; i++) {
+                var refno = refnos[i];
+                refno.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    var refnoText = this.textContent;
+                    var refnoNumber = parseInt(refnoText.substring(refnoText.indexOf('#') + 1).trim());
+                    qr.show();
+                    qr.addRefno(refnoNumber);
+                });
+            }
         }
     };
 
