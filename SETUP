@@ -158,7 +158,12 @@ server {
   server_name your.virtual.host;
   # ssl params here
 
+  add_header X-XSS-Protection "1; mode=block";
+  add_header X-Content-Type-Options "nosniff";
+  add_header X-Frame-Options "DENY";
+
   location / {
+    # Keep this the same as your config.py MAX_CONTENT_LENGTH config
     client_max_body_size 5M;
     gzip off;
 
@@ -174,7 +179,7 @@ server {
 
   location /static {
     alias /home/uchan/uchan/uchan/static;
-    expires 31d;
+    expires 1y;
   }
 
   location /favicon.ico {
@@ -183,7 +188,7 @@ server {
 
   location /media/ {
     alias /home/uchan/uchanmedia/;
-    expires 31d;
+    expires 1y;
   }
 
   error_page 404 /static/404.html;
