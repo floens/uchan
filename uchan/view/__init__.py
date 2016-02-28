@@ -72,3 +72,10 @@ def check_csrf_referer(request):
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
 app.jinja_env.globals['csrf_html'] = generate_csrf_token_html
+
+import uchan.view.index
+import uchan.view.board
+import uchan.view.post
+import uchan.view.thread
+import uchan.view.banned
+import uchan.view.page

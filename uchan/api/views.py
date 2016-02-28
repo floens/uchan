@@ -1,6 +1,3 @@
-from collections import OrderedDict
-from time import sleep
-
 from flask import abort
 
 from uchan import g
