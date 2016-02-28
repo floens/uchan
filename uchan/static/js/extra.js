@@ -173,7 +173,7 @@
     };
 
     QR.prototype.insertFormElement = function(element) {
-        this.formElement.insertBefore(element, this.fileElement);
+        this.formElement.insertBefore(element, this.commentElement.nextSibling);
     };
 
     QR.prototype.addStateChangedListener = function(listener) {

@@ -61,10 +61,8 @@ def extra_javascript(js):
         };
 
         var postFormFieldset = document.querySelector('.post-form fieldset');
-        var fileElementLabel = postFormFieldset.querySelector('input[name="file"]').parentNode;
-        postFormFieldset.insertBefore(recaptchaElement, fileElementLabel);
-
-        var postFormComment = postFormFieldset.querySelector('textarea[name="comment"]');
+        var postFormComment = postFormFieldset.querySelector('textarea[name="comment"]').parentNode;
+        postFormFieldset.insertBefore(recaptchaElement, postFormComment.nextSibling);
         var rendered = false;
         postFormComment.addEventListener('keydown', function(event) {
             if (!rendered) {
@@ -91,7 +89,6 @@ def extra_javascript(js):
                 } else if (what == 'submitError' || what == 'submitDone') {
                     window.grecaptcha.reset(qrRecaptchaWidgetId);
                 }
-                console.log(qr, what);
             });
         }
 
