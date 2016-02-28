@@ -45,7 +45,7 @@
 
 {% block styles %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style/extra.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/extra.1.css') }}">
 {% endblock %}
 
 {% block javascripts %}
@@ -67,6 +67,6 @@
             {% endif %}
         }
     </script>
-    <script src="{{ url_for('static', filename='js/thread.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/extra.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/thread.1.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/extra.1.js') }}"></script>
 {% endblock %}
