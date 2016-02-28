@@ -138,6 +138,7 @@
             '            <span class="handle-close">&#x2716;</span>' +
             '        </span><br>' +
             '        <input type="text" name="name" placeholder="Name"><br>' +
+            '        <input type="password" name="password" placeholder="Password (for post deletion)"><br>' +
             '        <textarea name="comment" placeholder="Comment" rows="8"></textarea><br>' +
             '        <input type="file" name="file"><input type="submit" value="Submit"/><br>' +
             '        <span class="error-message">Message</span>' +
@@ -155,6 +156,7 @@
         this.closeElement.addEventListener('click', this.onCloseClickedEvent.bind(this));
 
         this.nameElement = this.element.querySelector('input[name="name"]');
+        this.passwordElement = this.element.querySelector('input[name="password"]');
         this.commentElement = this.element.querySelector('textarea[name="comment"]');
         this.fileElement = this.element.querySelector('input[name="file"]');
         this.submitElement = this.element.querySelector('input[type="submit"]');

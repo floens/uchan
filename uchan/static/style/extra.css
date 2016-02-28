@@ -51,7 +51,7 @@
     font-family: monospace;
 }
 
-.qr input[type="text"], .qr textarea {
+.qr input[type="text"], .qr input[type="password"], .qr textarea {
     border: 1px solid #A9A9A9;
     width: calc(300px - 6px);
     padding: 1px;
