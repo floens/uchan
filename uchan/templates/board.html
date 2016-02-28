@@ -41,3 +41,17 @@
     {{ board_pager_widget.render(board.name, board_config.pages, page_index) }}
 
 {% endblock %}
+
+{% block javascripts %}
+    <script>
+        window.pageDetails = {
+            'mode': 'board',
+            'boardName': '{{ board.name }}',
+            'postEndpoint': '{{ url_for('post') }}',
+            {% if board_config.file_posting_enabled %}
+                'filePostingEnabled': true,
+            {% endif %}
+        }
+    </script>
+    {{ super() }}
+{% endblock %}

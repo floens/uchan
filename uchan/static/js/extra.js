@@ -538,7 +538,7 @@
 
             if (!context.pageDetails.locked) {
                 var postForm = document.querySelector('.post-form');
-                postForm.style.display = 'none';
+                //postForm.style.display = 'none';
 
                 var postsElement = document.querySelector('.posts');
                 var watchStatusElement = replyButtons.querySelector('#watch-status');

@@ -50,30 +50,61 @@ def extra_javascript(js):
     js.add("""
 <script>
 (function() {
-    var recaptchaElement = document.createElement('div');
-    recaptchaElement.className = 'g-recaptcha input';
-    recaptchaElement.setAttribute('style', 'width: 302px;');
-    qr.insertFormElement(recaptchaElement);
-    var rendered = false;
-    qr.addStateChangedListener(function(qr, what) {
-        if (what == 'show') {
+    if (window.pageDetails && (pageDetails.mode == 'board' || pageDetails.mode == 'thread')) {
+        var recaptchaElement = document.createElement('div');
+        recaptchaElement.className = 'g-recaptcha input';
+        recaptchaElement.setAttribute('style', 'width: 302px;');
+        recaptchaElement.innerHTML = 'Type to show the captcha.<br><br>';
+
+        var captchaParams = {
+            'sitekey': '__sitekey__'
+        };
+
+        var postFormFieldset = document.querySelector('.post-form fieldset');
+        var fileElementLabel = postFormFieldset.querySelector('input[name="file"]').parentNode;
+        postFormFieldset.insertBefore(recaptchaElement, fileElementLabel);
+
+        var postFormComment = postFormFieldset.querySelector('textarea[name="comment"]');
+        var rendered = false;
+        postFormComment.addEventListener('keydown', function(event) {
             if (!rendered) {
                 rendered = true;
-                window.grecaptcha.render(recaptchaElement, {
-                    'sitekey': '__sitekey__'
-                });
+                recaptchaElement.innerHTML = '';
+                window.grecaptcha.render(recaptchaElement, captchaParams);
             }
-        } else if (what == 'submitError' || what == 'submitDone') {
-            window.grecaptcha.reset();
-        }
-        console.log(qr, what);
-    });
+        });
 
-    window.recaptchaOnloadCallback = function() {
-    };
+        window.recaptchaOnloadCallback = function() {
+        };
+
+        if (window.qr) {
+            var qrRecaptchaElement = recaptchaElement.cloneNode(false);
+            qr.insertFormElement(qrRecaptchaElement);
+            var qrCaptchaRendered = false;
+            var qrRecaptchaWidgetId = null;
+            qr.addStateChangedListener(function(qr, what) {
+                if (what == 'show') {
+                    if (!qrCaptchaRendered) {
+                        qrCaptchaRendered = true;
+                        qrRecaptchaWidgetId = window.grecaptcha.render(qrRecaptchaElement, captchaParams);
+                    }
+                } else if (what == 'submitError' || what == 'submitDone') {
+                    window.grecaptcha.reset(qrRecaptchaWidgetId);
+                }
+                console.log(qr, what);
+            });
+        }
+
+        var recaptchaScript = document.createElement('script');
+        recaptchaScript.type = 'text/javascript';
+        recaptchaScript.async = true;
+        recaptchaScript.defer = true;
+        recaptchaScript.src = 'https://www.google.com/recaptcha/api.js?onload=recaptchaOnloadCallback&render=explicit';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(recaptchaScript, s);
+    }
 })();
 </script>
-<script src="https://www.google.com/recaptcha/api.js?onload=recaptchaOnloadCallback&render=explicit" async defer></script>
 """.replace('__sitekey__', _sitekey))
 
 
