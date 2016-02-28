@@ -62,6 +62,9 @@
             {% if thread.sticky %}
                 'sticky': true,
             {% endif %}
+            {% if board_config.file_posting_enabled %}
+                'filePostingEnabled': true,
+            {% endif %}
         }
     </script>
     <script src="{{ url_for('static', filename='js/thread.js') }}"></script>

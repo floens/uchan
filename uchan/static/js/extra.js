@@ -127,6 +127,7 @@
         this.watcher = watcher;
 
         this.postEndpoint = context.pageDetails.postEndpoint;
+        this.filePostingEnabled = !!context.pageDetails.filePostingEnabled;
 
         this.element = document.createElement('div');
         this.element.className = 'qr';
@@ -159,6 +160,7 @@
         this.passwordElement = this.element.querySelector('input[name="password"]');
         this.commentElement = this.element.querySelector('textarea[name="comment"]');
         this.fileElement = this.element.querySelector('input[name="file"]');
+        this.fileElement.style.display = this.filePostingEnabled ? 'inline-block' : 'none';
         this.submitElement = this.element.querySelector('input[type="submit"]');
         this.errorMessageElement = this.element.querySelector('.error-message');
 
