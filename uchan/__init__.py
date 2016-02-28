@@ -11,12 +11,14 @@ class Globals():
         self.app = None
         self.celery = None
         self.database = None
+        self.plugin_manager = None
 
         self.cache = None
         self.posts_cache = None
         self.board_cache = None
         self.site_cache = None
         self.page_cache = None
+
         self.posts_service = None
         self.board_service = None
         self.moderator_service = None
@@ -69,6 +71,8 @@ class CustomCeleryLoader(AppLoader):
 
 
 def init():
+    print('Initializing')
+
     global g, app, celery
     assert isinstance(g, Globals)
 
@@ -108,6 +112,11 @@ def init():
 
     setup_logger(g)
 
+    from uchan.lib.plugin_manager import PluginManager
+    g.plugin_manager = PluginManager()
+    import uchan.plugins.captcha2 as captcha2_module
+    g.plugin_manager.add_module(captcha2_module)
+
     # Setup singletons
     from uchan.lib.service import PostsService
     from uchan.lib.cache import PostsCache
@@ -144,6 +153,8 @@ def init():
     from uchan.lib.cache import PageCache
     g.page_service = PageService()
     g.page_cache = PageCache(g.cache)
+
+    print('Done')
 
 
 init()

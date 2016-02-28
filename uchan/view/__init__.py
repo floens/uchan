@@ -11,6 +11,17 @@ from uchan import g, app
 from uchan.lib.service import PageService
 
 
+class ExtraJavascript:
+    def __init__(self):
+        self.js = ''
+
+    def add(self, js):
+        self.js += js
+
+    def gather(self):
+        return self.js
+
+
 @app.context_processor
 def inject_variables():
     site_config_cached = g.site_cache.find_site_config_cached()
@@ -22,7 +33,10 @@ def inject_variables():
     footer_pages_cached = g.page_cache.find_pages_for_type_cached(PageService.TYPE_FOOTER_PAGE)
     footer_pages = footer_pages_cached.pages if footer_pages_cached else []
 
-    return dict(all_boards=all_boards, site_config=site_config_cached, footer_pages=footer_pages)
+    extra_javascript = ExtraJavascript()
+    g.plugin_manager.execute_hook('extra_javascript', extra_javascript)
+
+    return dict(all_boards=all_boards, site_config=site_config_cached, footer_pages=footer_pages, extra_javascript=extra_javascript)
 
 
 @app.route('/favicon.ico')

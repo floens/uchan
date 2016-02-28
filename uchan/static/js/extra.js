@@ -138,9 +138,9 @@
             '            <span class="handle-text">Reply</span>' +
             '            <span class="handle-close">&#x2716;</span>' +
             '        </span><br>' +
-            '        <input type="text" name="name" placeholder="Name"><br>' +
-            '        <input type="password" name="password" placeholder="Password (for post deletion)"><br>' +
-            '        <textarea name="comment" placeholder="Comment" rows="8"></textarea><br>' +
+            '        <input class="input" type="text" name="name" placeholder="Name"><br>' +
+            '        <input class="input" type="password" name="password" placeholder="Password (for post deletion)"><br>' +
+            '        <textarea class="input" name="comment" placeholder="Comment" rows="8"></textarea><br>' +
             '        <input type="file" name="file"><input type="submit" value="Submit"/><br>' +
             '        <span class="error-message">Message</span>' +
             '        <input type="hidden" name="board" value="' + context.pageDetails.boardName + '"/>' +
@@ -167,15 +167,38 @@
         this.commentElement.addEventListener('keydown', this.onCommentKeyDownEvent.bind(this));
         this.submitElement.addEventListener('click', this.onSubmitEvent.bind(this));
 
+        this.stateListeners = [];
         this.showing = false;
         this.submitXhr = null;
     };
 
-    QR.prototype.clear = function() {
-        this.formElement.reset();
+    QR.prototype.insertFormElement = function(element) {
+        this.formElement.insertBefore(element, this.fileElement);
     };
 
-    QR.prototype.addShowListener = function(element) {
+    QR.prototype.addStateChangedListener = function(listener) {
+        this.stateListeners.push(listener);
+    };
+
+    QR.prototype.removeStateChangedListener = function(listener) {
+        var index = this.stateListeners.indexOf(listener);
+        if (index >= 0) {
+            this.stateListeners.splice(index, 1);
+        }
+    };
+
+    QR.prototype.callStateChangedListeners = function(what) {
+        for (var i = 0; i < this.stateListeners.length; i++) {
+            this.stateListeners[i](this, what);
+        }
+    };
+
+    QR.prototype.clear = function() {
+        this.formElement.reset();
+        this.callStateChangedListeners('clear');
+    };
+
+    QR.prototype.addShowClickListener = function(element) {
         element.addEventListener('click', this.onOpenEvent.bind(this));
     };
 
@@ -206,6 +229,8 @@
             this.draggable.setPosition(x, document.documentElement.clientHeight - bb.height - 100);
 
             this.commentElement.focus();
+
+            this.callStateChangedListeners('show');
         }
     };
 
@@ -214,6 +239,8 @@
             this.showing = false;
 
             this.element.style.display = 'none';
+
+            this.callStateChangedListeners('hide');
         }
     };
 
@@ -247,6 +274,8 @@
             xhr.send(formData);
 
             this.submitElement.disabled = true;
+
+            this.callStateChangedListeners('submitSent');
         }
     };
 
@@ -273,12 +302,16 @@
         console.error('Error submitting', this.submitXhr, event);
         this.showErrorMessage(true, responseMessage);
 
+        this.callStateChangedListeners('submitError');
+
         this.resetAfterSubmit();
     };
 
     QR.prototype.submitXhrOnLoadEvent = function(event) {
         if (this.submitXhr.status == 200) {
             this.showErrorMessage(false);
+
+            this.callStateChangedListeners('submitDone');
 
             this.clear();
             this.hide();
@@ -514,8 +547,8 @@
                 watcher.bindPosts(posts);
                 watcher.update();
 
-                var qr = new QR(watcher);
-                qr.addShowListener(replyButtons.querySelector('#open-qr'));
+                window.qr = new QR(watcher);
+                qr.addShowClickListener(replyButtons.querySelector('#open-qr'));
 
                 watcher.addUpdateListener(replyButtons.querySelector('#watch-update'));
 

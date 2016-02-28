@@ -50,3 +50,8 @@ DATABASE_POOL_SIZE = 4
 
 # Generate with `import os` `os.urandom(32)`
 SECRET_KEY = None
+
+# A place for plugins to store their params
+# See the documentation of the plugin
+PLUGIN_CONFIG = {
+}

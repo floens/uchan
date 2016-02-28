@@ -65,6 +65,7 @@
 </div>
 
 {% block javascripts %}
+{{ extra_javascript.gather()|safe }}
 {% endblock %}
 </body>
 </html>

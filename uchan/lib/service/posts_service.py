@@ -33,6 +33,8 @@ class PostsService:
     def handle_post_check(self, post_details):
         board, thread = self.get_board_thread(post_details)
 
+        g.plugin_manager.execute_hook('on_handle_post_check', post_details)
+
         if thread is not None and thread.locked:
             raise ArgumentError('Thread is locked')
 
@@ -70,6 +72,8 @@ class PostsService:
 
     def handle_post(self, post_details):
         board, to_thread = self.get_board_thread(post_details)
+
+        g.plugin_manager.execute_hook('on_handle_post', post_details)
 
         db = get_db()
 

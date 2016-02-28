@@ -49,7 +49,6 @@
 {% endblock %}
 
 {% block javascripts %}
-    {{ super() }}
     <script>
         window.pageDetails = {
             'mode': 'thread',
@@ -69,4 +68,5 @@
     </script>
     <script src="{{ url_for('static', filename='js/thread.1.js') }}"></script>
     <script src="{{ url_for('static', filename='js/extra.1.js') }}"></script>
+    {{ super() }}
 {% endblock %}

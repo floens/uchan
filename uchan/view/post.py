@@ -58,7 +58,7 @@ def post():
     # ip4 of the request
     ip4 = g.ban_service.get_request_ip4()
 
-    post_details = PostDetails(board_name, thread_id, text, name, subject, password, has_file, ip4)
+    post_details = PostDetails(form, board_name, thread_id, text, name, subject, password, has_file, ip4)
 
     # Queue the post check task
     try:

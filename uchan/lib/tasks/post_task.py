@@ -2,7 +2,8 @@ from uchan import celery, g
 
 
 class PostDetails:
-    def __init__(self, board_name, thread_id, text, name, subject, password, has_file, ip4):
+    def __init__(self, form, board_name, thread_id, text, name, subject, password, has_file, ip4):
+        self.form = form
         self.board_name = board_name
         self.thread_id = thread_id
         self.text = text
