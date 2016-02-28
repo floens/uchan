@@ -20,7 +20,7 @@
 
     <hr class="content-divider">
 
-    {{ post_form_widget.render(board) }}
+    {{ post_form_widget.render(board, file_field=board_config.file_posting_enabled) }}
 
     <br>
 
