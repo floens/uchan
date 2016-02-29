@@ -37,7 +37,7 @@
     <hr class="content-divider">
 
     {% if not thread.locked %}
-        {{ post_form_widget.render(thread.board, thread, file_field=board_config.file_posting_enabled) }}
+        {{ post_form_widget.render(thread.board, thread, file_field=board_config.file_posting_enabled, moderator_fields=show_moderator_buttons) }}
     {% else %}
         Thread locked, you may not reply at this time.<br>
     {% endif %}
@@ -67,6 +67,6 @@
         }
     </script>
     <script src="{{ url_for('static', filename='js/thread.1.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/extra.1.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/extra.2.js') }}"></script>
     {{ super() }}
 {% endblock %}

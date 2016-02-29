@@ -415,8 +415,13 @@
         }
 
         postHtml += '<a href="#p' + postData.refno + '" class="refno">#' + postData.refno + '</a> ' +
-            '<span class="name">' + this.getPostNameHtml(postData.name) + '</span> ' +
-            '<span class="date">' + this.getPostDateText(postData.date) + '</span> ' +
+            '<span class="name">' + this.getPostNameHtml(postData.name) + '</span> ';
+
+        if (postData.modCode) {
+            postHtml += '<span class="modcode">' + escape(postData.modCode) + '</span> ';
+        }
+
+        postHtml += '<span class="date">' + this.getPostDateText(postData.date) + '</span> ' +
             '<span class="manage"><input type="checkbox" name="post_id" value="' + postData.id + '"></span>';
 
         if (file) {
@@ -496,6 +501,14 @@
             var nameText = postElement.querySelector('.header .name').textContent.trim();
             if (nameText) {
                 postObj.name = nameText;
+            }
+
+            var modCodeElement = postElement.querySelector('.header .modcode');
+            if (modCodeElement) {
+                var modCodeText = modCodeElement.textContent;
+                if (modCodeText) {
+                    postObj.modCode = modCodeText;
+                }
             }
 
             var subjectElement = postElement.querySelector('.header .subject');

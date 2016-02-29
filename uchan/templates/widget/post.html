@@ -12,6 +12,9 @@
             <span class="name">
                 {{ post_item.name|post_name }}
             </span>
+            {% if post_item.mod_code %}
+                <span class="modcode">{{ post_item.mod_code }}</span>
+            {% endif %}
             <span class="date">
                 {{ post_item.date|post_time }}
             </span>

@@ -1,5 +1,6 @@
 from uchan import g
 from uchan.filter.text_parser import parse_text
+from uchan.lib import roles
 
 from uchan.lib.cache import CacheDict
 
@@ -43,6 +44,13 @@ class PostCacheProxy(CacheDict):
         self.html = parse_text(post.text)
         self.refno = post.refno
 
+        self.mod_code = None
+        if post.moderator is not None:
+            moderator = post.moderator
+            self.mod_code = '## ' + roles.get_role_name(moderator.roles)
+            if post.with_mod_name:
+                self.mod_code = moderator.username + ' ' + self.mod_code
+
         self.has_file = post.file is not None
         if self.has_file:
             self.file_location = g.file_service.resolve_to_uri(post.file.location)
@@ -68,7 +76,8 @@ class PostsCache:
             thread = g.posts_service.find_thread(thread_id, True)
             if not thread:
                 return None
-            thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board).convert(), [PostCacheProxy(i).convert() for i in thread.posts]).convert()
+            thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board).convert(),
+                                            [PostCacheProxy(i).convert() for i in thread.posts]).convert()
             self.cache.set(key, thread_cache, timeout=0)
         return thread_cache
 

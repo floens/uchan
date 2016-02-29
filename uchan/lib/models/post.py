@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, BigInteger, ForeignKey
+from sqlalchemy import Column, Integer, String, BigInteger, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 
 from uchan.lib.database import ModelBase
@@ -12,6 +12,9 @@ class Post(ModelBase):
     thread_id = Column(Integer(), ForeignKey('thread.id'), nullable=False, index=True)
     # thread is a backref property
 
+    moderator_id = Column(Integer(), ForeignKey('moderator.id'), nullable=True, index=True)
+    # moderator is a backref property
+
     report = relationship('Report', backref='post', cascade='all, delete-orphan')
 
     file = relationship('File', backref='post', uselist=False, lazy='joined', cascade='all, delete-orphan')
@@ -23,3 +26,4 @@ class Post(ModelBase):
     refno = Column(Integer(), nullable=False, index=True)
     password = Column(String())
     ip4 = Column(BigInteger(), nullable=False, index=True)
+    with_mod_name = Column(Boolean(), nullable=False, default=False)

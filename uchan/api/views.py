@@ -82,6 +82,9 @@ def build_post_object(post):
     if post.subject:
         post_obj['subject'] = post.subject
 
+    if post.mod_code:
+        post_obj['modCode'] = post.mod_code
+
     if post.has_file:
         file_obj = {
             'location': post.file_location,

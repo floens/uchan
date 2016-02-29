@@ -80,6 +80,13 @@ class PostsService:
         site_config_cached = g.site_cache.find_site_config_cached()
         board_config_cached = g.board_cache.find_board_config_cached(board.name)
 
+        # Get moderator if mod_id was set
+        moderator = None
+        if post_details.mod_id is not None:
+            moderator = g.moderator_service.find_moderator_id(post_details.mod_id)
+            if moderator is None:
+                raise Exception('Moderator not found')
+
         post = Post()
         if post_details.text is not None:
             post.text = post_details.text.strip()
@@ -111,6 +118,10 @@ class PostsService:
             post.password = post_details.password
         post.date = now()
         post.ip4 = post_details.ip4
+
+        if moderator is not None:
+            post.moderator = moderator
+            post.with_mod_name = post_details.with_mod_name
 
         db.add(post)
 
@@ -150,7 +161,8 @@ class PostsService:
             to_thread.posts.append(post)
 
             self.on_post_created(post, board, board_config_cached)
-            mod_log('new reply /{}/{}#{}'.format(board_name, thread_id, post_refno), ip4_str=ip4_to_str(post_details.ip4))
+            mod_log('new reply /{}/{}#{}'.format(board_name, thread_id, post_refno),
+                    ip4_str=ip4_to_str(post_details.ip4))
             db.commit()
             g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread_id)

@@ -1,5 +1,3 @@
-from time import sleep
-
 from flask import request, abort, redirect, url_for, render_template, jsonify
 
 from uchan import app, g
@@ -59,6 +57,15 @@ def post():
     ip4 = g.ban_service.get_request_ip4()
 
     post_details = PostDetails(form, board_name, thread_id, text, name, subject, password, has_file, ip4)
+
+    with_mod = form.get('with_mod', type=bool)
+    if with_mod is True:
+        moderator = get_authed_moderator() if get_authed() else None
+        if moderator is not None:
+            post_details.mod_id = moderator.id
+
+            with_mod_name = form.get('with_mod_name', type=bool)
+            post_details.with_mod_name = with_mod_name is True
 
     # Queue the post check task
     try:

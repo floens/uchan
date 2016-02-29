@@ -115,6 +115,10 @@ body, textarea {
     font-size: 0.9em;
 }
 
+.post .header .modcode {
+    color: #ff0000;
+}
+
 .post .header .date {
 }
 

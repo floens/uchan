@@ -19,3 +19,5 @@ class Moderator(ModelBase):
 
     # Bans given by this moderator
     given_bans = relationship('Ban', backref='moderator')
+
+    posts = relationship('Post', backref='moderator')

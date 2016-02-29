@@ -1,4 +1,4 @@
-{% macro render(board, thread=None, file_field=True) %}
+{% macro render(board, thread=None, file_field=True, moderator_fields=False) %}
     <form class="post-form" action="{{ url_for('post') }}" method="post" enctype="multipart/form-data">
         <fieldset>
             {% if thread %}
@@ -38,6 +38,16 @@
                 <br>
             {% endif %}
             <br>
+            {% if moderator_fields %}
+                <label>
+                    <input type="checkbox" name="with_mod">Post as moderator<br>
+                </label>
+                <br>
+                <label>
+                    <input type="checkbox" name="with_mod_name">Post with moderator name<br>
+                </label>
+                <br>
+            {% endif %}
             <input type="submit" value="Submit"/>
 
             <input type="hidden" name="board" value="{{ board.name }}"/>

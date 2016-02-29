@@ -12,6 +12,8 @@ class PostDetails:
         self.password = password
         self.has_file = has_file
         self.ip4 = ip4
+        self.mod_id = None
+        self.with_mod_name = False
 
         self.uploaded_file = None
 

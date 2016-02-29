@@ -114,8 +114,8 @@ def init():
 
     from uchan.lib.plugin_manager import PluginManager
     g.plugin_manager = PluginManager()
-    import uchan.plugins.captcha2 as captcha2_module
-    g.plugin_manager.add_module(captcha2_module)
+    # import uchan.plugins.captcha2 as captcha2_module
+    # g.plugin_manager.add_module(captcha2_module)
 
     # Setup singletons
     from uchan.lib.service import PostsService
