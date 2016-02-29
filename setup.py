@@ -13,6 +13,18 @@ def init_models():
     if g.config_service.get_config_by_type(SiteConfig.TYPE) is None:
         g.config_service.save_config(SiteConfig(), None)
 
+    from uchan.lib.service import PageService
+    from uchan.lib.models import Page
+    front_page = g.page_service.get_pages_for_type(PageService.TYPE_FRONT_PAGE)
+    if not front_page:
+        front_page = Page()
+        front_page.title = 'Front page'
+        front_page.link_name = 'front_page'
+        front_page.type = PageService.TYPE_FRONT_PAGE
+        front_page.order = 0
+        front_page.content = 'This is the front page.'
+        g.page_service.create_page(front_page)
+
     from uchan.lib import roles
     from uchan.lib.models import Moderator
 
@@ -28,6 +40,8 @@ def init_models():
         g.moderator_service.create_moderator(moderator, password)
     else:
         print('Moderator already exists')
+
+    print('Success! You can not login at /mod/auth')
 
 
 if __name__ == '__main__':
