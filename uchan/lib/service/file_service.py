@@ -89,7 +89,7 @@ class FileService:
     ALLOWED_FORMATS = ['JPEG', 'PNG', 'GIF']
 
     GENERATED_FILE_NAME_LENGTH = 16
-    MAX_FILE_NAME_LENGTH = 32
+    MAX_FILE_NAME_LENGTH = 50
     THUMBNAIL_POSTFIX = '_t'
 
     def __init__(self, upload_queue_path, cdn):
