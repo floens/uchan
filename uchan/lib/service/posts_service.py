@@ -139,9 +139,11 @@ class PostsService:
             board.threads.append(thread)
             db.add(thread)
 
-            self.on_post_created(post, board, board_config_cached)
-            db.commit()
+            thread_ids_to_invalidate = self.purge_threads(board, board_config_cached)
+            for thread_id_to_invalidate in thread_ids_to_invalidate:
+                g.posts_cache.invalidate_thread_cache(thread_id_to_invalidate)
             mod_log('new thread /{}/{}'.format(board_name, thread.id), ip4_str=ip4_to_str(post_details.ip4))
+            db.commit()
             g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread.id)
 
@@ -160,10 +162,10 @@ class PostsService:
             post_refno = post.refno = to_thread.refno_counter
             to_thread.posts.append(post)
 
-            self.on_post_created(post, board, board_config_cached)
-            mod_log('new reply /{}/{}#{}'.format(board_name, thread_id, post_refno),
-                    ip4_str=ip4_to_str(post_details.ip4))
             db.commit()
+            mod_log('new reply {} /{}/{}#{}'.format(post.id, board_name, thread_id, post_refno),
+                    ip4_str=ip4_to_str(post_details.ip4))
+
             g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread_id)
 
@@ -272,6 +274,14 @@ class PostsService:
             if include_posts:
                 q = q.options(lazyload('posts'))
             thread = q.filter_by(id=thread_id).one()
+
+            # The thread and posts query are done separately
+            # And thus there is a possibility that the second query returns empty data
+            # when another transaction deletes the thread
+            # Account for this by just returning None as if the thread didn't exist
+            if not thread.posts:
+                return None
+
             return thread
         except NoResultFound:
             return None
@@ -319,13 +329,16 @@ class PostsService:
         db.delete(thread)
         db.commit()
 
-    def on_post_created(self, post, board, board_config_cached):
+    def purge_threads(self, board, board_config_cached):
         pages = board_config_cached.board_config.pages
         per_page = board_config_cached.board_config.per_page
         max = (per_page * pages) - 1
 
         db = get_db()
 
+        thread_ids_to_invalidate = []
         overflowed_threads = db.query(Thread).order_by(Thread.last_modified.desc()).filter_by(board_id=board.id)[max:]
         for overflowed_thread in overflowed_threads:
-            self.delete_thread(overflowed_thread)
+            db.delete(overflowed_thread)
+            thread_ids_to_invalidate.append(overflowed_thread.id)
+        return thread_ids_to_invalidate

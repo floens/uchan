@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="board-header">
+        <h1>/{{ board.name }}/ - {{ board_config.full_name }}</h1>
+        <div class="description">{{ board_config.description }}</div>
+    </div>
+    <br>
+
+    <hr class="content-divider">
+
+    <div class="motd">{{ site_config.motd }}</div>
+
+    <hr class="content-divider">
+
+    {% block post_form_top %}{% endblock %}
+
+    {% block board_controls_top %}{% endblock %}
+
+    {% block board_view_content %}{% endblock %}
+
+    {% block board_controls_bottom %}{% endblock %}
+
+    {% block post_form_bottom %}{% endblock %}
+
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        window.pageDetails = {{ page_details|tojson|safe }};
+    </script>
+    {{ super() }}
+{% endblock %}

@@ -76,6 +76,7 @@ class PostsCache:
             thread = g.posts_service.find_thread(thread_id, True)
             if not thread:
                 return None
+
             thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board).convert(),
                                             [PostCacheProxy(i).convert() for i in thread.posts]).convert()
             self.cache.set(key, thread_cache, timeout=0)
@@ -101,6 +102,11 @@ class PostsCache:
             threads = []
             for thread in board.threads:
                 thread_cached = self.find_thread_cached(thread.id)
+                # The board and thread selects are done separately and there is thus the
+                # possibility that the thread was removed after the board select
+                if thread_cached is None:
+                    continue
+
                 original_length = len(thread_cached.posts)
 
                 op = thread_cached.posts[0]

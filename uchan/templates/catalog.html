@@ -1,0 +1,28 @@
+{% extends "board_view.html" %}
+
+{% block title %}Catalog /{{ board.name }}/ - {{ board_config.full_name }}{% endblock %}
+
+{% import "widget/post_catalog.html" as post_catalog_widget %}
+{% import "widget/post_form.html" as post_form_widget %}
+{% import "widget/post_manage.html" as post_manage_widget %}
+{% import "widget/board_pager.html" as board_pager_widget %}
+
+{% block post_form_top %}
+    {{ post_form_widget.render(board, file_field=board_config.file_posting_enabled) }}
+{% endblock %}
+
+{% block board_controls_top %}
+{% endblock %}
+
+{% block board_view_content %}
+    {% for thread in threads %}
+        {{ post_catalog_widget.render(board.name, thread.posts[0], thread, is_sticky=thread.sticky, is_locked=thread.locked) }}
+    {% endfor %}
+{% endblock %}
+
+{% block board_controls_bottom %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ super() }}
+{% endblock %}

@@ -2,7 +2,7 @@
     <form class="post-manage-form" action="{{ url_for('post_manage') }}" method="post">
 {% endmacro %}
 
-{% macro render_end(thread, show_moderator_buttons=False) %}
+{% macro render_content(thread, show_moderator_buttons=False) %}
     <div class="post-manage-form-container">
         {#To delete or report posts, check the checkbox next to the post and select the appropiate action here.#}
         <label>Password
@@ -18,5 +18,8 @@
         {% endif %}
         <input type="hidden" name="thread_id" value="{{ thread.id }}">
     </div>
+{% endmacro %}
+
+{% macro render_end() %}
     </form>
 {% endmacro %}

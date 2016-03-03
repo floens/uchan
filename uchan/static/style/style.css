@@ -91,35 +91,35 @@ body, textarea {
     background-color: #fff4e2;
 }
 
-.post .header .subject {
+.header .subject {
     color: #0200ff;
 }
 
-.post .header .refno {
+.header .refno {
     color: #000;
     text-decoration: none;
 }
 
-.post .header .refno:hover {
+.header .refno:hover {
     text-decoration: underline;
     color: #ff0000;
 }
 
-.post .header .name {
+.header .name {
     font-weight: bold;
     color: #018a00;
 }
 
-.post .header .name .trip {
+.header .name .trip {
     font-weight: normal;
     font-size: 0.9em;
 }
 
-.post .header .modcode {
+.header .modcode {
     color: #ff0000;
 }
 
-.post .header .date {
+.header .date {
 }
 
 .styled-text {
@@ -156,6 +156,38 @@ body, textarea {
 .post .boardinfo {
     margin: 20px 0 0 0;
     color: #5a5a5a;
+}
+
+.catalog-post {
+    display: inline-block;
+    width: 130px;
+    vertical-align: top;
+    margin: 0.7em;
+}
+
+.catalog-post .header {
+
+}
+
+.catalog-post .styled-text {
+    overflow: hidden;
+    height: 200px;
+    margin: 0 0 0.7em 0;
+}
+
+.catalog-post .file {
+    text-align: center;
+}
+
+.catalog-post img {
+    max-width: 130px;
+    max-height: 100px;
+    margin: 0 auto;
+    width: auto;
+    height: auto;
+}
+
+.catalog-post .styled-text {
 }
 
 .footer {

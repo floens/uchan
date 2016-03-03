@@ -8,7 +8,7 @@
     <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}">
 
     {% block styles %}
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'style/style.2.css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style/style.css' if config.DEBUG else 'style/style.3.css') }}">
     {% endblock %}
     <noscript>
         <style>
@@ -65,7 +65,7 @@
 </div>
 
 {% block javascripts %}
-{{ extra_javascript.gather()|safe }}
+    {{ extra_javascript.gather()|safe }}
 {% endblock %}
 </body>
 </html>

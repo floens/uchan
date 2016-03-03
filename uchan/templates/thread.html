@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "board_view.html" %}
 
 {% block title %}/{{ thread.board.name }}/ - {{ board_config.full_name }}{% endblock %}
 
@@ -6,36 +6,40 @@
 {% import "widget/post_form.html" as post_form_widget %}
 {% import "widget/post_manage.html" as post_manage_widget %}
 
-{% block content %}
-    <h2>Viewing thread</h2>
+{% block post_form_top %}
+    <h1>Viewing thread</h1>
+{% endblock %}
+
+{% block board_controls_top %}
+    <hr class="content-divider">
     [<a href="{{ url_for('board', board_name=thread.board.name) }}">Back</a>]
-
     <hr class="content-divider">
+{% endblock %}
 
-    <div class="motd">{{ site_config.motd }}</div>
-
-    <hr class="content-divider">
-
+{% block board_view_content %}
     {{ post_manage_widget.render_begin() }}
     <div class="posts">
         {% for post_item in thread.posts %}
             {{ post_widget.render(post_item, thread_view=True, with_divider=not loop.last,
-            is_sticky=loop.first and thread.sticky, is_locked=loop.first and thread.locked) }}
+        is_sticky=loop.first and thread.sticky, is_locked=loop.first and thread.locked) }}
         {% endfor %}
     </div>
+{% endblock %}
 
+{% block board_controls_bottom %}
     <hr class="content-divider">
-
     <div class="post-manage-container">
         <div class="thread-controls">
             [<a href="{{ url_for('board', board_name=thread.board.name) }}">Back</a>]
         </div>
-        {{ post_manage_widget.render_end(thread, show_moderator_buttons) }}
+        {{ post_manage_widget.render_content(thread, show_moderator_buttons) }}
         <div class="clear"></div>
     </div>
-
+    {{ post_manage_widget.render_end() }}
     <hr class="content-divider">
+{% endblock %}
 
+{% block post_form_bottom %}
     {% if not thread.locked %}
         {{ post_form_widget.render(thread.board, thread, file_field=board_config.file_posting_enabled, moderator_fields=show_moderator_buttons) }}
     {% else %}
@@ -43,30 +47,14 @@
     {% endif %}
 {% endblock %}
 
+
 {% block styles %}
     {{ super() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='style/extra.1.css') }}">
 {% endblock %}
 
 {% block javascripts %}
-    <script>
-        window.pageDetails = {
-            'mode': 'thread',
-            'boardName': '{{ thread.board.name }}',
-            'threadId': {{ thread.id }},
-            'postEndpoint': '{{ url_for('post') }}',
-            {% if thread.locked %}
-                'locked': true,
-            {% endif %}
-            {% if thread.sticky %}
-                'sticky': true,
-            {% endif %}
-            {% if board_config.file_posting_enabled %}
-                'filePostingEnabled': true,
-            {% endif %}
-        }
-    </script>
-    <script src="{{ url_for('static', filename='js/thread.1.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/extra.2.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/thread.js' if config.DEBUG else 'js/thread.1.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/extra.css' if config.DEBUG else 'js/extra.3.css') }}"></script>
     {{ super() }}
 {% endblock %}

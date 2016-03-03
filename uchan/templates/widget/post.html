@@ -42,9 +42,11 @@
             </div>
         {% endif %}
         {% if post_item.has_file %}
-            <a class="file-link" href="{{ post_item.file_location }}" data-filewidth="{{ post_item.file_width }}" data-fileheight="{{ post_item.file_height }}" data-filename="{{ post_item.file_name }}" data-filesize="{{ post_item.file_size }}">
-                <img src="{{ post_item.file_thumbnail_location }}" width="{{ post_item.file_thumbnail_width }}" height="{{ post_item.file_thumbnail_height }}">
-            </a>
+            <div class="file">
+                <a class="file-link" href="{{ post_item.file_location }}" data-filewidth="{{ post_item.file_width }}" data-fileheight="{{ post_item.file_height }}" data-filename="{{ post_item.file_name }}" data-filesize="{{ post_item.file_size }}">
+                    <img src="{{ post_item.file_thumbnail_location }}" width="{{ post_item.file_thumbnail_width }}" height="{{ post_item.file_thumbnail_height }}">
+                </a>
+            </div>
         {% endif %}
         {% if thread %}
             <div class="boardinfo">

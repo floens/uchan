@@ -6,6 +6,14 @@ from uchan.lib import roles
 from uchan.lib.moderator_request import get_authed, get_authed_moderator
 
 
+def get_page_details(mode, board_name):
+    return {
+        'mode': mode,
+        'boardName': board_name,
+        'postEndpoint': url_for('post')
+    }
+
+
 @app.route('/<board_name>/')
 @app.route('/<board_name>/<int:page>')
 def board(board_name, page=None):
@@ -28,8 +36,28 @@ def board(board_name, page=None):
     if not board_cached:
         abort(404)
 
+    page_details = get_page_details('board', board_name)
+    if board_config_cached.board_config.file_posting_enabled:
+        page_details['filePostingEnabled'] = True
+
     show_moderator_buttons = get_authed() and g.moderator_service.has_role(get_authed_moderator(), roles.ROLE_ADMIN)
 
     return render_template('board.html', board=board_cached.board, threads=board_cached.threads,
                            board_config=board_config_cached.board_config, page_index=page,
-                           show_moderator_buttons=show_moderator_buttons)
+                           page_details=page_details, show_moderator_buttons=show_moderator_buttons)
+
+
+@app.route('/<board_name>/catalog')
+def board_catalog(board_name):
+    board_config_cached = g.board_cache.find_board_config_cached(board_name)
+    if not board_config_cached:
+        abort(404)
+
+    board_cached = g.posts_cache.find_board_cached(board_name)
+    if not board_cached:
+        abort(404)
+
+    page_details = get_page_details('catalog', board_name)
+
+    return render_template('catalog.html', board=board_cached.board, threads=board_cached.threads,
+                           board_config=board_config_cached.board_config, page_details=page_details)

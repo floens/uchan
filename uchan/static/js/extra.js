@@ -436,9 +436,11 @@
         }
 
         if (file) {
+            postHtml += '<div class="file">';
             postHtml += '<a class="file-link" href="' + escape(file.location) + '">';
             postHtml += '<img src="' + escape(file.thumbnailLocation) + '" width="' + file.thumbnailWidth + '" height="' + file.thumbnailHeight + '">';
-            postHtml += '</a>'
+            postHtml += '</a>';
+            postHtml += '</div>';
         }
 
         postDiv.innerHTML = postHtml;
@@ -519,7 +521,7 @@
                 }
             }
 
-            var fileAnchorElement = postElement.querySelector('.file-link');
+            var fileAnchorElement = postElement.querySelector('.file');
             if (fileAnchorElement) {
                 var imgElement = fileAnchorElement.querySelector('img');
                 postObj.file = {
