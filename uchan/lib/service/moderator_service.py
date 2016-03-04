@@ -25,14 +25,14 @@ class ModeratorService:
     def add_report(self, report):
         db = get_db()
 
-        exiting_report = None
+        existing_report = None
         try:
-            exiting_report = db.query(Report).filter_by(post_id=report.post_id).one()
+            existing_report = db.query(Report).filter_by(post_id=report.post_id).one()
         except NoResultFound:
             pass
 
-        if exiting_report is not None:
-            exiting_report.count += 1
+        if existing_report is not None:
+            existing_report.count = Report.count + 1
         else:
             report.count = 1
             db.add(report)

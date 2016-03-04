@@ -4,7 +4,6 @@ from uchan import g
 from uchan.lib import roles, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Ban
-from uchan.lib.moderator_request import get_authed_moderator
 from uchan.lib.utils import now, ip4_to_str
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token

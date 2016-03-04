@@ -4,7 +4,6 @@ from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, get_authed_moderator
-from uchan.lib.proxy_request import get_request_ip4_str
 from uchan.mod import mod
 from uchan.view import check_csrf_token
 

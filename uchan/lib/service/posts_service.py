@@ -152,17 +152,25 @@ class PostsService:
             board_name = board.name
             thread_id = to_thread.id
 
-            to_thread.refno_counter += 1
-
             thread_len = db.query(Post).filter_by(thread_id=thread_id).count()
 
             if not sage and thread_len < board_config_cached.board_config.bump_limit:
                 to_thread.last_modified = now()
 
-            post_refno = post.refno = to_thread.refno_counter
-            to_thread.posts.append(post)
+            post.refno = 0
+            # to_thread.posts += [post]
+            post.thread = to_thread
+
+            # Atomically update the refno counter
+            to_thread.refno_counter = Thread.refno_counter + 1
 
             db.commit()
+
+            # Set it to the post after the commit to make sure there aren't any duplicates
+            post_refno = post.refno = to_thread.refno_counter
+
+            db.commit()
+
             mod_log('new reply {} /{}/{}#{}'.format(post.id, board_name, thread_id, post_refno),
                     ip4_str=ip4_to_str(post_details.ip4))
 
