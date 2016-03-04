@@ -8,10 +8,11 @@
 {% import "widget/board_pager.html" as board_pager_widget %}
 
 {% block post_form_top %}
-    {{ post_form_widget.render(board, file_field=board_config.file_posting_enabled) }}
 {% endblock %}
 
 {% block board_controls_top %}
+    [<a href="{{ url_for('board', board_name=board.name) }}">Back</a>]
+    <hr class="content-divider">
 {% endblock %}
 
 {% block board_view_content %}
@@ -21,6 +22,9 @@
 {% endblock %}
 
 {% block board_controls_bottom %}
+    <hr class="content-divider">
+    [<a href="{{ url_for('board', board_name=board.name) }}">Back</a>]
+    <hr class="content-divider">
 {% endblock %}
 
 {% block javascripts %}
