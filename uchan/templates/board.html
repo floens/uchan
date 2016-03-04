@@ -13,7 +13,6 @@
 
 {% block board_controls_top %}
     <hr class="content-divider">
-    [<a href="{{ url_for('board_catalog', board_name=board.name) }}">Catalog</a>]
     {{ board_pager_widget.render(board.name, board_config.pages, page_index) }}
     <hr class="content-divider">
 {% endblock %}

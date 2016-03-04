@@ -1,4 +1,5 @@
 {% macro render(board_name, pages, index) %}
+    [<a href="{{ url_for('board_catalog', board_name=board_name) }}">Catalog</a>]
     {% for i in range(1, pages + 1) %}
         {% if i == index + 1 %}
             [{{ i }}]
