@@ -73,17 +73,18 @@ class PostsCache:
         key = self.get_thread_cache_key(thread_id)
         thread_cache = self.cache.get(key, True)
         if thread_cache is None:
-            thread_cache = self.invalidate_thread_cache(thread_id)
+            thread = g.posts_service.find_thread(thread_id, True)
+            if not thread:
+                return None
+
+            thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board).convert(),
+                                            [PostCacheProxy(i).convert() for i in thread.posts]).convert()
+            self.cache.set(key, thread_cache, timeout=0)
         return thread_cache
 
     def invalidate_thread_cache(self, thread_id):
-        thread = g.posts_service.find_thread(thread_id, True)
-        if not thread:
-            return None
-        thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board).convert(),
-                                        [PostCacheProxy(i).convert() for i in thread.posts]).convert()
-        self.cache.set(self.get_thread_cache_key(thread_id), thread_cache, timeout=0)
-        return thread_cache
+        key = self.get_thread_cache_key(thread_id)
+        self.cache.delete(key)
 
     def get_thread_cache_key(self, thread_id):
         key = 'thread_{}'.format(thread_id)
@@ -93,10 +94,38 @@ class PostsCache:
         key = self.get_board_page_cache_key(board_name)
         board_cache = self.cache.get(key, True)
         if board_cache is None:
-            board_cache = self.invalidate_board_page_cache(board_name)
+            board = g.board_service.find_board(board_name, True)
+            if not board:
+                return None
 
-        if board_cache is None:
-            return None
+            stickies = []
+            threads = []
+            for thread in board.threads:
+                thread_cached = self.find_thread_cached(thread.id)
+                # The board and thread selects are done separately and there is thus the
+                # possibility that the thread was removed after the board select
+                if thread_cached is None:
+                    continue
+
+                original_length = len(thread_cached.posts)
+
+                op = thread_cached.posts[0]
+                snippets = thread_cached.posts[-PostsCache.BOARD_SNIPPET_COUNT:]
+                if snippets and snippets[0].id == op.id:
+                    snippets = snippets[1:]
+
+                thread_cached.posts = [op] + snippets
+                thread_cached.omitted_count = original_length - 1 - 5
+                if thread_cached.sticky:
+                    stickies.append(thread_cached)
+                else:
+                    threads.append(thread_cached)
+
+            stickies = sorted(stickies, key=lambda t: t.last_modified, reverse=False)
+            threads = sorted(threads, key=lambda t: t.last_modified, reverse=True)
+
+            board_cache = BoardPageCacheProxy(BoardCacheProxy(board), stickies + threads).convert()
+            self.cache.set(key, board_cache, timeout=0)
 
         if page is None:
             return BoardPageCacheProxy(board_cache.board, board_cache.threads).convert()
@@ -108,39 +137,8 @@ class PostsCache:
             return BoardPageCacheProxy(board_cache.board, board_cache.threads[from_index:to_index]).convert()
 
     def invalidate_board_page_cache(self, board_name):
-        board = g.board_service.find_board(board_name, True)
-        if not board:
-            return None
-
-        stickies = []
-        threads = []
-        for thread in board.threads:
-            thread_cached = self.find_thread_cached(thread.id)
-            # The board and thread selects are done separately and there is thus the
-            # possibility that the thread was removed after the board select
-            if thread_cached is None:
-                continue
-
-            original_length = len(thread_cached.posts)
-
-            op = thread_cached.posts[0]
-            snippets = thread_cached.posts[-PostsCache.BOARD_SNIPPET_COUNT:]
-            if snippets and snippets[0].id == op.id:
-                snippets = snippets[1:]
-
-            thread_cached.posts = [op] + snippets
-            thread_cached.omitted_count = original_length - 1 - 5
-            if thread_cached.sticky:
-                stickies.append(thread_cached)
-            else:
-                threads.append(thread_cached)
-
-        stickies = sorted(stickies, key=lambda t: t.last_modified, reverse=False)
-        threads = sorted(threads, key=lambda t: t.last_modified, reverse=True)
-
-        board_cache = BoardPageCacheProxy(BoardCacheProxy(board), stickies + threads).convert()
-        self.cache.set(self.get_board_page_cache_key(board_name), board_cache, timeout=0)
-        return board_cache
+        key = self.get_board_page_cache_key(board_name)
+        self.cache.delete(key)
 
     def get_board_page_cache_key(self, board_name):
         key = 'board_{}'.format(board_name)
