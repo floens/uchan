@@ -50,11 +50,11 @@
 
 {% block styles %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style/extra.1.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/extra.css' if config.DEBUG else 'css/extra.4.css') }}">
 {% endblock %}
 
 {% block javascripts %}
-    <script src="{{ url_for('static', filename='js/thread.js' if config.DEBUG else 'js/thread.1.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/extra.css' if config.DEBUG else 'js/extra.3.css') }}"></script>
     {{ super() }}
+    <script src="{{ url_for('static', filename='js/thread.js' if config.DEBUG else 'js/thread.4.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/extra.js' if config.DEBUG else 'js/extra.4.js') }}"></script>
 {% endblock %}
