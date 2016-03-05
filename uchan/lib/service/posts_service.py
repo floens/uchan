@@ -71,6 +71,8 @@ class PostsService:
                 raise ArgumentError('Password too long, max ' + str(self.MAX_PASSWORD_LENGTH))
 
     def handle_post(self, post_details):
+        start_time = now()
+
         board, to_thread = self.get_board_thread(post_details)
 
         g.plugin_manager.execute_hook('on_handle_post', post_details)
@@ -135,27 +137,30 @@ class PostsService:
 
             thread = Thread()
             thread.last_modified = now()
-            thread.posts.append(post)
-            board.threads.append(thread)
+            post.thread = thread
+            thread.board = board
             db.add(thread)
 
+            db.flush()
+            thread_id = thread.id
+
             thread_ids_to_invalidate = self.purge_threads(board, board_config_cached)
+            db.commit()
+
+            mod_log('new thread /{}/{} took {}ms'.format(board_name, thread_id, now() - start_time), ip4_str=ip4_to_str(post_details.ip4))
+            start_time = now()
+
             for thread_id_to_invalidate in thread_ids_to_invalidate:
                 g.posts_cache.invalidate_thread_cache(thread_id_to_invalidate)
-            mod_log('new thread /{}/{}'.format(board_name, thread.id), ip4_str=ip4_to_str(post_details.ip4))
-            db.commit()
-            g.posts_cache.invalidate_thread_cache(thread.id)
+            g.posts_cache.invalidate_thread_cache(thread_id)
             g.posts_cache.invalidate_board_page_cache(board_name)
+
+            g.logger.info('updating new thread caches took {}ms'.format(now() - start_time))
 
             return board_name, thread.id, 1
         else:
             board_name = board.name
             thread_id = to_thread.id
-
-            thread_len = db.query(Post).filter_by(thread_id=thread_id).count()
-
-            if not sage and thread_len < board_config_cached.board_config.bump_limit:
-                to_thread.last_modified = now()
 
             post.refno = 0
             # to_thread.posts += [post]
@@ -168,14 +173,22 @@ class PostsService:
 
             # Set it to the post after the commit to make sure there aren't any duplicates
             post_refno = post.refno = to_thread.refno_counter
+            post_id = post.id
+
+            # Use the refno to avoid a count(*)
+            if not sage and post_refno <= board_config_cached.board_config.bump_limit:
+                to_thread.last_modified = now()
 
             db.commit()
 
-            mod_log('new reply {} /{}/{}#{}'.format(post.id, board_name, thread_id, post_refno),
+            mod_log('new reply {} /{}/{}#{} took {}ms'.format(post_id, board_name, thread_id, post_refno, now() - start_time),
                     ip4_str=ip4_to_str(post_details.ip4))
+            start_time = now()
 
             g.posts_cache.invalidate_thread_cache(thread_id)
             g.posts_cache.invalidate_board_page_cache(board_name)
+
+            g.logger.info('updating new reply caches took {}ms'.format(now() - start_time))
 
             return board_name, thread_id, post_refno
 
@@ -283,12 +296,13 @@ class PostsService:
                 q = q.options(lazyload('posts'))
             thread = q.filter_by(id=thread_id).one()
 
-            # The thread and posts query are done separately
-            # And thus there is a possibility that the second query returns empty data
-            # when another transaction deletes the thread
-            # Account for this by just returning None as if the thread didn't exist
-            if not thread.posts:
-                return None
+            if include_posts:
+                # The thread and posts query are done separately
+                # And thus there is a possibility that the second query returns empty data
+                # when another transaction deletes the thread
+                # Account for this by just returning None as if the thread didn't exist
+                if not thread.posts:
+                    return None
 
             return thread
         except NoResultFound:
@@ -296,19 +310,21 @@ class PostsService:
 
     def toggle_thread_sticky(self, thread):
         thread.sticky = not thread.sticky
-        # Invalidate caches
-        g.posts_cache.invalidate_board_page_cache(thread.board.name)
-        g.posts_cache.invalidate_thread_cache(thread.id)
         db = get_db()
         db.commit()
 
-    def toggle_thread_locked(self, thread):
-        thread.locked = not thread.locked
         # Invalidate caches
         g.posts_cache.invalidate_board_page_cache(thread.board.name)
         g.posts_cache.invalidate_thread_cache(thread.id)
+
+    def toggle_thread_locked(self, thread):
+        thread.locked = not thread.locked
         db = get_db()
         db.commit()
+
+        # Invalidate caches
+        g.posts_cache.invalidate_board_page_cache(thread.board.name)
+        g.posts_cache.invalidate_thread_cache(thread.id)
 
     def find_post(self, post_id):
         try:
@@ -320,22 +336,22 @@ class PostsService:
         if post.refno == 1:
             self.delete_thread(post.thread)
         else:
-            # Invalidate caches
-            g.posts_cache.invalidate_board_page_cache(post.thread.board.name)
-            g.posts_cache.invalidate_thread_cache(post.thread.id)
-
             db = get_db()
             db.delete(post)
             db.commit()
 
-    def delete_thread(self, thread):
-        # Invalidate caches
-        g.posts_cache.invalidate_board_page_cache(thread.board.name)
-        g.posts_cache.invalidate_thread_cache(thread.id)
+            # Invalidate caches
+            g.posts_cache.invalidate_board_page_cache(post.thread.board.name)
+            g.posts_cache.invalidate_thread_cache(post.thread.id)
 
+    def delete_thread(self, thread):
         db = get_db()
         db.delete(thread)
         db.commit()
+
+        # Invalidate caches
+        g.posts_cache.invalidate_board_page_cache(thread.board.name)
+        g.posts_cache.invalidate_thread_cache(thread.id)
 
     def purge_threads(self, board, board_config_cached):
         pages = board_config_cached.board_config.pages
@@ -347,6 +363,7 @@ class PostsService:
         thread_ids_to_invalidate = []
         overflowed_threads = db.query(Thread).order_by(Thread.last_modified.desc()).filter_by(board_id=board.id)[max:]
         for overflowed_thread in overflowed_threads:
+            thread_id = overflowed_thread.id
             db.delete(overflowed_thread)
-            thread_ids_to_invalidate.append(overflowed_thread.id)
+            thread_ids_to_invalidate.append(thread_id)
         return thread_ids_to_invalidate

@@ -45,11 +45,13 @@ class PageCache:
         return 'page_single_{}'.format(link_name)
 
     def invalidate_page_cache(self, link_name):
+        key = self.get_page_key(link_name)
         page = g.page_service.get_page_for_link_name(link_name)
         if not page:
+            self.cache.delete(key)
             return None
         page_cache = PageCacheProxy(page)
-        self.cache.set(self.get_page_key(link_name), page_cache, timeout=0)
+        self.cache.set(key, page_cache, timeout=0)
         return page_cache
 
     def find_pages_for_type_cached(self, page_type):
@@ -72,9 +74,11 @@ class PageCache:
         return 'page_type_{}'.format(page_type)
 
     def invalidate_pages_with_type(self, page_type):
+        key = self.get_pages_type_key(page_type)
         pages = g.page_service.get_pages_for_type(page_type)
         if pages is None:
+            self.cache.delete(key)
             return None
         pages_cache = PagesCacheProxy(pages)
-        self.cache.set(self.get_pages_type_key(page_type), pages_cache, timeout=0)
+        self.cache.set(key, pages_cache, timeout=0)
         return pages_cache

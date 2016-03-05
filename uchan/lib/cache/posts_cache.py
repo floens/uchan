@@ -77,12 +77,14 @@ class PostsCache:
         return thread_cache
 
     def invalidate_thread_cache(self, thread_id):
+        key = self.get_thread_cache_key(thread_id)
         thread = g.posts_service.find_thread(thread_id, True)
         if not thread:
+            self.cache.delete(key)
             return None
         thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board).convert(),
                                         [PostCacheProxy(i).convert() for i in thread.posts]).convert()
-        self.cache.set(self.get_thread_cache_key(thread_id), thread_cache, timeout=0)
+        self.cache.set(key, thread_cache, timeout=0)
         return thread_cache
 
     def get_thread_cache_key(self, thread_id):
@@ -108,8 +110,10 @@ class PostsCache:
             return BoardPageCacheProxy(board_cache.board, board_cache.threads[from_index:to_index]).convert()
 
     def invalidate_board_page_cache(self, board_name):
+        key = self.get_board_page_cache_key(board_name)
         board = g.board_service.find_board(board_name, True)
         if not board:
+            self.cache.delete(key)
             return None
 
         stickies = []
@@ -139,7 +143,7 @@ class PostsCache:
         threads = sorted(threads, key=lambda t: t.last_modified, reverse=True)
 
         board_cache = BoardPageCacheProxy(BoardCacheProxy(board), stickies + threads).convert()
-        self.cache.set(self.get_board_page_cache_key(board_name), board_cache, timeout=0)
+        self.cache.set(key, board_cache, timeout=0)
         return board_cache
 
     def get_board_page_cache_key(self, board_name):
