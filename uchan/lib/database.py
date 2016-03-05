@@ -40,7 +40,8 @@ def init_db():
     global _engine
     global ModelBase
 
-    _engine = create_engine(connect_string(), pool_size=config.DATABASE_POOL_SIZE, echo=config.DEBUG)
+    echo = hasattr(config, 'DATABASE_ECHO') and config.DATABASE_ECHO
+    _engine = create_engine(connect_string(), pool_size=config.DATABASE_POOL_SIZE, echo=echo)
     _sessionconstruct = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=_engine))
 
     # Import our models. If you add new models, import them here.

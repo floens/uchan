@@ -314,8 +314,8 @@ class PostsService:
         db.commit()
 
         # Invalidate caches
-        g.posts_cache.invalidate_board_page_cache(thread.board.name)
         g.posts_cache.invalidate_thread_cache(thread.id)
+        g.posts_cache.invalidate_board_page_cache(thread.board.name)
 
     def toggle_thread_locked(self, thread):
         thread.locked = not thread.locked
@@ -323,8 +323,8 @@ class PostsService:
         db.commit()
 
         # Invalidate caches
-        g.posts_cache.invalidate_board_page_cache(thread.board.name)
         g.posts_cache.invalidate_thread_cache(thread.id)
+        g.posts_cache.invalidate_board_page_cache(thread.board.name)
 
     def find_post(self, post_id):
         try:
@@ -341,8 +341,8 @@ class PostsService:
             db.commit()
 
             # Invalidate caches
-            g.posts_cache.invalidate_board_page_cache(post.thread.board.name)
             g.posts_cache.invalidate_thread_cache(post.thread.id)
+            g.posts_cache.invalidate_board_page_cache(post.thread.board.name)
 
     def delete_thread(self, thread):
         db = get_db()
@@ -350,8 +350,8 @@ class PostsService:
         db.commit()
 
         # Invalidate caches
-        g.posts_cache.invalidate_board_page_cache(thread.board.name)
         g.posts_cache.invalidate_thread_cache(thread.id)
+        g.posts_cache.invalidate_board_page_cache(thread.board.name)
 
     def purge_threads(self, board, board_config_cached):
         pages = board_config_cached.board_config.pages

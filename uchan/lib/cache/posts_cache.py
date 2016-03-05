@@ -31,6 +31,9 @@ class ThreadCacheProxy(CacheDict):
         self.board = board
         self.posts = posts
 
+        # self.original_length = 0
+        # self.omitted_count = 0
+
 
 # Object to be memcached, containing post info
 class PostCacheProxy(CacheDict):
@@ -73,23 +76,46 @@ class PostsCache:
         key = self.get_thread_cache_key(thread_id)
         thread_cache = self.cache.get(key, True)
         if thread_cache is None:
-            thread_cache = self.invalidate_thread_cache(thread_id)
+            thread_cache, thread_stub_cache = self.invalidate_thread_cache(thread_id)
         return thread_cache
+
+    def find_thread_stub_cached(self, thread_id):
+        key = self.get_thread_stub_cache_key(thread_id)
+        thread_stub_cache = self.cache.get(key, True)
+        if thread_stub_cache is None:
+            thread_cache, thread_stub_cache = self.invalidate_thread_cache(thread_id)
+        return thread_stub_cache
 
     def invalidate_thread_cache(self, thread_id):
         key = self.get_thread_cache_key(thread_id)
+        stub_key = self.get_thread_stub_cache_key(thread_id)
         thread = g.posts_service.find_thread(thread_id, True)
         if not thread:
             self.cache.delete(key)
-            return None
-        thread_cache = ThreadCacheProxy(thread, BoardCacheProxy(thread.board).convert(),
-                                        [PostCacheProxy(i).convert() for i in thread.posts]).convert()
+            self.cache.delete(stub_key)
+            return None, None
+        board_cache = BoardCacheProxy(thread.board).convert()
+        thread_cache = ThreadCacheProxy(thread, board_cache, [PostCacheProxy(i).convert() for i in thread.posts]).convert()
+
         self.cache.set(key, thread_cache, timeout=0)
-        return thread_cache
+
+        op = thread_cache.posts[0]
+        snippets = thread_cache.posts[-PostsCache.BOARD_SNIPPET_COUNT:]
+        if snippets and snippets[0].id == op.id:
+            snippets = snippets[1:]
+
+        thread_cache_stub = ThreadCacheProxy(thread, board_cache, [op] + snippets).convert()
+        thread_cache_stub.original_length = len(thread_cache.posts)
+
+        self.cache.set(stub_key, thread_cache_stub, timeout=0)
+
+        return thread_cache, thread_cache_stub
 
     def get_thread_cache_key(self, thread_id):
-        key = 'thread_{}'.format(thread_id)
-        return key
+        return 'thread_{}'.format(thread_id)
+
+    def get_thread_stub_cache_key(self, thread_id):
+        return 'thread_stub_{}'.format(thread_id)
 
     def find_board_cached(self, board_name, page=None):
         key = self.get_board_page_cache_key(board_name)
@@ -119,25 +145,17 @@ class PostsCache:
         stickies = []
         threads = []
         for thread in board.threads:
-            thread_cached = self.find_thread_cached(thread.id)
+            thread_stub_cached = self.find_thread_stub_cached(thread.id)
             # The board and thread selects are done separately and there is thus the
             # possibility that the thread was removed after the board select
-            if thread_cached is None:
+            if thread_stub_cached is None:
                 continue
 
-            original_length = len(thread_cached.posts)
-
-            op = thread_cached.posts[0]
-            snippets = thread_cached.posts[-PostsCache.BOARD_SNIPPET_COUNT:]
-            if snippets and snippets[0].id == op.id:
-                snippets = snippets[1:]
-
-            thread_cached.posts = [op] + snippets
-            thread_cached.omitted_count = original_length - 1 - 5
-            if thread_cached.sticky:
-                stickies.append(thread_cached)
+            thread_stub_cached.omitted_count = thread_stub_cached.original_length - 1 - 5
+            if thread_stub_cached.sticky:
+                stickies.append(thread_stub_cached)
             else:
-                threads.append(thread_cached)
+                threads.append(thread_stub_cached)
 
         stickies = sorted(stickies, key=lambda t: t.last_modified, reverse=False)
         threads = sorted(threads, key=lambda t: t.last_modified, reverse=True)
@@ -147,8 +165,7 @@ class PostsCache:
         return board_cache
 
     def get_board_page_cache_key(self, board_name):
-        key = 'board_{}'.format(board_name)
-        return key
+        return 'board_{}'.format(board_name)
 
     def invalidate_board(self, board_name):
         self.invalidate_board_page_cache(board_name)
