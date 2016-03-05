@@ -144,8 +144,8 @@ class PostsService:
                 g.posts_cache.invalidate_thread_cache(thread_id_to_invalidate)
             mod_log('new thread /{}/{}'.format(board_name, thread.id), ip4_str=ip4_to_str(post_details.ip4))
             db.commit()
-            g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread.id)
+            g.posts_cache.invalidate_board_page_cache(board_name)
 
             return board_name, thread.id, 1
         else:
@@ -174,8 +174,8 @@ class PostsService:
             mod_log('new reply {} /{}/{}#{}'.format(post.id, board_name, thread_id, post_refno),
                     ip4_str=ip4_to_str(post_details.ip4))
 
-            g.posts_cache.invalidate_board_page_cache(board_name)
             g.posts_cache.invalidate_thread_cache(thread_id)
+            g.posts_cache.invalidate_board_page_cache(board_name)
 
             return board_name, thread_id, post_refno
 
