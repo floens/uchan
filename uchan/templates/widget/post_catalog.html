@@ -1,4 +1,4 @@
-{% macro render(board_name, post_item, thread, snippet=False, is_locked=False, is_sticky=False) %}
+{% macro render(board_name, thread, post_item, snippet=False, is_locked=False, is_sticky=False) %}
     <div class="catalog-post" id="p{{ post_item.refno }}">
         {% if post_item.has_file %}
             <div class="file">
@@ -28,6 +28,11 @@
                 {% endif %}
             </div>
         {% endif %}
-        [<a href="{{ url_for('view_thread',board_name=board_name,thread_id=thread.id) }}">View thread</a>]
+        {% if thread.original_length > 1 %}
+            <div class="stats">
+                {{ thread.original_length - 1 }} {{ (thread.original_length - 1)|pluralize('reply', 'replies') }}
+            </div>
+        {% endif %}
+        [<a href="{{ url_for('view_thread', board_name=board_name, thread_id=thread.id) }}">View thread</a>]
     </div>
 {% endmacro %}

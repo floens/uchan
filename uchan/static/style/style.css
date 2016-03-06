@@ -169,6 +169,10 @@ body, textarea {
 
 }
 
+.catalog-post .header .date {
+    color: #5a5a5a;
+}
+
 .catalog-post .file {
     text-align: center;
 }
@@ -185,6 +189,10 @@ body, textarea {
     overflow: hidden;
     max-height: 100px;
     margin: 0 0 0.7em 0;
+}
+
+.catalog-post .stats {
+    color: #5a5a5a;
 }
 
 .footer {

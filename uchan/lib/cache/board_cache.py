@@ -55,7 +55,7 @@ class BoardCache:
         return board_config_cache
 
     def get_board_config_key(self, board_name):
-        return 'board_config_{}'.format(board_name)
+        return 'board_config${}'.format(board_name)
 
     def invalidate_board_config(self, board_name):
         self.cache.delete(self.get_board_config_key(board_name))
@@ -79,5 +79,4 @@ class BoardCache:
         return all_boards_cache
 
     def invalidate_all_boards(self):
-        key = 'all_boards'
-        self.cache.delete(key)
+        self.cache.delete('all_boards')

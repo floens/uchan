@@ -51,7 +51,7 @@
         {% if thread %}
             <div class="boardinfo">
                 {% if thread.omitted_count > 0 %}
-                    {{ thread.omitted_count ~ ' ' ~ thread.omitted_count|pluralize('reply','replies') }} omitted
+                    {{ thread.omitted_count ~ ' ' ~ thread.omitted_count|pluralize('reply', 'replies') }} omitted
                 {% endif %}
                 [<a href="{{ url_for('view_thread', board_name=thread.board.name, thread_id=thread.id) }}">View thread</a>]
             </div>

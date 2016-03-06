@@ -4,6 +4,7 @@ from time import time
 from werkzeug.contrib.cache import MemcachedCache
 
 import config
+from uchan import g
 from uchan.lib.utils import now
 
 
@@ -21,12 +22,28 @@ def make_attr_dict(value):
 class CacheWrapper(MemcachedCache):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.client = self._client
+
+        self.max_length = config.MEMCACHE_MAX_ITEM_SIZE
+        self.client.server_max_value_length = self.max_length
 
     def set(self, key, value, **kwargs):
         # g.logger.debug('set {} {}'.format(key, value))
 
-        if not super().set(key, json.dumps(value), **kwargs) and config.NO_MEMCACHED_PENALTY:
-            raise Exception('Could not set value to cache')
+        json_data = json.dumps(value, separators=(',', ':'))
+
+        if len(json_data) > self.max_length:
+            g.logger.error('cache value exceeds max length ({} > {})'.format(len(json_data), self.max_length))
+            return False
+
+        percentage = len(json_data) / self.max_length
+        if percentage > 0.5:
+            g.logger.warning('key {0} exceeds 50% of the total storage available ({1:.2f}%)'.format(key, percentage * 100))
+
+        ret = super().set(key, json_data, **kwargs)
+        if not ret:
+            g.logger.error('cache set failed {}'.format(ret))
+        return bool(ret)
 
     def get(self, key, convert=False):
         # g.logger.debug('get {}'.format(key))

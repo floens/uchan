@@ -27,10 +27,12 @@ LOCAL_CDN_WEB_PATH = 'https://cdn.example.com/media/'
 ENABLE_COOLDOWN_CHECKING = True
 
 # Memcached servers to use
+# Running without memcached destroys performance, so make sure this is correctly set.
 MEMCACHED_SERVERS = ['127.0.0.1:11211']
-# Fail when connecting to the memcached server fails
-# Only disable when developing, running without memcached destroys performance.
-NO_MEMCACHED_PENALTY = True
+# The -I flag of memcache, the max size of items
+# note: "-I 2M" means "2 * 1024 * 1024" here
+# Memcache defaults to 1M
+MEMCACHE_MAX_ITEM_SIZE = 1 * 1024 * 1024
 
 # Enable this when serving behind a proxy (almost always)
 # Do not use this middleware in non-proxy setups for security reasons.

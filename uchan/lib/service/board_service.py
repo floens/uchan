@@ -79,14 +79,16 @@ class BoardService:
         g.board_cache.invalidate_all_boards()
 
     def delete_board(self, board):
-        g.posts_cache.invalidate_board(board.name)
-        g.board_cache.invalidate_all_boards()
-
         db = get_db()
         db.delete(board)
         db.commit()
 
-    def update_board_config(self, board):
+        g.board_cache.invalidate_all_boards()
         g.board_cache.invalidate_board_config(board.name)
+        g.posts_cache.delete_board_cache(board.name)
 
+    def update_board_config(self, board):
         get_db().commit()
+
+        g.board_cache.invalidate_board_config(board.name)
+        g.posts_cache.invalidate_board(board.name)

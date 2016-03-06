@@ -42,7 +42,7 @@ class PageCache:
         return page_cache
 
     def get_page_key(self, link_name):
-        return 'page_single_{}'.format(link_name)
+        return 'page_single${}'.format(link_name)
 
     def invalidate_page_cache(self, link_name):
         key = self.get_page_key(link_name)
@@ -71,7 +71,7 @@ class PageCache:
         return pages_cache
 
     def get_pages_type_key(self, page_type):
-        return 'page_type_{}'.format(page_type)
+        return 'page_type${}'.format(page_type)
 
     def invalidate_pages_with_type(self, page_type):
         key = self.get_pages_type_key(page_type)
