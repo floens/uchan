@@ -90,6 +90,8 @@ class FileService:
 
     GENERATED_FILE_NAME_LENGTH = 16
     MAX_FILE_NAME_LENGTH = 50
+    MAX_IMAGE_WIDTH = 10000
+    MAX_IMAGE_HEIGHT = 10000
     THUMBNAIL_POSTFIX = '_t'
 
     def __init__(self, upload_queue_path, cdn):
@@ -153,6 +155,10 @@ class FileService:
                 raise ArgumentError('Invalid file format')
 
             width, height = image.size
+
+            if width > self.MAX_IMAGE_WIDTH or height > self.MAX_IMAGE_HEIGHT:
+                raise ArgumentError('Image size too big')
+
             image.thumbnail((thumbnail_size, thumbnail_size))
             thumbnail_width, thumbnail_height = image.size
 
