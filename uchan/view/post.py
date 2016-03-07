@@ -13,7 +13,7 @@ def post():
     form = request.form
 
     if not check_csrf_referer(request):
-        abort(400)
+        raise BadRequestError('Bad referer header')
 
     site_config = g.site_cache.find_site_config_cached()
     if not site_config.posting_enabled:
@@ -113,7 +113,7 @@ def post_manage():
     form = request.form
 
     if not check_csrf_referer(request):
-        abort(400)
+        raise BadRequestError('Bad referer header')
 
     post_id = form.get('post_id', type=int)
     if post_id is not None and (post_id <= 0 or post_id > 2 ** 32):
