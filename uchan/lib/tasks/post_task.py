@@ -17,6 +17,9 @@ class PostDetails:
 
         self.uploaded_file = None
 
+        self.check_time = 0
+        self.file_time = 0
+
 
 @celery.task
 def post_check_task(post_details):

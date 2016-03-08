@@ -5,11 +5,14 @@ from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib.moderator_request import get_authed_moderator, get_authed
 from uchan.lib.service.posts_service import RequestBannedException, RequestSuspendedException
 from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task, post_check_task
+from uchan.lib.utils import now
 from uchan.view import check_csrf_referer
 
 
 @app.route('/post', methods=['POST'])
 def post():
+    start_time = now()
+
     form = request.form
 
     if not check_csrf_referer(request):
@@ -77,16 +80,20 @@ def post():
     except ArgumentError as e:
         raise BadRequestError(e.message)
 
+    post_details.check_time = now() - start_time
+
     upload_queue_files = None
     try:
         # If a image was uploaded validate it and upload it to the cdn
         # Then if that's complete, send a task off to the workers to insert the details in the db
         if has_file:
+            start_time = now()
             thumbnail_size = 128 if thread_id else 256
             try:
                 post_details.uploaded_file, upload_queue_files = g.file_service.handle_upload(file, thumbnail_size)
             except ArgumentError as e:
                 raise BadRequestError(e.message)
+            post_details.file_time = now() - start_time
 
         # Queue the post task
         try:

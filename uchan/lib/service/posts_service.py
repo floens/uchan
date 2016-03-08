@@ -147,7 +147,7 @@ class PostsService:
             thread_ids_to_invalidate = self.purge_threads(board, board_config_cached)
             db.commit()
 
-            mod_log('new thread /{}/{} took {}ms'.format(board_name, thread_id, now() - start_time), ip4_str=ip4_to_str(post_details.ip4))
+            insert_time = now() - start_time
             start_time = now()
 
             for thread_id_to_invalidate in thread_ids_to_invalidate:
@@ -155,7 +155,9 @@ class PostsService:
             g.posts_cache.invalidate_thread_cache(thread_id)
             g.posts_cache.invalidate_board_page_cache(board_name)
 
-            g.logger.info('updating new thread caches took {}ms'.format(now() - start_time))
+            cache_time = now() - start_time
+            log = 'new thread /{}/{} ({})'.format(board_name, thread_id, self.gather_statistics(insert_time, cache_time, post_details))
+            mod_log(log, ip4_str=ip4_to_str(post_details.ip4))
 
             return board_name, thread.id, 1
         else:
@@ -181,16 +183,27 @@ class PostsService:
 
             db.commit()
 
-            mod_log('new reply {} /{}/{}#{} took {}ms'.format(post_id, board_name, thread_id, post_refno, now() - start_time),
-                    ip4_str=ip4_to_str(post_details.ip4))
+            insert_time = now() - start_time
             start_time = now()
 
             g.posts_cache.invalidate_thread_cache(thread_id)
             g.posts_cache.invalidate_board_page_cache(board_name)
 
-            g.logger.info('updating new reply caches took {}ms'.format(now() - start_time))
+            cache_time = now() - start_time
+            log = 'new reply /{}/{}#{} (id: {} {})'.format(
+                    board_name, thread_id, post_refno, post_id, self.gather_statistics(insert_time, cache_time, post_details))
+            mod_log(log, ip4_str=ip4_to_str(post_details.ip4))
 
             return board_name, thread_id, post_refno
+
+    def gather_statistics(self, insert_time, cache_time, post_details):
+        total = insert_time + cache_time + post_details.check_time
+        file_time = ''
+        if post_details.has_file:
+            total += post_details.file_time
+            file_time = 'file: {}ms, '.format(post_details.file_time)
+
+        return 'check: {}ms, {}db: {}ms, caches: {}ms, total: {}ms'.format(post_details.check_time, file_time, insert_time, cache_time, total)
 
     def get_board_thread(self, post_details):
         board = g.board_service.find_board(post_details.board_name)
