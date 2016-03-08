@@ -149,6 +149,10 @@ body, textarea {
     color: #ff0000;
 }
 
+.post .styled-text .abbreviated {
+    color: #5a5a5a;
+}
+
 .post .file-link img {
     margin: 15px 0 0 0;
 }

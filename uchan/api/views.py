@@ -72,8 +72,7 @@ def build_post_object(post):
         'date': post.date
     }
 
-    if post.text:
-        # post_obj['text'] = post.text
+    if post.html:
         post_obj['html'] = post.html
 
     if post.name:

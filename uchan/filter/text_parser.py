@@ -5,15 +5,15 @@ from markupsafe import escape, Markup
 POST_REFNO_PATTERN = re.compile('&gt;&gt;(\\d{1,16})')
 
 
-def parse_text(raw, linkify=False, bigheaders=False):
-    # Any html chars are now replaced with their escaped version
-    # e.g. > became &gt;
-    # keep this in mind when parsing
-    value = str(escape(raw))
-
+def parse_text(raw, linkify=False, bigheaders=False, maxlines=0, maxlinestext=None):
     lines = []
     was_empty_line = False
-    for line in value.splitlines():
+    for rawline in raw.splitlines():
+        # Any html chars are now replaced with their escaped version
+        # e.g. > became &gt;
+        # keep this in mind when parsing
+        line = str(escape(rawline))
+
         if line:
             was_empty_line = False
 
@@ -24,6 +24,11 @@ def parse_text(raw, linkify=False, bigheaders=False):
                 lines.append('<br>')
                 was_empty_line = True
 
+        if maxlines > 0 and len(lines) >= maxlines - 1:
+            if maxlinestext:
+                lines.append(maxlinestext)
+            break
+
     value = ''.join(lines)
 
     value = parse_text_whole(value)
@@ -32,8 +37,10 @@ def parse_text(raw, linkify=False, bigheaders=False):
     return Markup(value)
 
 
-CODE_RE = re.compile(r'(\[code\])(.+?(?=\[/code\]))(\[/code\])', re.S | re.I)
-SPOILER_RE = re.compile(r'(\[s\])(.+?(?=\[/s\]))(\[/s\])', re.S | re.I)
+# note: these match until the closing tag or the end of the line
+# this is to make the maxlines code easier
+CODE_RE = re.compile(r'(\[code\](?:<br>)?)(.+?(?=\[/code\]|$))(\[/code\]|$)', re.S | re.I)
+SPOILER_RE = re.compile(r'(\[s\])(.+?(?=\[/s\]|$))(\[/s\]|$)', re.S | re.I)
 
 STRIKETHROUGH_RE = re.compile(r'(~~)(.+?(?=~~))(~~)', re.S)
 
@@ -67,22 +74,22 @@ def parse_text_line(line, linkify, bigheaders):
 
     line = STRIKETHROUGH_RE.sub('<s>\\2</s>', line)
 
-    if line.startswith('# '):
-        with_break = False
-        line = '<h3> ' + line[2:] + '</h3>'
-
-    if line.startswith('## '):
-        with_break = False
-        line = '<h3 class="red"> ' + line[3:] + '</h3>'
-
     if bigheaders:
-        if line.startswith('### '):
+        if line.startswith('####'):
             with_break = False
-            line = '<h2> ' + line[4:] + '</h2>'
+            line = '<h1> ' + line[4:].lstrip() + '</h1>'
 
-        if line.startswith('#### '):
+        if line.startswith('###'):
             with_break = False
-            line = '<h1> ' + line[5:] + '</h1>'
+            line = '<h2> ' + line[3:].lstrip() + '</h2>'
+
+    if line.startswith('##'):
+        with_break = False
+        line = '<h3 class="red"> ' + line[2:].lstrip() + '</h3>'
+
+    if line.startswith('#'):
+        with_break = False
+        line = '<h3> ' + line[1:].lstrip() + '</h3>'
 
     # If the line started with a > wrap the line around a quote span
     if line.startswith('&gt;'):

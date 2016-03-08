@@ -37,14 +37,13 @@ class ThreadCacheProxy(CacheDict):
 
 # Object to be memcached, containing post info
 class PostCacheProxy(CacheDict):
-    def __init__(self, post):
+    def __init__(self, post, html):
         super().__init__()
         self.id = post.id
         self.date = post.date
         self.name = post.name
         self.subject = post.subject
-        self.text = post.text
-        self.html = parse_text(post.text)
+        self.html = html
         self.refno = post.refno
 
         self.mod_code = None
@@ -52,6 +51,7 @@ class PostCacheProxy(CacheDict):
             moderator = post.moderator
             self.mod_code = '## ' + roles.get_role_name(moderator.roles)
             if post.with_mod_name:
+                self.name = ''
                 self.mod_code = moderator.username + ' ' + self.mod_code
 
         self.has_file = post.file is not None
@@ -68,6 +68,7 @@ class PostCacheProxy(CacheDict):
 
 class PostsCache:
     BOARD_SNIPPET_COUNT = 5
+    BOARD_SNIPPET_MAX_LINES = 12
 
     def __init__(self, cache):
         self.cache = cache
@@ -95,14 +96,20 @@ class PostsCache:
             self.cache.delete(stub_key)
             return None, None
         board_cache = BoardCacheProxy(thread.board).convert()
-        thread_cache = ThreadCacheProxy(thread, board_cache, [PostCacheProxy(i).convert() for i in thread.posts]).convert()
+
+        thread_cache = ThreadCacheProxy(thread, board_cache, [PostCacheProxy(i, parse_text(i.text)) for i in thread.posts]).convert()
 
         self.cache.set(key, thread_cache, timeout=0)
 
-        op = thread_cache.posts[0]
-        snippets = thread_cache.posts[1:][-PostsCache.BOARD_SNIPPET_COUNT:]
+        total_snippets_original = [thread.posts[0]] + thread.posts[1:][-PostsCache.BOARD_SNIPPET_COUNT:]
+        total_snippets_shortened = []
 
-        thread_cache_stub = ThreadCacheProxy(thread, board_cache, [op] + snippets).convert()
+        for i in total_snippets_original:
+            # TODO: clean up view code
+            html = parse_text(i.text, maxlines=self.BOARD_SNIPPET_MAX_LINES, maxlinestext='<span class="abbreviated">Comment too long, view thread to read.</span>')
+            total_snippets_shortened.append(PostCacheProxy(i, html))
+
+        thread_cache_stub = ThreadCacheProxy(thread, board_cache, total_snippets_shortened).convert()
         thread_cache_stub.original_length = len(thread_cache.posts)
 
         self.cache.set(stub_key, thread_cache_stub, timeout=0)
