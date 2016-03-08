@@ -40,6 +40,7 @@ Install the required python packages:
 Copy the configs:
 cp config_sample.py config.py
 cp config_celery_sample.py config_celery.py
+cp uchan/static/robots.txt.sample uchan/static/robots.txt
 Edit the configs to your liking.
 
 
@@ -180,6 +181,10 @@ server {
   location /favicon.ico {
     alias /home/uchan/uchan/uchan/static/favicon.ico;
     expires 1y;
+  }
+
+  location /robots.txt {
+    alias /home/uchan/uchan/uchan/static/robots.txt;
   }
 
   location /static/ {

@@ -2,6 +2,7 @@
 /config_celery.py
 /media/
 /upload_queue/
+/uchan/static/robots.txt
 
 .idea
 *.iml

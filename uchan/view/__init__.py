@@ -36,12 +36,18 @@ def inject_variables():
     extra_javascript = ExtraJavascript()
     g.plugin_manager.execute_hook('extra_javascript', extra_javascript)
 
-    return dict(all_boards=all_boards, site_config=site_config_cached, footer_pages=footer_pages, extra_javascript=extra_javascript)
+    return dict(all_boards=all_boards, site_config=site_config_cached, footer_pages=footer_pages,
+                extra_javascript=extra_javascript)
 
 
 @app.route('/favicon.ico')
 def favicon():
     return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+
+
+@app.route('/robots.txt')
+def robots():
+    return send_from_directory(app.static_folder, 'robots.txt')
 
 
 def generate_csrf_token():
