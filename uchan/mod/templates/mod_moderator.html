@@ -5,10 +5,11 @@
 {% block content %}
     <h2>Modify moderator</h2>
 
-    Changing moderator <b>{{ moderator.username }}</b><br>
+    [<a href="{{ url_for('.mod_moderators') }}">Back</a>]<br>
     <br>
 
-    <hr class="content-divider">
+    Changing moderator <b>{{ moderator.username }}</b><br>
+    <br>
 
     Assigned to these boards:<br>
     <form action="{{ url_for('.mod_moderator_board_remove', moderator_id=moderator.id) }}" method="POST">
@@ -81,11 +82,14 @@
     </form>
 
     <br>
+    <hr class="content-divider">
     <br>
 
     <form action="{{ url_for('.mod_moderator_delete') }}" method="POST">
         {{ csrf_html() }}
         <button name="moderator_id" value="{{ moderator.id }}">Delete moderator</button>
+        <br>
+        <b>This will permanently delete the moderator!</b>
     </form>
 
 {% endblock %}

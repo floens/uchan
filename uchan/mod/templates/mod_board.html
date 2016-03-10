@@ -7,17 +7,16 @@
 {% block content %}
     <h2>Modify board</h2>
 
+    [<a href="{{ url_for('.mod_boards') }}">Back</a>]<br>
+    <br>
+
     Changing board <b>{{ board.name }}</b><br>
     <br>
 
     {{ dynamic_config_widget.render(board_config, url_for('.mod_board', board_name=board.name)) }}
 
     <br>
-    <br>
-
     <hr class="content-divider">
-
-    <br>
     <br>
 
     <form action="{{ url_for('.mod_board_delete') }}" method="POST">
