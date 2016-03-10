@@ -74,6 +74,7 @@ class BoardService:
         try:
             db.commit()
         except IntegrityError:
+            db.rollback()
             raise ArgumentError('Duplicate board name')
 
         g.board_cache.invalidate_all_boards()
