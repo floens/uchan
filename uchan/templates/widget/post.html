@@ -1,4 +1,4 @@
-{% macro render(post_item, thread=None, snippet=False, thread_view=False, with_divider=False, is_locked=False, is_sticky=False) %}
+{% macro render(post_item, thread=None, snippet=False, thread_view=False, board_info=False, with_divider=False, is_locked=False, is_sticky=False) %}
     {# NOTE: keep this in line with the javascript post html builder #}
     <div class="post{{ ' snippet' if snippet else '' }}{{ ' divider' if with_divider else '' }}" id="p{{ post_item.refno }}" data-date="{{ post_item.date }}">
         <div class="header">
@@ -8,7 +8,7 @@
                 </span>
                 <br>
             {% endif %}
-            {% if thread_view %}<a href="#p{{ post_item.refno }}" class="refno">{% endif %}#{{ post_item.refno }}{% if thread_view %}</a>{% endif %}
+            <a href="{% if not thread_view %}{{ url_for('view_thread', board_name=thread.board.name, thread_id=thread.id) }}{% endif %}#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
             <span class="name">
                 {{ post_item.name|post_name }}
             </span>
@@ -48,7 +48,7 @@
                 </a>
             </div>
         {% endif %}
-        {% if thread %}
+        {% if board_info %}
             <div class="boardinfo">
                 {% if thread.omitted_count > 0 %}
                     {{ thread.omitted_count ~ ' ' ~ thread.omitted_count|pluralize('reply', 'replies') }} omitted
