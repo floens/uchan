@@ -43,12 +43,15 @@
 .qr .error-message {
     display: none;
     width: calc(100% - 12px);
+    max-width: 500px;
     margin: 1px;
     padding: 5px;
     background-color: #ff0000;
     color: #ffffff;
     font-weight: bold;
     font-family: monospace;
+    word-wrap: break-word;
+    word-break: break-all;
 }
 
 .qr .input {
