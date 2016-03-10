@@ -3,6 +3,7 @@ from flask import request, abort, redirect, url_for, render_template, jsonify
 from uchan import app, g
 from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib.moderator_request import get_authed_moderator, get_authed
+from uchan.lib.service import BoardService
 from uchan.lib.service.posts_service import RequestBannedException, RequestSuspendedException
 from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task, post_check_task
 from uchan.lib.utils import now
@@ -34,7 +35,7 @@ def post():
             abort(400)
 
     board_name = form.get('board', None)
-    if not board_name:
+    if not board_name or len(board_name) > BoardService.BOARD_NAME_MAX_LENGTH:
         abort(400)
 
     text = form.get('comment', None)

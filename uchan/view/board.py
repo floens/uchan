@@ -14,8 +14,8 @@ def get_page_details(mode, board_name):
     }
 
 
-@app.route('/<board_name>/')
-@app.route('/<board_name>/<int:page>')
+@app.route('/<string(maxlength=20):board_name>/')
+@app.route('/<string(maxlength=20):board_name>/<int:page>')
 def board(board_name, page=None):
     board_config_cached = g.board_cache.find_board_config_cached(board_name)
     if not board_config_cached:
@@ -47,7 +47,7 @@ def board(board_name, page=None):
                            page_details=page_details, show_moderator_buttons=show_moderator_buttons)
 
 
-@app.route('/<board_name>/catalog')
+@app.route('/<string(maxlength=20):board_name>/catalog')
 def board_catalog(board_name):
     board_config_cached = g.board_cache.find_board_config_cached(board_name)
     if not board_config_cached:

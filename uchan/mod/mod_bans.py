@@ -9,16 +9,6 @@ from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
 
 
-def get_moderator_or_abort(moderator_id):
-    if moderator_id <= 0 or moderator_id > 2 ** 32:
-        abort(400)
-
-    moderator = g.moderator_service.find_moderator_id(moderator_id)
-    if not moderator:
-        abort(404)
-    return moderator
-
-
 @mod.route('/mod_ban')
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_bans():

@@ -6,7 +6,7 @@ from uchan.lib.moderator_request import get_authed, get_authed_moderator
 from uchan.view.board import get_page_details
 
 
-@app.route('/<board_name>/view/<int:thread_id>')
+@app.route('/<string(maxlength=20):board_name>/view/<int:thread_id>')
 def view_thread(board_name, thread_id):
     if thread_id <= 0 or thread_id > 2 ** 32:
         abort(400)
