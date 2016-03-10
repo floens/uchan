@@ -76,8 +76,8 @@ def post():
         post_check_task.delay(post_details).get()
     except RequestBannedException:
         raise BadRequestError('You are banned')
-    except RequestSuspendedException:
-        raise BadRequestError('You must wait before posting again')
+    except RequestSuspendedException as e:
+        raise BadRequestError('You must wait {} second{} before posting again'.format(e.suspend_time, '' if e.suspend_time == 1 else 's'))
     except ArgumentError as e:
         raise BadRequestError(e.message)
 

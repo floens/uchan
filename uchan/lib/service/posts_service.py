@@ -20,6 +20,7 @@ class RequestBannedException(ArgumentError):
 class RequestSuspendedException(ArgumentError):
     def __init__(self, *args):
         ArgumentError.__init__(self, *args)
+        self.suspend_time = 0
 
 
 class PostsService:
@@ -41,8 +42,12 @@ class PostsService:
         if g.ban_service.is_request_banned(post_details.ip4, board):
             raise RequestBannedException()
 
-        if config.ENABLE_COOLDOWN_CHECKING and g.ban_service.is_request_suspended(post_details.ip4, board, thread):
-            raise RequestSuspendedException()
+        if config.ENABLE_COOLDOWN_CHECKING:
+            suspended, suspend_time = g.ban_service.is_request_suspended(post_details.ip4, board, thread)
+            if suspended:
+                e = RequestSuspendedException()
+                e.suspend_time = suspend_time
+                raise e
 
         board_config_cached = g.board_cache.find_board_config_cached(board.name)
         if post_details.has_file and not board_config_cached.board_config.file_posting_enabled:

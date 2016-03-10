@@ -1,3 +1,4 @@
+from sqlalchemy import desc
 from sqlalchemy.orm.exc import NoResultFound
 from uchan import g
 from uchan.lib import ArgumentError
@@ -27,7 +28,11 @@ class BanService:
         from_time = now() - timeout
 
         posts = self.find_post_by_ip4(ip4, from_time, thread)
-        return len(posts) > 0
+        if posts:
+            most_recent = posts[0]
+            time_left = (most_recent.date + timeout - now()) // 1000
+            return True, time_left
+        return False, 0
 
     def find_post_by_ip4(self, ip4, from_time, for_thread=None):
         db = get_db()
@@ -36,6 +41,7 @@ class BanService:
             query = query.filter_by(thread_id=for_thread.id)
         else:
             query = query.filter_by(refno=1)
+        query = query.order_by(desc(Post.date))
         posts = query.all()
         return posts
 
