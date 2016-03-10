@@ -57,7 +57,6 @@ body, textarea {
 
 .post-form [name="comment"] {
     width: 100%;
-    min-width: 400px;
     padding: 0;
 }
 
@@ -224,4 +223,10 @@ body, textarea {
 
 .page {
 
+}
+
+@media (max-width: 425px) {
+    .post.snippet {
+        margin-left: 20px;
+    }
 }
