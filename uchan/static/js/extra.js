@@ -445,6 +445,8 @@
 
         postDiv.innerHTML = postHtml;
 
+        this.bindRefno(postDiv.querySelector('a.refno'));
+
         return postDiv;
     };
 
@@ -540,6 +542,24 @@
         }
     };
 
+    Watcher.prototype.bindRefnos = function() {
+        var refnos = document.querySelectorAll('a.refno');
+        for (var i = 0; i < refnos.length; i++) {
+            var refno = refnos[i];
+            this.bindRefno(refno);
+        }
+    };
+
+    Watcher.prototype.bindRefno = function(refno) {
+        refno.addEventListener('click', function(event) {
+            event.preventDefault();
+            var refnoText = this.textContent;
+            var refnoNumber = parseInt(refnoText.substring(refnoText.indexOf('#') + 1).trim());
+            qr.show();
+            qr.addRefno(refnoNumber);
+        });
+    };
+
     var init = function() {
         var pageDetails = window.pageDetails;
         if (!pageDetails) {
@@ -566,18 +586,7 @@
                 qr.addShowClickListener(replyButtons.querySelector('#open-qr'));
 
                 watcher.addUpdateListener(replyButtons.querySelector('#watch-update'));
-
-                var refnos = document.querySelectorAll('a.refno');
-                for (var i = 0; i < refnos.length; i++) {
-                    var refno = refnos[i];
-                    refno.addEventListener('click', function(event) {
-                        event.preventDefault();
-                        var refnoText = this.textContent;
-                        var refnoNumber = parseInt(refnoText.substring(refnoText.indexOf('#') + 1).trim());
-                        qr.show();
-                        qr.addRefno(refnoNumber);
-                    });
-                }
+                watcher.bindRefnos();
             }
         }
     };
