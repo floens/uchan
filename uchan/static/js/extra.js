@@ -340,10 +340,11 @@
         }
     };
 
-    var Watcher = function(threadId, postsElement, statusElement) {
+    var Watcher = function(threadId, postsElement, statusElement, imageExpansion) {
         this.threadId = threadId;
         this.postsElement = postsElement;
         this.statusElement = statusElement;
+        this.imageExpansion = imageExpansion;
 
         this.xhr = null;
 
@@ -426,7 +427,7 @@
 
         if (file) {
             postHtml += '<br>File: <a href="' + escape(file.location) + '">' + escape(file.name) + '</a> ';
-            postHtml += '(' + this.getPostFileSizeText(file.size) + ') , ' + file.width + 'x' + file.height + ')';
+            postHtml += '(' + this.getPostFileSizeText(file.size) + ', ' + file.width + 'x' + file.height + ')';
         }
 
         postHtml += '</div>\n';
@@ -437,7 +438,7 @@
 
         if (file) {
             postHtml += '<div class="file">';
-            postHtml += '<a class="file-link" href="' + escape(file.location) + '">';
+            postHtml += '<a class="file-link" href="' + escape(file.location) + '" data-filewidth="' + file.width + '" data-fileheight="' + file.height + '" data-filename="' + escape(file.name) + '" data-filesize="' + file.size + '">';
             postHtml += '<img src="' + escape(file.thumbnailLocation) + '" width="' + file.thumbnailWidth + '" height="' + file.thumbnailHeight + '">';
             postHtml += '</a>';
             postHtml += '</div>';
@@ -446,6 +447,9 @@
         postDiv.innerHTML = postHtml;
 
         this.bindRefno(postDiv.querySelector('a.refno'));
+        if (file) {
+            this.imageExpansion.bindImage(postDiv.querySelector('.file'));
+        }
 
         return postDiv;
     };
@@ -469,7 +473,7 @@
             for (var i = 0; i < prefixes.length; i++) {
                 var unit = Math.pow(1000, i + 2);
                 if (bytes < unit) {
-                    return round((1000 * bytes / unit), 2) + ' ' + prefixes[i];
+                    return round((1000 * bytes / unit), 1) + ' ' + prefixes[i];
                 }
             }
         }
@@ -560,6 +564,66 @@
         });
     };
 
+    var ImageExpansion = function() {
+
+    };
+
+    ImageExpansion.prototype.bindImages = function() {
+        var images = document.querySelectorAll('.post .file');
+        for (var i = 0; i < images.length; i++) {
+            var image = images[i];
+            this.bindImage(image);
+        }
+    };
+
+    ImageExpansion.prototype.bindImage = function(container) {
+        var link = container.querySelector('a');
+        var image = container.querySelector('img');
+        image.addEventListener('click', function(event) {
+            event.preventDefault();
+
+            var expanded = link.dataset.expanded == 'true';
+            if (expanded) {
+                this.close(container, link, image);
+            } else {
+                this.expand(container, link, image);
+            }
+        }.bind(this));
+    };
+
+    ImageExpansion.prototype.expand = function(container, link, image) {
+        if (!link.dataset.thumbnail) {
+            link.dataset.thumbnail = image.src;
+            link.dataset.thumbnailwidth = image.width;
+            link.dataset.thumbnailheight = image.height;
+        }
+
+        var width = link.dataset.filewidth;
+        var height = link.dataset.fileheight;
+
+        var bb = container.getBoundingClientRect();
+        var availableWidth = document.documentElement.clientWidth - bb.left;
+        var availableHeight = document.documentElement.clientHeight;
+
+        if (width > availableWidth || height > availableHeight) {
+            var ratio = Math.min(availableWidth / width, availableHeight / height);
+            width *= ratio;
+            height *= ratio;
+        }
+
+        link.dataset.expanded = true;
+        image.src = link.href;
+        image.width = width;
+        image.height = height;
+    };
+
+    ImageExpansion.prototype.close = function(container, link, image) {
+        image.src = link.dataset.thumbnail;
+        image.width = link.dataset.thumbnailwidth;
+        image.height = link.dataset.thumbnailheight;
+        link.dataset.expanded = false;
+    };
+
     var init = function() {
         var pageDetails = window.pageDetails;
         if (!pageDetails) {
@@ -567,17 +631,22 @@
         } else {
             context.pageDetails = pageDetails;
 
-            var replyButtons = document.querySelector('.thread-controls');
-            replyButtons.innerHTML += '[<a id="open-qr" href="#">Reply</a>] [<a id="watch-update" href="#">Update</a>] ' +
-                '<span id="watch-status"></span>';
+            if (context.pageDetails.mode == 'thread') {
+                var replyButtons = document.querySelector('.thread-controls');
+                replyButtons.innerHTML += '[<a id="open-qr" href="#">Reply</a>] [<a id="watch-update" href="#">Update</a>] ' +
+                    '<span id="watch-status"></span>';
+            }
 
-            if (!context.pageDetails.locked) {
+            var imageExpansion = new ImageExpansion();
+            imageExpansion.bindImages();
+
+            if (context.pageDetails.mode == 'thread' && !context.pageDetails.locked) {
                 var postForm = document.querySelector('.post-form');
                 //postForm.style.display = 'none';
 
                 var postsElement = document.querySelector('.posts');
                 var watchStatusElement = replyButtons.querySelector('#watch-status');
-                var watcher = new Watcher(context.pageDetails.threadId, postsElement, watchStatusElement);
+                var watcher = new Watcher(context.pageDetails.threadId, postsElement, watchStatusElement, imageExpansion);
                 var posts = postsElement.querySelectorAll('.post');
                 watcher.bindPosts(posts);
                 watcher.update();
