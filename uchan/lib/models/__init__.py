@@ -30,3 +30,4 @@ from .thread import Thread
 from .file import File
 from .ban import Ban
 from .page import Page
+from .verification import Verification

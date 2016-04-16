@@ -1,6 +1,14 @@
+import importlib
+
+
 class PluginManager:
     def __init__(self):
         self.modules = []
+
+    def load_plugins(self, plugins):
+        for plugin in plugins:
+            loaded_module = importlib.import_module('uchan.plugins.{}'.format(plugin))
+            self.add_module(loaded_module)
 
     def add_module(self, module):
         info = self.execute_module_method(module, 'describe_plugin', False)

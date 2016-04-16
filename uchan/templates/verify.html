@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Verify{% endblock %}
+
+{% block content %}
+    <div class="message">
+        {% if not request_message and not verified_message %}
+            No pending verifications
+        {% else %}
+            {% if request_message %}
+                <b>Requested verifications:</b>
+                {{ request_message|page_formatting }}
+            {% endif %}
+            {% if verified_message %}
+                {% if request_message %}
+                    <br>
+                    <hr class="content-divider"><br>
+                {% endif %}
+                <b>You're verified for:</b>
+                {{ verified_message|page_formatting }}
+            {% endif %}
+        {% endif %}
+        {% if method_html %}
+            <br>
+            <hr class="content-divider">
+            <br>
+            <form action="{{ url_for('verify_do') }}" method="post">
+                {{ method_html|safe }}<br>
+                <input type="submit" value="Verify">
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}

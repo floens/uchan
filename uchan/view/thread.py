@@ -13,7 +13,7 @@ def view_thread(board_name, thread_id):
 
     board_config_cached = g.board_cache.find_board_config_cached(board_name)
     if not board_config_cached:
-        abort(400)
+        abort(404)
 
     thread_cached = g.posts_cache.find_thread_cached(thread_id)
 

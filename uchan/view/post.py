@@ -60,6 +60,15 @@ def post():
     # ip4 of the request
     ip4 = g.ban_service.get_request_ip4()
 
+    verification_data = g.verification_service.get_verification_data_for_request(request, ip4, 'post')
+    if verification_data is None:
+        g.verification_service.set_verification(
+            request, ip4, 'post', False,
+            request_message='posting')
+
+    if not g.verification_service.is_verification_data_verified(verification_data):
+        raise BadRequestError('[Please verify here first](_{})'.format(url_for('verify')))
+
     post_details = PostDetails(form, board_name, thread_id, text, name, subject, password, has_file, ip4)
 
     with_mod = form.get('with_mod', type=bool)
@@ -77,7 +86,8 @@ def post():
     except RequestBannedException:
         raise BadRequestError('You are banned')
     except RequestSuspendedException as e:
-        raise BadRequestError('You must wait {} second{} before posting again'.format(e.suspend_time, '' if e.suspend_time == 1 else 's'))
+        raise BadRequestError(
+            'You must wait {} second{} before posting again'.format(e.suspend_time, '' if e.suspend_time == 1 else 's'))
     except ArgumentError as e:
         raise BadRequestError(e.message)
 

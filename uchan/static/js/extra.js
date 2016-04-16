@@ -336,7 +336,7 @@
     QR.prototype.showErrorMessage = function(show, message) {
         this.errorMessageElement.style.display = show ? 'inline-block' : 'none';
         if (show) {
-            this.errorMessageElement.innerText = message;
+            this.errorMessageElement.innerHTML = message;
         }
     };
 

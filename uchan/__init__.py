@@ -26,6 +26,7 @@ class Globals():
         self.file_service = None
         self.ban_service = None
         self.page_service = None
+        self.verification_service = None
 
 
 g = Globals()
@@ -114,8 +115,6 @@ def init():
 
     from uchan.lib.plugin_manager import PluginManager
     g.plugin_manager = PluginManager()
-    # import uchan.plugins.captcha2 as captcha2_module
-    # g.plugin_manager.add_module(captcha2_module)
 
     # Setup singletons
     from uchan.lib.service import PostsService
@@ -153,6 +152,14 @@ def init():
     from uchan.lib.cache import PageCache
     g.page_service = PageService()
     g.page_cache = PageCache(g.cache)
+
+    from uchan.lib.service import VerificationService
+    g.verification_service = VerificationService(g.cache)
+
+    print('Loading plugins')
+
+    import uchan.plugins
+    g.plugin_manager.load_plugins(config.PLUGINS)
 
     print('Done')
 

@@ -59,14 +59,14 @@
                 <tr>
                     <td>{{ ip4_to_str(ban.ip4) }}</td>
                     <td>{{ ip4_to_str(ban.ip4_end) if ban.ip4_end is not none else '' }}</td>
-                    <td>{{ ban.date|ban_time }}</td>
+                    <td>{{ ban.date|formatted_time }}</td>
                     <td>
                         {% if ban.length > 0 %}
-                            {{ (ban.date + ban.length)|ban_time }} -
+                            {{ (ban.date + ban.length)|formatted_time }} -
                             {% if (ban.date + ban.length) - now < 0 %}
                                 <b>Expired, not viewed</b>
                             {% else %}
-                                <b>{{ (ban.date + ban.length)|ban_remaining }} remaining</b>
+                                <b>{{ (ban.date + ban.length)|time_remaining }} remaining</b>
                             {% endif %}
                         {% else %}
                             Does not expire

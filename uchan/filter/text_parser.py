@@ -50,6 +50,7 @@ STRONG2_RE = re.compile(r'(__)(.+?(?=__))(__)', re.S)
 EMPHASIS_RE = re.compile(r'(\*)([^\*]+)(\*)', re.S)
 EMPHASIS2_RE = re.compile(r'(_)([^_]+)(_)', re.S)
 
+LINK_TARGET_RE = re.compile(r'\[([^\]]+)\]\(_([^\)]+)\)', re.S)
 LINK_RE = re.compile(r'\[([^\]]+)\]\(([^\)]+)\)', re.S)
 
 
@@ -100,6 +101,7 @@ def parse_text_line(line, linkify, bigheaders):
 
     if linkify:
         # Replace [text](links)
+        line = LINK_TARGET_RE.sub('<a href="\\2" target="_blank">\\1</a>', line)
         line = LINK_RE.sub('<a href="\\2">\\1</a>', line)
 
     if with_break:

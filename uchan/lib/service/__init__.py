@@ -5,3 +5,4 @@ from .file_service import FileService, LocalCdn
 from .moderator_service import ModeratorService
 from .page_service import PageService
 from .posts_service import PostsService
+from .verification_service import VerificationService

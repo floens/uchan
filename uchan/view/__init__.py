@@ -3,11 +3,12 @@ import string
 from functools import wraps
 from urllib.parse import urlparse
 
-from flask import send_from_directory, session, request, abort
+from flask import send_from_directory, session, request, abort, url_for
 from markupsafe import escape, Markup
 
 import config
 from uchan import g, app
+from uchan.lib import BadRequestError
 from uchan.lib.service import PageService
 
 
@@ -53,7 +54,7 @@ def robots():
 def generate_csrf_token():
     if '_csrf_token' not in session:
         session['_csrf_token'] = ''.join(
-                random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(32))
+            random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(32))
     return session['_csrf_token']
 
 
@@ -67,6 +68,32 @@ def with_token():
         def decorated_function(*args, **kwargs):
             if not check_csrf_token(request.form.get('token')):
                 abort(400)
+
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
+def require_verification(name, link_message=None, request_message=None, *user_args, **user_kwargs):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # ip4 of the request
+            ip4 = g.ban_service.get_request_ip4()
+
+            verification_data = g.verification_service.get_verification_data_for_request(request, ip4, name)
+            if verification_data is None:
+                g.verification_service.set_verification(
+                    request, ip4, name, False, request_message=request_message, *user_args, **user_kwargs)
+
+            if not g.verification_service.is_verification_data_verified(verification_data):
+                real_link_message = link_message
+                if real_link_message is None:
+                    real_link_message = 'Please verify here first'
+
+                raise BadRequestError('[{}](_{})'.format(real_link_message, url_for('verify')))
 
             return f(*args, **kwargs)
 
@@ -99,3 +126,4 @@ import uchan.view.post
 import uchan.view.thread
 import uchan.view.banned
 import uchan.view.page
+import uchan.view.verify

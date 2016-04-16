@@ -5,7 +5,7 @@
 {% block content %}
     <div class="message">
         <h2>Error:</h2>
-        <div class="error-message">{{ message }}</div>
+        <div class="error-message">{{ message|page_formatting }}</div>
         <div class="jsonly">
             <br>
             [<a href="javascript:history.back();">Back</a>]

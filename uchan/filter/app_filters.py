@@ -22,22 +22,37 @@ def post_time(t):
 
 
 @app.template_filter()
-def ban_time(t):
+def formatted_time(t):
     return time.strftime('%Y-%m-%d %H:%M', time.gmtime(t / 1000))
 
 
 @app.template_filter()
-def ban_remaining(t):
-    remaining = t - now()
-    day_ms = timedelta(days=1).total_seconds() * 1000
-    days = remaining // day_ms
-    hours = (remaining - (days * day_ms)) // (timedelta(hours=1).total_seconds() * 1000)
+def time_remaining(t):
+    remaining = max(0, t - now())
+
+    ms_in_day = 1000 * 60 * 60 * 24
+    days = int(remaining // ms_in_day)
+    remaining -= days * ms_in_day
+
+    ms_in_hour = 1000 * 60 * 60
+    hours = int(remaining // ms_in_hour)
+    remaining -= hours * ms_in_hour
+
+    ms_in_minute = 1000 * 60
+    minutes = int(remaining // ms_in_minute)
+    remaining -= minutes * ms_in_minute
 
     text = ''
     if days > 0:
-        text += '{} day{} and '.format(int(days), '' if days == 1 else 's')
-    hours_rounded = int(hours + 1)
-    text += '{} hour{}'.format(hours_rounded, '' if hours_rounded == 1 else 's')
+        text += '{} day{}'.format(days, '' if days == 1 else 's')
+        if hours > 0:
+            text += ', '
+        else:
+            text += ' and '
+    if hours > 0:
+        text += '{} hour{} and '.format(hours, '' if hours == 1 else 's')
+    text += '{} minute{}'.format(minutes, '' if minutes == 1 else 's')
+
     return text
 
 

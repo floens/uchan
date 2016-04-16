@@ -36,7 +36,7 @@ class CustomSessionInterface(SessionInterface):
 
     session_class = CustomSession
 
-    def __init__(self, cache, prefix='session_'):
+    def __init__(self, cache, prefix='session$'):
         self.cache = cache
         self.prefix = prefix
 

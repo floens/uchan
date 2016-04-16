@@ -2,10 +2,6 @@ from getpass import getpass
 
 
 def init_models():
-    from uchan.lib import database
-
-    database.metadata_create_all()
-
     from uchan import g
 
     from uchan.lib.configs import SiteConfig
@@ -41,7 +37,7 @@ def init_models():
     else:
         print('Moderator already exists')
 
-    print('Success! You can not login at /mod/auth')
+    print('Success! You can now login at /mod/auth')
 
 
 if __name__ == '__main__':

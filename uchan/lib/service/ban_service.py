@@ -50,6 +50,7 @@ class BanService:
         return self.find_bans(ip4)
 
     def get_request_ip4(self):
+        # TODO: move method
         try:
             ip4 = self.parse_ip4(get_request_ip4_str())
         except ValueError:

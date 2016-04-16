@@ -46,6 +46,8 @@ def create_web_app(g, config, app):
 
     from flask import request, jsonify
 
+    from uchan.filter.app_filters import page_formatting
+
     @app.errorhandler(BadRequestError)
     def bad_request_handler(error):
         user_message = bad_request(error)
@@ -56,10 +58,15 @@ def create_web_app(g, config, app):
             }
 
             if user_message:
-                xhr_response['message'] = user_message
+                xhr_response['message'] = page_formatting(user_message)
 
             return jsonify(xhr_response), 400
         else:
             return render_template('error.html', message=user_message), 400
+
+    @app.after_request
+    def after_request_handler(response):
+        g.verification_service.after_request(response)
+        return response
 
     return app

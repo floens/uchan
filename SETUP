@@ -43,10 +43,6 @@ cp config_celery_sample.py config_celery.py
 cp uchan/static/robots.txt.sample uchan/static/robots.txt
 Edit the configs to your liking.
 
-
-You can test if the server starts with `python run.py`
-We're now done with the uchan account.
-
 Make the uchanmedia and uchanuploadqueue folders readable for nginx (www-data)
 `chmod 755 /home/uchan`
 
@@ -281,9 +277,8 @@ gid = uchan
 
 Tweak processes and threads to your liking. This configuration will launch 8 * 4 threads. The port must be the same as configured in varnish.
 
-setup models script
-enable all with systemd
-
+run alembic upgrade `alembic upgrade head`
+then run the setup script `python setup.py`
 
 Go to /mod/ and log in with the admin account. Check [mod site] and make sure the ip is correct.
 Check if everything works by posting some things and uploading some images.

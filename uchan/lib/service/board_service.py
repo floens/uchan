@@ -16,11 +16,11 @@ class BoardService:
 
     DISALLOWED_BOARD_NAMES = [
         # Names that are routes now
-        'mod', 'post_manage', 'banned', 'post', 'api', 'find_post', 'static', 'page',
+        'mod', 'post_manage', 'banned', 'post', 'api', 'find_post', 'static', 'page', 'verify',
         # names that can be confusing
         'admin', 'ban', 'bans', 'id', 'moderate', 'auth', 'login', 'logout', 'res', 'thread', 'threads',
         'board', 'boards', 'report', 'reports', 'user', 'users', 'log', 'logs', 'search', 'config', 'debug', 'create',
-        'delete', 'update', 'faq', 'index', 'read'
+        'delete', 'update', 'faq', 'index', 'read', 'all'
     ]
 
     def get_all_boards(self):

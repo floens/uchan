@@ -45,7 +45,7 @@ def init_db():
     _sessionconstruct = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=_engine))
 
     # Import our models. If you add new models, import them here.
-    from uchan.lib.models import Post, Thread, Board, Session, Report, Moderator, Config, File, Ban, Page
+    from uchan.lib.models import Post, Thread, Board, Session, Report, Moderator, Config, File, Ban, Page, Verification
 
 
 def metadata_create_all():
