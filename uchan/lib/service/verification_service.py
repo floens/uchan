@@ -9,7 +9,7 @@ from uchan import g
 from uchan.lib.cache import CacheDict
 from uchan.lib.database import get_db
 from uchan.lib.models import Verification
-from uchan.lib.utils import now
+from uchan.lib.utils import now, get_cookie_domain
 
 
 class VerificationMethod:
@@ -176,8 +176,8 @@ class VerificationService:
         if hasattr(flaskg, 'pending_verification'):
             verification = flaskg.pending_verification
             expire_date = datetime.datetime.utcfromtimestamp(verification.expires / 1000)
-            # TODO: domain
-            response.set_cookie('verification', verification.verification_id, expires=expire_date, httponly=True)
+            response.set_cookie('verification', verification.verification_id, expires=expire_date, httponly=True,
+                                domain=get_cookie_domain(g.app))
 
     def generate_verification_id(self):
         return str(uuid4()).replace('-', '')

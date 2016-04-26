@@ -57,17 +57,21 @@ def post():
     if has_file and not site_config.file_posting_enabled:
         raise BadRequestError('File posting is disabled')
 
-    # ip4 of the request
     ip4 = g.ban_service.get_request_ip4()
 
-    verification_data = g.verification_service.get_verification_data_for_request(request, ip4, 'post')
-    if verification_data is None:
-        g.verification_service.set_verification(
-            request, ip4, 'post', False,
-            request_message='posting')
+    board_config_cached = g.board_cache.find_board_config_cached(board_name)
+    if not board_config_cached:
+        abort(404)
 
-    if not g.verification_service.is_verification_data_verified(verification_data):
-        raise BadRequestError('[Please verify here first](_{})'.format(url_for('verify')))
+    if board_config_cached.board_config.posting_verification_required:
+        verification_data = g.verification_service.get_verification_data_for_request(request, ip4, 'post')
+        if verification_data is None:
+            g.verification_service.set_verification(
+                request, ip4, 'post', False,
+                request_message='posting')
+
+        if not g.verification_service.is_verification_data_verified(verification_data):
+            raise BadRequestError('[Please verify here first](_{})'.format(url_for('verify')))
 
     post_details = PostDetails(form, board_name, thread_id, text, name, subject, password, has_file, ip4)
 

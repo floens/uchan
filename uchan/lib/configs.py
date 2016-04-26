@@ -14,6 +14,7 @@ class BoardConfig(DynamicConfig):
         self.configs.append(DynamicConfigItem('bump_limit', 'Max count of posts in a thread that will bump',
                                               300, int, minimum=100, maximum=500))
         self.configs.append(DynamicConfigItem('file_posting_enabled', 'File posting enabled', True, bool))
+        self.configs.append(DynamicConfigItem('posting_verification_required', 'Posting requires verification', False, bool))
 
 
 class SiteConfig(DynamicConfig):
