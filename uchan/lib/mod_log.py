@@ -1,4 +1,5 @@
 from flask.globals import _request_ctx_stack
+
 from uchan import g
 from uchan.lib.moderator_request import get_authed_moderator, get_authed
 from uchan.lib.proxy_request import get_request_ip4_str

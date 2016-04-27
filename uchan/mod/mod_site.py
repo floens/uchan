@@ -1,4 +1,5 @@
 from flask import request, render_template, abort, flash, redirect, url_for, session
+
 from uchan import g, app
 from uchan.lib import roles, ArgumentError
 from uchan.lib.configs import SiteConfig

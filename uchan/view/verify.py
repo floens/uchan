@@ -3,8 +3,7 @@ from flask import render_template, request, url_for, redirect
 from uchan import app, g
 from uchan.lib import ArgumentError
 from uchan.lib import BadRequestError
-from uchan.lib.utils import now
-from uchan.view import with_token, check_csrf_referer
+from uchan.view import check_csrf_referer
 
 
 @app.route('/verify/')

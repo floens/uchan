@@ -1,4 +1,4 @@
-from flask import render_template, Flask
+from flask import Flask
 from werkzeug.contrib.fixers import ProxyFix
 
 
@@ -48,6 +48,8 @@ def create_web_app(g, config, app):
 
     from uchan.filter.app_filters import page_formatting
 
+    from uchan.view import render_error
+
     @app.errorhandler(BadRequestError)
     def bad_request_handler(error):
         user_message = bad_request(error)
@@ -62,7 +64,7 @@ def create_web_app(g, config, app):
 
             return jsonify(xhr_response), 400
         else:
-            return render_template('error.html', message=user_message), 400
+            return render_error(user_message)
 
     @app.after_request
     def after_request_handler(response):

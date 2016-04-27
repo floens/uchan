@@ -1,5 +1,4 @@
 import time
-from datetime import timedelta
 
 from markupsafe import Markup, escape
 

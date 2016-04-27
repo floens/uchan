@@ -156,7 +156,7 @@ def init():
     from uchan.lib.service import VerificationService
     g.verification_service = VerificationService(g.cache)
 
-    print('Loading plugins')
+    # print('Loading plugins')
 
     import uchan.plugins
     g.plugin_manager.load_plugins(config.PLUGINS)

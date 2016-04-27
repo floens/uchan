@@ -18,6 +18,37 @@ body, textarea {
 
 .top-list {
     padding: 5px;
+    color: #666;
+    font-size: 12px;
+}
+
+.top-list a {
+    text-decoration: none;
+}
+
+.top-list a:hover {
+    text-decoration: underline;
+}
+
+.top-list .top-list-right {
+    float: right;
+}
+
+.top-list .top-list-start {
+    margin-right: -3px;
+}
+
+.top-list .top-list-end {
+    margin-left: -3px;
+}
+
+.flashes {
+    margin: 0 0 1em 0;
+    padding: 10px 30px;
+    border: 1px solid #B1B1B1;
+    background-color: #FFC6C6;
+    list-style: square;
+    line-height: 1.4em;
 }
 
 .content {

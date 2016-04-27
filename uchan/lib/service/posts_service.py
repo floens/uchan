@@ -1,6 +1,7 @@
-import config
 from sqlalchemy.orm import lazyload
 from sqlalchemy.orm.exc import NoResultFound
+
+import config
 from uchan import g
 from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib import roles

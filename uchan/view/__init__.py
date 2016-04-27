@@ -3,12 +3,13 @@ import string
 from functools import wraps
 from urllib.parse import urlparse
 
-from flask import send_from_directory, session, request, abort, url_for
+from flask import send_from_directory, session, request, abort, url_for, render_template
 from markupsafe import escape, Markup
 
 import config
 from uchan import g, app
 from uchan.lib import BadRequestError
+from uchan.lib.moderator_request import get_authed
 from uchan.lib.service import PageService
 
 
@@ -37,7 +38,14 @@ def inject_variables():
     extra_javascript = ExtraJavascript()
     g.plugin_manager.execute_hook('extra_javascript', extra_javascript)
 
-    return dict(all_boards=all_boards, site_config=site_config_cached, footer_pages=footer_pages,
+    header_links = [
+        ('mod', url_for('mod.mod_auth')),
+    ]
+
+    return dict(all_boards=all_boards,
+                header_links=header_links,
+                site_config=site_config_cached,
+                footer_pages=footer_pages,
                 extra_javascript=extra_javascript)
 
 
@@ -115,6 +123,10 @@ def check_csrf_referer(request):
     parsed_url = urlparse(referer)
 
     return '{}://{}'.format(parsed_url.scheme, parsed_url.hostname) == config.SITE_URL
+
+
+def render_error(user_message):
+    return render_template('error.html', message=user_message), 400
 
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token

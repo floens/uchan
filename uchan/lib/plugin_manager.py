@@ -13,7 +13,7 @@ class PluginManager:
     def add_module(self, module):
         info = self.execute_module_method(module, 'describe_plugin', False)
         self.execute_module_method(module, 'on_enable', False)
-        print('Loaded plugin {}: {}'.format(info['name'], info['description']))
+        # print('Loaded plugin {}: {}'.format(info['name'], info['description']))
 
         self.modules.append(module)
 

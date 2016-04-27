@@ -4,9 +4,11 @@ import bcrypt
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
+
 from uchan.lib import ArgumentError
 from uchan.lib import roles
 from uchan.lib.database import get_db
+from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Moderator, Report, Post, Thread, Board
 from uchan.lib.models.board import board_moderator_table
 from uchan.lib.utils import now
@@ -49,7 +51,8 @@ class ModeratorService:
         if not self.has_role(moderator, roles.ROLE_ADMIN):
             # Filter that gets all reports for the moderator id
             reports_query = reports_query.filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
-                                                 Thread.board_id == Board.id, Board.id == board_moderator_table.c.board_id,
+                                                 Thread.board_id == Board.id,
+                                                 Board.id == board_moderator_table.c.board_id,
                                                  board_moderator_table.c.moderator_id == moderator.id)
 
         reports_query = reports_query.order_by(desc(Report.date))
@@ -80,6 +83,29 @@ class ModeratorService:
             return False
 
         return True
+
+    def user_register(self, username, password, password_repeat):
+        if not self.check_username_validity(username):
+            raise ArgumentError('Invalid username')
+
+        if not self.check_password_validity(password) or not self.check_password_validity(password_repeat):
+            raise ArgumentError('Invalid password')
+
+        if password != password_repeat:
+            raise ArgumentError('Password does not match')
+
+        if self.find_moderator_username(username) is not None:
+            raise ArgumentError('Username taken')
+
+        moderator = Moderator()
+        moderator.roles = []
+        moderator.username = username
+
+        self.create_moderator(moderator, password)
+
+        mod_log('User {} registered'.format(username))
+
+        return moderator
 
     def create_moderator(self, moderator, password):
         if not self.check_username_validity(moderator.username):

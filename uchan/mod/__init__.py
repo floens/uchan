@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import Blueprint, request, url_for, redirect, render_template
+from flask import Blueprint, url_for, render_template
 
 from uchan.lib import roles
 from uchan.lib.moderator_request import request_has_role, get_authed
@@ -8,22 +8,12 @@ from uchan.lib.moderator_request import request_has_role, get_authed
 mod = Blueprint('mod', __name__, url_prefix='/mod', template_folder='templates', static_folder='static')
 
 
-def mod_abort_redirect():
-    return redirect(url_for('.mod_auth'))
-
-
-@mod.before_request
-def mod_restrict():
-    if request.endpoint != 'mod.mod_auth' and not get_authed():
-        return mod_abort_redirect()
-
-
 def mod_role_restrict(role):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not request_has_role(role):
-                return render_template('error.html', message='No permission')
+                return render_template('error.html', message='No permission'), 401
 
             return f(*args, **kwargs)
 
