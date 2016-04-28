@@ -1,0 +1,31 @@
+{% macro render(report, post, thread, view_ips=False) %}
+    <div class="report-post" id="p{{ post.refno }}">
+        <div class="header">
+            <span class="date">
+                {{ post.date|post_time }}
+            </span><br>
+            Report count: {{ report.count }}<br>
+            Reported on: {{ report.date|formatted_time }}<br>
+            {% if view_ips %}
+                IP: {{ ip4_to_str(report.post.ip4) }}
+            {% endif %}
+        </div>
+        {% if post.has_file %}
+            <div class="file">
+                <a class="file-link" href="{{ post.file_location }}">
+                    <img src="{{ post.file_thumbnail_location }}" width="{{ post.file_thumbnail_width }}" height="{{ post.file_thumbnail_height }}">
+                </a>
+            </div>
+        {% endif %}
+        {% if post.html %}
+            <div class="styled-text">
+                {# Render both the cached version and the model #}
+                {% if post.html %}
+                    {{ post.html|safe }}
+                {% else %}
+                    {{ post.text|post_text }}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}

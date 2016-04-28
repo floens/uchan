@@ -1,4 +1,4 @@
-{% macro render(post_item, thread=None, snippet=False, thread_view=False, board_info=False, with_divider=False, is_locked=False, is_sticky=False) %}
+{% macro render(post_item, thread, snippet=False, link_refno=False, board_info=False, with_divider=False, checkbox=False, is_locked=False, is_sticky=False) %}
     {# NOTE: keep this in line with the javascript post html builder #}
     <div class="post{{ ' snippet' if snippet else '' }}{{ ' divider' if with_divider else '' }}" id="p{{ post_item.refno }}" data-date="{{ post_item.date }}">
         <div class="header">
@@ -8,7 +8,7 @@
                 </span>
                 <br>
             {% endif %}
-            <a href="{% if not thread_view %}{{ url_for('view_thread', board_name=thread.board.name, thread_id=thread.id) }}{% endif %}#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
+            <a href="{% if link_refno %}{{ url_for('view_thread', board_name=thread.board.name, thread_id=thread.id) }}{% endif %}#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
             <span class="name">
                 {{ post_item.name|post_name }}
             </span>
@@ -20,8 +20,8 @@
             </span>
             {% if is_locked %}<b>[locked]</b> {% endif %}
             {% if is_sticky %}<b>[sticky]</b>{% endif %}
-            {% if thread_view %}
-                <span class="manage">
+            {% if checkbox %}
+            <span class="manage">
                 <input type="checkbox" name="post_id" value="{{ post_item.id }}">
             </span>
             {% endif %}

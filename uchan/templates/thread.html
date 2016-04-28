@@ -21,7 +21,7 @@
     {{ post_manage_widget.render_begin() }}
     <div class="posts">
         {% for post_item in thread.posts %}
-            {{ post_widget.render(post_item, thread_view=True, with_divider=not loop.last,
+            {{ post_widget.render(post_item, checkbox=True, with_divider=not loop.last,
         is_sticky=loop.first and thread.sticky, is_locked=loop.first and thread.locked) }}
         {% endfor %}
     </div>

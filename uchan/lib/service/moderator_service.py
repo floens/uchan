@@ -3,6 +3,7 @@ import string
 import bcrypt
 from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import lazyload, joinedload
 from sqlalchemy.orm.exc import NoResultFound
 
 from uchan.lib import ArgumentError
@@ -56,6 +57,9 @@ class ModeratorService:
                                                  board_moderator_table.c.moderator_id == moderator.id)
 
         reports_query = reports_query.order_by(desc(Report.date))
+        reports_query = reports_query.options(
+            joinedload('post').joinedload('thread').joinedload('board')
+        )
         reports = reports_query.all()
 
         return reports

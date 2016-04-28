@@ -1,6 +1,7 @@
 from flask import request, abort, redirect, url_for, render_template, jsonify
 
 from uchan import app, g
+from uchan.filter.app_filters import time_remaining
 from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib.moderator_request import get_authed_moderator, get_authed
 from uchan.lib.service import BoardService
@@ -91,7 +92,7 @@ def post():
         raise BadRequestError('You are banned')
     except RequestSuspendedException as e:
         raise BadRequestError(
-            'You must wait {} second{} before posting again'.format(e.suspend_time, '' if e.suspend_time == 1 else 's'))
+            'You must wait {} before posting again'.format(time_remaining(now() + 1000 * e.suspend_time)))
     except ArgumentError as e:
         raise BadRequestError(e.message)
 

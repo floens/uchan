@@ -2,32 +2,19 @@
 
 {% block title %}Mod posts{% endblock %}
 
-{% import "widget/post.html" as post_widget %}
+{% import "widget/post_report.html" as post_report_widget %}
 
 {% block content %}
     <h2>Reports</h2>
 
-    <table class="datatable">
-        <thead>
-        <tr>
-            <th>Post</th>
-            <th>Report count</th>
-            {% if view_ips %}
-                <th>IP4</th>{% endif %}
-            <th></th>
-        </tr>
-        </thead>
-        <tbody>
+    <form action="{{ url_for('.mod_post_manage') }}" method="post">
+        {{ csrf_html() }}
+
         {% for report in reports %}
-            <tr>
-                <td>{{ post_widget.render(report.post) }}</td>
-                <td>{{ report.count }}</td>
-                {% if view_ips %}
-                    <td>{{ ip4_to_str(report.post.ip4) }}</td>{% endif %}
-                <td>[<a href="{{ url_for('find_post',post_id=report.post.id) }}">Go to post</a>]</td>
-            </tr>
+            {{ post_report_widget.render(report, report.post_cache, report.post.thread, view_ips=view_ips) }}
         {% endfor %}
-        </tbody>
-    </table>
+
+        <button name="mode" value="delete">Delete</button>
+    </form>
 
 {% endblock %}

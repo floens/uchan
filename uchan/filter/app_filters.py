@@ -41,16 +41,23 @@ def time_remaining(t):
     minutes = int(remaining // ms_in_minute)
     remaining -= minutes * ms_in_minute
 
+    ms_in_second = 1000
+    seconds = int(remaining // ms_in_second)
+    remaining -= seconds * ms_in_second
+
     text = ''
-    if days > 0:
-        text += '{} day{}'.format(days, '' if days == 1 else 's')
+    if not days and not hours and not minutes:
+        text += '{} second{}'.format(seconds, '' if seconds == 1 else 's')
+    else:
+        if days > 0:
+            text += '{} day{}'.format(days, '' if days == 1 else 's')
+            if hours > 0:
+                text += ', '
+            else:
+                text += ' and '
         if hours > 0:
-            text += ', '
-        else:
-            text += ' and '
-    if hours > 0:
-        text += '{} hour{} and '.format(hours, '' if hours == 1 else 's')
-    text += '{} minute{}'.format(minutes, '' if minutes == 1 else 's')
+            text += '{} hour{} and '.format(hours, '' if hours == 1 else 's')
+        text += '{} minute{}'.format(minutes, '' if minutes == 1 else 's')
 
     return text
 

@@ -121,35 +121,35 @@ body, textarea {
     background-color: #fff4e2;
 }
 
-.header .subject {
+.post .header .subject {
     color: #0200ff;
 }
 
-.header .refno {
+.post .header .refno {
     color: #000;
     text-decoration: none;
 }
 
-.header .refno:hover {
+.post .header .refno:hover {
     text-decoration: underline;
     color: #ff0000;
 }
 
-.header .name {
+.post .header .name {
     font-weight: bold;
     color: #018a00;
 }
 
-.header .name .trip {
+.post .header .name .trip {
     font-weight: normal;
     font-size: 0.9em;
 }
 
-.header .modcode {
+.post .header .modcode {
     color: #ff0000;
 }
 
-.header .date {
+.post .header .date {
 }
 
 .styled-text {

@@ -23,7 +23,7 @@
             is_sticky=thread.sticky, is_locked=thread.locked) }}
 
         {% for post_snippet in thread.posts[1:] %}
-            {{ post_widget.render(post_snippet, thread, snippet=True, thread_view=False, with_divider=not loop.last) }}
+            {{ post_widget.render(post_snippet, thread, link_refno=True, snippet=True, with_divider=not loop.last) }}
         {% endfor %}
         {% if not loop.last %}
             <hr class="content-divider">
