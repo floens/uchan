@@ -3,8 +3,10 @@
 {% macro render(report, post, thread, view_ips=False, ip4_to_str=None) %}
     <div class="report-post" id="p{{ post.refno }}">
         <div class="report-post-header">
-            {{ report.count }} {{ report.count|pluralize('report', 'reports') }}<br>
-            <span title="{{ report.date|formatted_time }}">Reported {{ report.date|time_remaining }}</span><br>
+            <a target="_blank" href="{{ url_for('view_thread', board_name=thread.board.name, thread_id=thread.id) }}#p{{ post.refno }}">
+                /{{ thread.board.name }}/{{ thread.id }}#{{ post.id }}</a>
+            reported {{ report.count|pluralize('once', report.count ~ ' times') }}<br>
+            <span title="{{ report.date|formatted_time }}">{{ report.date|time_remaining }}</span><br>
             {% if view_ips %}
                 IP: {{ ip4_to_str(report.post.ip4) }}
             {% endif %}
