@@ -25,51 +25,6 @@ class ModeratorService:
     def __init__(self):
         pass
 
-    def add_report(self, report):
-        db = get_db()
-
-        existing_report = None
-        try:
-            existing_report = db.query(Report).filter_by(post_id=report.post_id).one()
-        except NoResultFound:
-            pass
-
-        if existing_report is not None:
-            existing_report.count = Report.count + 1
-        else:
-            report.count = 1
-            db.add(report)
-
-        report.date = now()
-
-        db.commit()
-
-    def get_reports(self, moderator):
-        db = get_db()
-
-        reports_query = db.query(Report)
-        # Show all reports when the moderator has the admin role
-        if not self.has_role(moderator, roles.ROLE_ADMIN):
-            # Filter that gets all reports for the moderator id
-            reports_query = reports_query.filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
-                                                 Thread.board_id == Board.id,
-                                                 Board.id == board_moderator_table.c.board_id,
-                                                 board_moderator_table.c.moderator_id == moderator.id)
-
-        reports_query = reports_query.order_by(desc(Report.date))
-        reports_query = reports_query.options(
-            joinedload('post').joinedload('thread').joinedload('board')
-        )
-        reports = reports_query.all()
-
-        return reports
-
-    def can_delete(self, moderator, post):
-        if self.has_role(moderator, roles.ROLE_ADMIN):
-            return True
-        else:
-            return self.moderates_board(moderator, post.thread.board)
-
     def check_username_validity(self, username):
         if not 0 < len(username) <= self.USERNAME_MAX_LENGTH:
             return False

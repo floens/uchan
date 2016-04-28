@@ -162,7 +162,8 @@ class PostsService:
             g.posts_cache.invalidate_board_page_cache(board_name)
 
             cache_time = now() - start_time
-            log = 'new thread /{}/{} ({})'.format(board_name, thread_id, self.gather_statistics(insert_time, cache_time, post_details))
+            log = 'new thread /{}/{} ({})'.format(board_name, thread_id,
+                                                  self.gather_statistics(insert_time, cache_time, post_details))
             mod_log(log, ip4_str=ip4_to_str(post_details.ip4))
 
             return board_name, thread.id, 1
@@ -197,7 +198,8 @@ class PostsService:
 
             cache_time = now() - start_time
             log = 'new reply /{}/{}#{} (id: {} {})'.format(
-                    board_name, thread_id, post_refno, post_id, self.gather_statistics(insert_time, cache_time, post_details))
+                board_name, thread_id, post_refno, post_id,
+                self.gather_statistics(insert_time, cache_time, post_details))
             mod_log(log, ip4_str=ip4_to_str(post_details.ip4))
 
             return board_name, thread_id, post_refno
@@ -209,7 +211,8 @@ class PostsService:
             total += post_details.file_time
             file_time = 'file: {}ms, '.format(post_details.file_time)
 
-        return 'check: {}ms, {}db: {}ms, caches: {}ms, total: {}ms'.format(post_details.check_time, file_time, insert_time, cache_time, total)
+        return 'check: {}ms, {}db: {}ms, caches: {}ms, total: {}ms'.format(post_details.check_time, file_time,
+                                                                           insert_time, cache_time, total)
 
     def get_board_thread(self, post_details):
         board = g.board_service.find_board(post_details.board_name)
@@ -269,7 +272,7 @@ class PostsService:
                 else:
                     raise BadRequestError('Post not found')
 
-            can_delete = (moderator is not None and g.moderator_service.can_delete(moderator, post)) or \
+            can_delete = (moderator is not None and g.report_service.can_moderator_delete_post(moderator, post)) or \
                          (details.password is not None and details.password == post.password)
             if can_delete:
                 mod_log('post {} delete'.format(details.post_id), ip4_str=ip4_to_str(details.ip4),
@@ -288,20 +291,20 @@ class PostsService:
 
             report = Report(post_id=post.id)
             mod_log('post {} reported'.format(post.id), ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
-            g.moderator_service.add_report(report)
+            g.report_service.add_report(report)
         elif details.mode == ManagePostDetails.TOGGLE_STICKY:
             if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
                 mod_log('sticky on /{}/{} {}'.format(
-                        thread.board.name, thread.id, 'disabled' if thread.sticky else 'enabled'),
-                        ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
+                    thread.board.name, thread.id, 'disabled' if thread.sticky else 'enabled'),
+                    ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 self.toggle_thread_sticky(thread)
             else:
                 raise BadRequestError()
         elif details.mode == ManagePostDetails.TOGGLE_LOCKED:
             if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
                 mod_log('lock on /{}/{} {}'.format(
-                        thread.board.name, thread.id, 'disabled' if thread.locked else 'enabled'),
-                        ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
+                    thread.board.name, thread.id, 'disabled' if thread.locked else 'enabled'),
+                    ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 self.toggle_thread_locked(thread)
             else:
                 raise BadRequestError()
@@ -355,22 +358,27 @@ class PostsService:
         if post.refno == 1:
             self.delete_thread(post.thread)
         else:
+            thread_id = post.thread.id
+            board_name = post.thread.board.name
             db = get_db()
             db.delete(post)
             db.commit()
 
             # Invalidate caches
-            g.posts_cache.invalidate_thread_cache(post.thread.id)
-            g.posts_cache.invalidate_board_page_cache(post.thread.board.name)
+            g.posts_cache.invalidate_thread_cache(thread_id)
+            g.posts_cache.invalidate_board_page_cache(board_name)
 
     def delete_thread(self, thread):
+        thread_id = thread.id
+        board_name = thread.board.name
+
         db = get_db()
         db.delete(thread)
         db.commit()
 
         # Invalidate caches
-        g.posts_cache.invalidate_thread_cache(thread.id)
-        g.posts_cache.invalidate_board_page_cache(thread.board.name)
+        g.posts_cache.invalidate_thread_cache(thread_id)
+        g.posts_cache.invalidate_board_page_cache(board_name)
 
     def purge_threads(self, board, board_config_cached):
         pages = board_config_cached.board_config.pages

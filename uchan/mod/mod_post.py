@@ -1,17 +1,19 @@
-from flask import render_template, request
+from flask import render_template, request, abort, flash, redirect, url_for
 from uchan import g
 from uchan.filter.text_parser import parse_text
-from uchan.lib import roles
+from uchan.lib import roles, ArgumentError, BadRequestError
 from uchan.lib.cache.posts_cache import PostCacheProxy
 from uchan.lib.moderator_request import get_authed_moderator
+from uchan.lib.tasks.report_task import ManageReportDetails, manage_report_task
 from uchan.lib.utils import ip4_to_str
 from uchan.mod import mod
+from uchan.view import with_token
 
 
 @mod.route('/mod_post')
 def mod_post():
     moderator = get_authed_moderator()
-    reports = g.moderator_service.get_reports(moderator)
+    reports = g.report_service.get_reports(moderator)
 
     for report in reports:
         report.post_cache = PostCacheProxy(report.post, parse_text(report.post.text))
@@ -22,9 +24,29 @@ def mod_post():
 
 
 @mod.route('/mod_post/manage', methods=['POST'])
+@with_token()
 def mod_post_manage():
     form = request.form
 
-    mode = form['mode']
+    report_id = form.get('report_id', type=int)
+    moderator = get_authed_moderator()
+    details = ManageReportDetails(report_id, moderator.id)
 
-    return 'mode: {}'.format(mode)
+    success_message = None
+    mode_string = form['mode']
+    if mode_string == 'clear':
+        details.mode = ManageReportDetails.CLEAR
+        success_message = 'Cleared report'
+    elif mode_string == 'delete':
+        details.mode = ManageReportDetails.DELETE_POST
+        success_message = 'Deleted post'
+    else:
+        abort(400)
+
+    try:
+        manage_report_task.delay(details).get()
+    except ArgumentError as e:
+        raise BadRequestError(e.message)
+
+    flash(success_message)
+    return redirect(url_for('.mod_post'))

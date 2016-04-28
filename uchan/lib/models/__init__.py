@@ -20,7 +20,7 @@ class MutableList(Mutable, list):
             return value
 
 
-from .board import Board
+from .board import Board, board_moderator_table
 from .config import Config
 from .moderator import Moderator
 from .post import Post

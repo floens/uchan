@@ -27,6 +27,7 @@ class Globals():
         self.ban_service = None
         self.page_service = None
         self.verification_service = None
+        self.report_service = None
 
 
 g = Globals()
@@ -44,7 +45,7 @@ def setup_logger(globals):
     from logging.handlers import RotatingFileHandler
 
     app.logger.handlers[0].setFormatter(
-            logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"))
+        logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"))
     log_handler = RotatingFileHandler('log/' + config.APP_NAME + '.log', maxBytes=5000000, backupCount=5)
     log_handler.setFormatter(logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"))
     app.logger.addHandler(log_handler)
@@ -129,6 +130,9 @@ def init():
 
     from uchan.lib.service import ModeratorService
     g.moderator_service = ModeratorService()
+
+    from uchan.lib.service import ReportService
+    g.report_service = ReportService()
 
     from uchan.lib.service import ConfigService
     g.config_service = ConfigService()

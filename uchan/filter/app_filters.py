@@ -27,7 +27,11 @@ def formatted_time(t):
 
 @app.template_filter()
 def time_remaining(t):
-    remaining = max(0, t - now())
+    remaining = t - now()
+    past = False
+    if remaining < 0:
+        past = True
+        remaining = -remaining
 
     ms_in_day = 1000 * 60 * 60 * 24
     days = int(remaining // ms_in_day)
@@ -58,6 +62,9 @@ def time_remaining(t):
         if hours > 0:
             text += '{} hour{} and '.format(hours, '' if hours == 1 else 's')
         text += '{} minute{}'.format(minutes, '' if minutes == 1 else 's')
+
+    if past:
+        text += ' ago'
 
     return text
 
