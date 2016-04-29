@@ -1,13 +1,16 @@
 from sqlalchemy import Column, Integer, String, Table, ForeignKey
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import relationship
 
 from uchan.lib.database import ModelBase
+from uchan.lib.models import MutableList
 
 board_moderator_table = Table(
-        'boardmoderator',
-        ModelBase.metadata,
-        Column('board_id', Integer, ForeignKey('board.id'), index=True),
-        Column('moderator_id', Integer, ForeignKey('moderator.id'), index=True)
+    'boardmoderator',
+    ModelBase.metadata,
+    Column('board_id', Integer, ForeignKey('board.id'), index=True),
+    Column('moderator_id', Integer, ForeignKey('moderator.id'), index=True),
+    Column('roles', MutableList.as_mutable(ARRAY(String)), index=True, nullable=False, default='{}')
 )
 
 

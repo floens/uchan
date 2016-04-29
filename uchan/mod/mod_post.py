@@ -20,7 +20,14 @@ def mod_post():
 
     view_ips = g.moderator_service.has_role(moderator, roles.ROLE_ADMIN)
 
-    return render_template('mod_post.html', reports=reports, view_ips=view_ips, ip4_to_str=ip4_to_str)
+    board_links = []
+    for board in moderator.boards:
+        board_links.append((board.name, url_for('board', board_name=board.name)))
+
+    x = g.report_service.has_report_role(moderator, moderator.boards[0], 'janitor')
+
+    return render_template('mod_post.html', moderator=moderator, reports=reports, board_links=board_links,
+                           view_ips=view_ips, ip4_to_str=ip4_to_str, x=x)
 
 
 @mod.route('/mod_post/manage', methods=['POST'])

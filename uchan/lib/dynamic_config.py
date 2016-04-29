@@ -2,7 +2,7 @@ from uchan.lib import ArgumentError
 
 
 class DynamicConfigItem:
-    def __init__(self, name, description, default_value, value_type, minimum=None, maximum=None):
+    def __init__(self, name, description, default_value, value_type, minimum=None, maximum=None, roles=None):
         self.name = name
         self.description = description
         self.default_value = default_value
@@ -12,6 +12,8 @@ class DynamicConfigItem:
 
         self.minimum = minimum
         self.maximum = maximum
+
+        self.roles = roles
 
     def set(self, raw_value):
         if self.value_type == int:

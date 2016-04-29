@@ -135,9 +135,6 @@ class ModeratorService:
         db = get_db()
         db.commit()
 
-    def moderates_board(self, moderator, board):
-        return board in moderator.boards
-
     def change_password(self, moderator, old_password, new_password):
         if not self.check_password_validity(old_password):
             raise ArgumentError('Invalid password')

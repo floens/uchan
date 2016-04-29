@@ -28,17 +28,19 @@ def inject_variables():
         mod_links = [
             ('auth', url_for('.mod_auth')),
             ('mod posts', url_for('.mod_post')),
-            ('mod account', url_for('.mod_self'))
+            ('mod account', url_for('.mod_self')),
+            ('mod boards', url_for('.mod_boards'))
         ]
 
         if request_has_role(roles.ROLE_ADMIN):
-            mod_links.append(('mod bans', url_for('.mod_bans')))
-            mod_links.append(('stats', url_for('.mod_stat')))
-            mod_links.append(('memcache stats', url_for('.mod_memcache_stat')))
-            mod_links.append(('mod moderators', url_for('.mod_moderators')))
-            mod_links.append(('mod boards', url_for('.mod_boards')))
-            mod_links.append(('mod pages', url_for('.mod_pages')))
-            mod_links.append(('mod site', url_for('.mod_site')))
+            mod_links += [
+                ('mod bans', url_for('.mod_bans')),
+                ('stats', url_for('.mod_stat')),
+                ('memcache stats', url_for('.mod_memcache_stat')),
+                ('mod moderators', url_for('.mod_moderators')),
+                ('mod pages', url_for('.mod_pages')),
+                ('mod site', url_for('.mod_site')),
+            ]
 
         return dict(mod_links=mod_links)
     else:

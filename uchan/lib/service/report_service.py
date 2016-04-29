@@ -36,7 +36,27 @@ class ReportService:
         if g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
             return True
         else:
-            return g.moderator_service.moderates_board(moderator, post.thread.board)
+            return self.moderates_board(moderator, post.thread.board)
+
+    def moderates_board(self, moderator, board):
+        return board in moderator.boards
+
+    def report_role_exists(self, role):
+        return role is not None and role in roles.ALL_REPORT_ROLES
+
+    def has_report_role(self, moderator, board, role):
+        if not self.report_role_exists(role):
+            raise ArgumentError('Invalid report role')
+
+        db = get_db()
+        try:
+            board_moderator_roles = db.query(board_moderator_table.c.roles).filter(
+                board_moderator_table.c.moderator_id == moderator.id,
+                board_moderator_table.c.board_id == board.id).one()[0]
+        except NoResultFound:
+            return False
+
+        return role in board_moderator_roles
 
     def add_report(self, report):
         db = get_db()

@@ -1,0 +1,7 @@
+{% macro render(links) %}
+    [
+    {%- for link in links -%}
+        <a href="{{ link[1] }}">{{ link[0] }}</a>{% if not loop.last %} / {% endif %}
+    {%- endfor -%}
+    ]
+{% endmacro %}

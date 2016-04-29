@@ -1,10 +1,10 @@
 from flask import request, redirect, url_for, render_template, abort, flash
 
 from uchan import g
-from uchan.lib import roles, ArgumentError
+from uchan.lib import ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Board
-from uchan.mod import mod, mod_role_restrict
+from uchan.mod import mod
 from uchan.view import check_csrf_token, with_token
 
 
@@ -19,54 +19,13 @@ def get_board_or_abort(board_name):
 
 
 @mod.route('/mod_board')
-@mod_role_restrict(roles.ROLE_ADMIN)
 def mod_boards():
     boards = g.board_service.get_all_boards()
 
     return render_template('mod_boards.html', boards=boards)
 
 
-@mod.route('/mod_board/add', methods=['POST'])
-@mod_role_restrict(roles.ROLE_ADMIN)
-@with_token()
-def mod_board_add():
-    board_name = request.form['board_name']
-
-    if not g.board_service.check_board_name_validity(board_name):
-        flash('Invalid board name')
-        return redirect(url_for('.mod_boards'))
-
-    board = Board()
-    board.name = board_name
-
-    try:
-        g.board_service.add_board(board)
-        flash('Board added')
-        mod_log('add board /{}/'.format(board_name))
-    except ArgumentError as e:
-        flash(e.message)
-
-    return redirect(url_for('.mod_board', board_name=board.name))
-
-
-@mod.route('/mod_board/delete', methods=['POST'])
-@mod_role_restrict(roles.ROLE_ADMIN)
-@with_token()
-def mod_board_delete():
-    board = get_board_or_abort(request.form['board_name'])
-
-    try:
-        g.board_service.delete_board(board)
-        flash('Board deleted')
-        mod_log('delete board /{}/'.format(board.name))
-    except ArgumentError as e:
-        flash(e.message)
-
-    return redirect(url_for('.mod_boards'))
-
-
 @mod.route('/mod_board/<board_name>', methods=['GET', 'POST'])
-@mod_role_restrict(roles.ROLE_ADMIN)
 def mod_board(board_name):
     board = get_board_or_abort(board_name)
 
@@ -90,3 +49,40 @@ def mod_board(board_name):
             flash(str(e))
 
         return redirect(url_for('.mod_board', board_name=board_name))
+
+
+@mod.route('/mod_board/add', methods=['POST'])
+@with_token()
+def mod_board_add():
+    board_name = request.form['board_name']
+
+    if not g.board_service.check_board_name_validity(board_name):
+        flash('Invalid board name')
+        return redirect(url_for('.mod_boards'))
+
+    board = Board()
+    board.name = board_name
+
+    try:
+        g.board_service.add_board(board)
+        flash('Board added')
+        mod_log('add board /{}/'.format(board_name))
+    except ArgumentError as e:
+        flash(e.message)
+
+    return redirect(url_for('.mod_board', board_name=board.name))
+
+
+@mod.route('/mod_board/delete', methods=['POST'])
+@with_token()
+def mod_board_delete():
+    board = get_board_or_abort(request.form['board_name'])
+
+    try:
+        g.board_service.delete_board(board)
+        flash('Board deleted')
+        mod_log('delete board /{}/'.format(board.name))
+    except ArgumentError as e:
+        flash(e.message)
+
+    return redirect(url_for('.mod_boards'))

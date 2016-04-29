@@ -12,7 +12,11 @@ from uchan.view import with_token
 def mod_self():
     moderator = get_authed_moderator()
 
-    return render_template('mod_self.html', moderator=moderator)
+    board_links = []
+    for board in moderator.boards:
+        board_links.append((board.name, url_for('board', board_name=board.name)))
+
+    return render_template('mod_self.html', moderator=moderator, board_links=board_links)
 
 
 @mod.route('/mod_self/change_password', methods=['POST'])

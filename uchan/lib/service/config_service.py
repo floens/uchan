@@ -6,6 +6,7 @@ from uchan.lib import ArgumentError
 from uchan.lib.configs import BoardConfig, SiteConfig
 from uchan.lib.database import get_db
 from uchan.lib.models.config import Config
+from uchan.lib.moderator_request import get_authed_moderator, get_authed
 
 
 class ConfigService:
@@ -65,9 +66,17 @@ class ConfigService:
         return config_row
 
     def save_from_form(self, config, config_row, form, prefix='config_'):
+        moderator = get_authed_moderator() if get_authed() else None
+
         for config_item in config.configs:
             form_value = form.get(prefix + config_item.name, None)
             if form_value is not None:
+                if config_item.roles is not None:
+                    if moderator is None:
+                        continue
+                    if not any(i in moderator.roles for i in config_item.roles):
+                        continue
+
                 try:
                     config_item.set(form_value)
                 except ArgumentError as e:

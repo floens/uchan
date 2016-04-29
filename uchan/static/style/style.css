@@ -16,30 +16,22 @@ body, textarea {
     clear: both;
 }
 
-.top-list {
+.link-list {
     padding: 5px;
     color: #666;
-    font-size: 12px;
+    /*font-size: 12px;*/
 }
 
-.top-list a {
+.link-list a {
     text-decoration: none;
 }
 
-.top-list a:hover {
+.link-list a:hover {
     text-decoration: underline;
 }
 
-.top-list .top-list-right {
+.link-list .link-list-right {
     float: right;
-}
-
-.top-list .top-list-start {
-    margin-right: -3px;
-}
-
-.top-list .top-list-end {
-    margin-left: -3px;
 }
 
 .flashes {
