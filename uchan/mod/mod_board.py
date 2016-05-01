@@ -1,9 +1,11 @@
 from flask import request, redirect, url_for, render_template, abort, flash
 
 from uchan import g
-from uchan.lib import ArgumentError
+from uchan.lib import roles, BadRequestError
+from uchan.lib import ArgumentError, NoPermissionError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Board
+from uchan.lib.moderator_request import request_moderator
 from uchan.mod import mod
 from uchan.view import check_csrf_token, with_token
 
@@ -20,7 +22,7 @@ def get_board_or_abort(board_name):
 
 @mod.route('/mod_board')
 def mod_boards():
-    boards = g.board_service.get_all_boards()
+    boards = g.moderator_service.get_moderating_boards(request_moderator())
 
     return render_template('mod_boards.html', boards=boards)
 
@@ -29,8 +31,14 @@ def mod_boards():
 def mod_board(board_name):
     board = get_board_or_abort(board_name)
 
+    moderator = request_moderator()
+    if not g.moderator_service.moderates_board(moderator, board):
+        raise NoPermissionError()
+
+    g.moderator_service.has_board_role(moderator, board, roles.BOARD_ROLE_JANITOR)
+
     board_config_row = board.config
-    board_config = g.config_service.load_config(board_config_row)
+    board_config = g.config_service.load_config(board_config_row, moderator)
 
     if request.method == 'GET':
         return render_template('mod_board.html', board=board, board_config=board_config)
@@ -41,7 +49,7 @@ def mod_board(board_name):
             abort(400)
 
         try:
-            g.config_service.save_from_form(board_config, board_config_row, form)
+            g.config_service.save_from_form(moderator, board_config, board_config_row, form)
             flash('Board config updated')
             mod_log('board /{}/ config updated'.format(board_name))
             g.board_cache.invalidate_board_config(board_name)
@@ -56,19 +64,16 @@ def mod_board(board_name):
 def mod_board_add():
     board_name = request.form['board_name']
 
-    if not g.board_service.check_board_name_validity(board_name):
-        flash('Invalid board name')
-        return redirect(url_for('.mod_boards'))
-
     board = Board()
     board.name = board_name
 
     try:
-        g.board_service.add_board(board)
+        g.moderator_service.user_create_board(request_moderator(), board)
         flash('Board added')
         mod_log('add board /{}/'.format(board_name))
     except ArgumentError as e:
         flash(e.message)
+        return redirect(url_for('.mod_boards'))
 
     return redirect(url_for('.mod_board', board_name=board.name))
 

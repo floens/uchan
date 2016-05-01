@@ -272,7 +272,7 @@ class PostsService:
                 else:
                     raise BadRequestError('Post not found')
 
-            can_delete = (moderator is not None and g.report_service.can_moderator_delete_post(moderator, post)) or \
+            can_delete = (moderator is not None and g.moderator_service.moderates_board(moderator, board)) or \
                          (details.password is not None and details.password == post.password)
             if can_delete:
                 mod_log('post {} delete'.format(details.post_id), ip4_str=ip4_to_str(details.ip4),
@@ -353,6 +353,21 @@ class PostsService:
             return get_db().query(Post).filter_by(id=post_id).one()
         except NoResultFound:
             return None
+
+    def delete_file(self, post):
+        if post.file is None:
+            raise ArgumentError('No file on post')
+
+        thread_id = post.thread.id
+        board_name = post.thread.board.name
+        db = get_db()
+        # The file_service listens to deletes and will delete it from the cdn
+        db.delete(post.file)
+        db.commit()
+
+        # Invalidate caches
+        g.posts_cache.invalidate_thread_cache(thread_id)
+        g.posts_cache.invalidate_board_page_cache(board_name)
 
     def delete_post(self, post):
         if post.refno == 1:

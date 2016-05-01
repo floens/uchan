@@ -3,7 +3,7 @@ from flask import request, abort, redirect, url_for, render_template, jsonify
 from uchan import app, g
 from uchan.filter.app_filters import time_remaining
 from uchan.lib import BadRequestError, ArgumentError
-from uchan.lib.moderator_request import get_authed_moderator, get_authed
+from uchan.lib.moderator_request import request_moderator, get_authed
 from uchan.lib.service import BoardService
 from uchan.lib.service.posts_service import RequestBannedException, RequestSuspendedException
 from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task, post_check_task
@@ -78,7 +78,7 @@ def post():
 
     with_mod = form.get('with_mod', type=bool)
     if with_mod is True:
-        moderator = get_authed_moderator() if get_authed() else None
+        moderator = request_moderator() if get_authed() else None
         if moderator is not None:
             post_details.mod_id = moderator.id
 
@@ -128,7 +128,7 @@ def post():
             'postRefno': post_refno
         })
     else:
-        return redirect(url_for('view_thread', board_name=board_name, thread_id=thread_id) + '#p' + str(post_refno))
+        return redirect(url_for_post(board_name, thread_id, post_refno))
 
 
 @app.route('/post_manage', methods=['POST'])
@@ -171,7 +171,7 @@ def post_manage():
     else:
         abort(400)
 
-    moderator = get_authed_moderator() if get_authed() else None
+    moderator = request_moderator() if get_authed() else None
     if moderator is not None:
         details.mod_id = moderator.id
 
@@ -181,3 +181,22 @@ def post_manage():
         raise BadRequestError('You are banned')
 
     return render_template('message.html', message=success_message)
+
+
+@app.route('/find_post/<int:post_id>')
+def find_post(post_id):
+    if post_id <= 0 or post_id > 2 ** 32:
+        abort(400)
+
+    post = g.posts_service.find_post(post_id)
+    if post:
+        return redirect(url_for_post(post.thread.board.name, post.thread.id, post.refno))
+    else:
+        abort(404)
+
+
+def url_for_post(board_name, thread_id, post_id):
+    return url_for('view_thread', board_name=board_name, thread_id=thread_id) + '#p' + str(post_id)
+
+
+app.jinja_env.globals['url_for_post'] = url_for_post

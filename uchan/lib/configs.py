@@ -9,11 +9,12 @@ class BoardConfig(DynamicConfig):
         super().__init__()
 
         self.configs += [
-            DynamicConfigItem('pages', 'Number of pages this board has', 10, int, minimum=1, maximum=15,
-                              roles=[roles.ROLE_ADMIN]),
+            DynamicConfigItem('pages', 'Number of pages this board has', 10, int, minimum=1, maximum=15),
             DynamicConfigItem('per_page', 'Threads per page', 15, int, minimum=10, maximum=15),
-            DynamicConfigItem('full_name', 'Full name', '', str, maximum=25),
-            DynamicConfigItem('description', 'Description', 'No description given', str, maximum=100),
+            DynamicConfigItem('full_name', 'Full name', '', str, maximum=25,
+                              access_roles=[]),
+            DynamicConfigItem('description', 'Description', 'No description given', str, maximum=100,
+                              access_roles=[]),
             DynamicConfigItem('bump_limit', 'Max count of posts in a thread that will bump', 300, int, minimum=100,
                               maximum=500),
             DynamicConfigItem('file_posting_enabled', 'File posting enabled', True, bool),

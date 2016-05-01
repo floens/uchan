@@ -3,12 +3,15 @@ import string
 from functools import wraps
 from urllib.parse import urlparse
 
-from flask import send_from_directory, session, request, abort, url_for, render_template
+from flask import send_from_directory, session, request, abort, url_for, render_template, jsonify
 from markupsafe import escape, Markup
+from sqlalchemy.orm.exc import NoResultFound
 
 import config
 from uchan import g, app
+from uchan.filter.app_filters import page_formatting
 from uchan.lib import BadRequestError
+from uchan.lib.database import get_db
 from uchan.lib.moderator_request import get_authed
 from uchan.lib.service import PageService
 
@@ -125,12 +128,34 @@ def check_csrf_referer(request):
     return '{}://{}'.format(parsed_url.scheme, parsed_url.hostname) == config.SITE_URL
 
 
-def render_error(user_message):
-    return render_template('error.html', message=user_message), 400
+def render_error(user_message, code=400):
+    if request.is_xhr:
+        xhr_response = {
+            'error': True
+        }
+
+        if user_message:
+            xhr_response['message'] = page_formatting(user_message)
+
+        return jsonify(xhr_response), code
+    else:
+        return render_template('error.html', message=user_message), code
 
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
 app.jinja_env.globals['csrf_html'] = generate_csrf_token_html
+
+
+def get_model_id(model, id):
+    if type(id) != int or id <= 0 or id > 2 ** 32:
+        abort(400)
+
+    db = get_db()
+    try:
+        return db.query(model).filter_by(id=id).one()
+    except NoResultFound:
+        abort(404)
+
 
 import uchan.view.index
 import uchan.view.board

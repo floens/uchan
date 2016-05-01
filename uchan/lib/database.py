@@ -9,8 +9,10 @@ ModelBase = declarative_base()
 _sessionconstruct = None
 _engine = None
 
+from sqlalchemy.orm.session import Session
 
-def get_db():
+
+def get_db() -> Session:
     global _sessionconstruct
 
     return _sessionconstruct()

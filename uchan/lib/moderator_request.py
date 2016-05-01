@@ -2,6 +2,7 @@
 
 from flask import g as flaskg
 from flask import session
+
 from uchan import g
 from uchan.lib import ArgumentError
 
@@ -10,7 +11,7 @@ def get_authed():
     return 'mod_auth_id' in session
 
 
-def get_authed_moderator():
+def request_moderator():
     # Cache for the request
     if not hasattr(flaskg, 'authed_moderator'):
         if not get_authed():
@@ -25,7 +26,7 @@ def get_authed_moderator():
 
 
 def request_has_role(role):
-    moderator = get_authed_moderator()
+    moderator = request_moderator()
     return moderator is not None and g.moderator_service.has_role(moderator, role)
 
 

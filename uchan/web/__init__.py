@@ -1,6 +1,8 @@
 from flask import Flask
 from werkzeug.contrib.fixers import ProxyFix
 
+from uchan.lib import NoPermissionError
+
 
 class CustomFlaskApp(Flask):
     def __init__(self, *args, **kwargs):
@@ -27,13 +29,6 @@ def create_web_app(g, config, app):
     from uchan.lib import BadRequestError
 
     # Setup error handlers
-    def bad_request(e):
-        if isinstance(e, BadRequestError):
-            while isinstance(e, Exception) and len(e.args) > 0:
-                e = e.args[0]
-
-        return e if type(e) is str else ''
-
     @app.errorhandler(500)
     def server_error_handler(error):
         g.logger.exception(error)
@@ -50,21 +45,22 @@ def create_web_app(g, config, app):
 
     from uchan.view import render_error
 
+    def bad_request_message(e):
+        if isinstance(e, BadRequestError):
+            while isinstance(e, Exception) and len(e.args) > 0:
+                e = e.args[0]
+
+        return e if type(e) is str else ''
+
     @app.errorhandler(BadRequestError)
     def bad_request_handler(error):
-        user_message = bad_request(error)
+        user_message = bad_request_message(error)
 
-        if request.is_xhr:
-            xhr_response = {
-                'error': True
-            }
+        return render_error(user_message, 400)
 
-            if user_message:
-                xhr_response['message'] = page_formatting(user_message)
-
-            return jsonify(xhr_response), 400
-        else:
-            return render_error(user_message)
+    @app.errorhandler(NoPermissionError)
+    def no_permission_handler(error):
+        return render_error('No permission', 401)
 
     @app.after_request
     def after_request_handler(response):

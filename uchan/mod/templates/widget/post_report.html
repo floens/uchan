@@ -3,7 +3,7 @@
 {% macro render(report, post, thread, view_ips=False, ip4_to_str=None) %}
     <div class="report-post" id="p{{ post.refno }}">
         <div class="report-post-header">
-            <a target="_blank" href="{{ url_for('view_thread', board_name=thread.board.name, thread_id=thread.id) }}#p{{ post.refno }}">
+            <a target="_blank" href="{{ url_for_post(thread.board.name, thread.id, post.refno) }}">
                 /{{ thread.board.name }}/{{ thread.id }}#{{ post.id }}</a>
             reported {{ report.count|pluralize('once', report.count ~ ' times') }}<br>
             <span title="{{ report.date|formatted_time }}">{{ report.date|time_remaining }}</span><br>
@@ -15,11 +15,14 @@
         {{ post_widget.render(post, thread, file_position='top', link_refno=True) }}
         <div class="clear"></div>
         <div class="report-post-manage">
-            <form action="{{ url_for('.mod_post_manage') }}" method="post">
+            <form action="{{ url_for('.mod_report_manage') }}" method="post">
                 {{ csrf_html() }}
                 <input type="hidden" name="report_id" value="{{ report.id }}">
                 <button name="mode" value="clear" title="Delete the report without taking action">Clear</button>
                 <button name="mode" value="delete" title="Remove the post">Delete{{ ' thread' if post.refno == 1 else '' }}</button>
+                {% if post.has_file %}
+                    <button name="mode" value="delete_file" title="Remove file">Remove file</button>
+                {% endif %}
             </form>
         </div>
     </div>

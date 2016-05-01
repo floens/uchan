@@ -1,17 +1,22 @@
-from sqlalchemy import Column, Integer, String, Table, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.dialects.postgresql import ARRAY
-from sqlalchemy.orm import relationship
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.orm import relationship, backref
 
 from uchan.lib.database import ModelBase
 from uchan.lib.models import MutableList
 
-board_moderator_table = Table(
-    'boardmoderator',
-    ModelBase.metadata,
-    Column('board_id', Integer, ForeignKey('board.id'), index=True),
-    Column('moderator_id', Integer, ForeignKey('moderator.id'), index=True),
-    Column('roles', MutableList.as_mutable(ARRAY(String)), index=True, nullable=False, default='{}')
-)
+
+class BoardModerator(ModelBase):
+    __tablename__ = 'boardmoderator'
+
+    board_id = Column(Integer, ForeignKey('board.id'), primary_key=True)
+    moderator_id = Column(Integer, ForeignKey('moderator.id'), primary_key=True)
+
+    roles = Column(MutableList.as_mutable(ARRAY(String)), index=True, nullable=False)
+
+    board = relationship(Board, backref=backref('board_moderators', cascade='all, delete-orphan'))
+    moderator = relationship('Moderator')
 
 
 class Board(ModelBase):
@@ -23,4 +28,5 @@ class Board(ModelBase):
 
     config = relationship('Config', cascade='all')
     threads = relationship('Thread', backref='board', cascade='all, delete-orphan')
-    moderators = relationship('Moderator', secondary=board_moderator_table, backref='boards')
+
+    moderators = association_proxy('board_moderators', 'board')

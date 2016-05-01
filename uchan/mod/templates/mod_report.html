@@ -1,6 +1,6 @@
 {% extends "mod_base.html" %}
 
-{% block title %}Mod posts{% endblock %}
+{% block title %}Reports{% endblock %}
 
 {% import "widget/post_report.html" as post_report_widget %}
 {% import "widget/link_list.html" as link_list_widget %}
@@ -8,10 +8,8 @@
 {% block content %}
     <h2>Reports</h2>
 
-    {{ x }}
-
     <p>
-        Reports for moderator {{ moderator.name }} that manages the boards {{ link_list_widget.render(board_links) }}
+        Reports for moderator <b>{{ moderator.username }}</b> for boards {{ link_list_widget.render(board_links) }}
     </p>
 
     {% for report in reports %}

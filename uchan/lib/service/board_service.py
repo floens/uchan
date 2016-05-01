@@ -8,7 +8,7 @@ from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib.configs import BoardConfig
 from uchan.lib.database import get_db
-from uchan.lib.models import Board
+from uchan.lib.models import Board, BoardModerator
 
 
 class BoardService:
@@ -41,12 +41,28 @@ class BoardService:
 
     def board_add_moderator(self, board, moderator):
         db = get_db()
-        board.moderators.append(moderator)
+
+        if board in moderator.boards:
+            raise ArgumentError('Board already added to moderator')
+
+        board_moderator = BoardModerator()
+        board_moderator.roles = []
+        board_moderator.moderator = moderator
+        board.board_moderator.append(board_moderator)
+        db.add(board_moderator)
         db.commit()
 
     def board_remove_moderator(self, board, moderator):
         db = get_db()
-        board.moderators.remove(moderator)
+
+        try:
+            board_moderator = db.query(BoardModerator).filter_by(
+                board_id=board.id,
+                moderator_id=moderator.id
+            ).one()
+        except NoResultFound:
+            raise ArgumentError('Moderator not on board')
+        db.delete(board_moderator)
         db.commit()
 
     def check_board_name_validity(self, name):

@@ -4,6 +4,7 @@ from uchan import celery, g
 class ManageReportDetails:
     CLEAR = 1
     DELETE_POST = 2
+    DELETE_FILE = 3
 
     def __init__(self, report_id, mod_id):
         self.report_id = report_id

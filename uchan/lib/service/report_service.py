@@ -5,7 +5,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from uchan import g
 from uchan.lib import roles, ArgumentError
 from uchan.lib.database import get_db
-from uchan.lib.models import Report, board_moderator_table, Thread, Board, Post
+from uchan.lib.models import Report, BoardModerator, Thread, Board, Post
 from uchan.lib.tasks.report_task import ManageReportDetails
 from uchan.lib.utils import now
 
@@ -23,40 +23,17 @@ class ReportService:
         if not moderator:
             raise ArgumentError('Moderator not found')
 
+        post = report.post
+        if not g.moderator_service.moderates_board(moderator, post.thread.board):
+            raise ArgumentError('No permission')
+
         if manage_report_details.mode == ManageReportDetails.CLEAR:
             self.delete_report(report)
         elif manage_report_details.mode == ManageReportDetails.DELETE_POST:
-            if self.can_moderator_delete_post(moderator, report.post):
-                # Report gets deleted with a cascade
-                g.posts_service.delete_post(report.post)
-            else:
-                raise ArgumentError('No permission to delete post')
-
-    def can_moderator_delete_post(self, moderator, post):
-        if g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
-            return True
-        else:
-            return self.moderates_board(moderator, post.thread.board)
-
-    def moderates_board(self, moderator, board):
-        return board in moderator.boards
-
-    def report_role_exists(self, role):
-        return role is not None and role in roles.ALL_REPORT_ROLES
-
-    def has_report_role(self, moderator, board, role):
-        if not self.report_role_exists(role):
-            raise ArgumentError('Invalid report role')
-
-        db = get_db()
-        try:
-            board_moderator_roles = db.query(board_moderator_table.c.roles).filter(
-                board_moderator_table.c.moderator_id == moderator.id,
-                board_moderator_table.c.board_id == board.id).one()[0]
-        except NoResultFound:
-            return False
-
-        return role in board_moderator_roles
+            # Report gets deleted with a cascade
+            g.posts_service.delete_post(post)
+        elif manage_report_details.mode == ManageReportDetails.DELETE_FILE:
+            g.posts_service.delete_file(post)
 
     def add_report(self, report):
         db = get_db()
@@ -91,8 +68,8 @@ class ReportService:
             # Filter that gets all reports for the moderator id
             reports_query = reports_query.filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
                                                  Thread.board_id == Board.id,
-                                                 Board.id == board_moderator_table.c.board_id,
-                                                 board_moderator_table.c.moderator_id == moderator.id)
+                                                 Board.id == BoardModerator.board_id,
+                                                 BoardModerator.moderator_id == moderator.id)
 
         reports_query = reports_query.order_by(desc(Report.date))
         reports_query = reports_query.options(

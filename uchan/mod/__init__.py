@@ -2,7 +2,7 @@ from functools import wraps
 
 from flask import Blueprint, url_for, render_template
 
-from uchan.lib import roles
+from uchan.lib import roles, NoPermissionError
 from uchan.lib.moderator_request import request_has_role, get_authed
 
 mod = Blueprint('mod', __name__, url_prefix='/mod', template_folder='templates', static_folder='static')
@@ -13,7 +13,7 @@ def mod_role_restrict(role):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not request_has_role(role):
-                return render_template('error.html', message='No permission'), 401
+                raise NoPermissionError()
 
             return f(*args, **kwargs)
 
@@ -27,7 +27,7 @@ def inject_variables():
     if get_authed():
         mod_links = [
             ('auth', url_for('.mod_auth')),
-            ('mod posts', url_for('.mod_post')),
+            ('mod reports', url_for('.mod_report')),
             ('mod account', url_for('.mod_self')),
             ('mod boards', url_for('.mod_boards'))
         ]
@@ -48,7 +48,7 @@ def inject_variables():
 
 
 import uchan.mod.mod_auth
-import uchan.mod.mod_post
+import uchan.mod.mod_report
 import uchan.mod.mod_self
 import uchan.mod.mod_board
 import uchan.mod.mod_moderator

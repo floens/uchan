@@ -4,7 +4,7 @@ from uchan import g
 from uchan.lib import roles, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Moderator
-from uchan.lib.moderator_request import get_authed_moderator, unset_mod_authed
+from uchan.lib.moderator_request import request_moderator, unset_mod_authed
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
 
@@ -62,7 +62,7 @@ def mod_moderator_delete():
     moderator = get_moderator_or_abort(request.form.get('moderator_id', type=int))
     username = moderator.username
 
-    authed_moderator = get_authed_moderator()
+    authed_moderator = request_moderator()
     self_delete = authed_moderator == moderator
 
     g.moderator_service.delete_moderator(moderator)

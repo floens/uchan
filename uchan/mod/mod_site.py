@@ -6,6 +6,7 @@ from uchan.lib.configs import SiteConfig
 from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Board, Post, Thread, Session, Ban, Report, Moderator, File, Config
+from uchan.lib.moderator_request import request_moderator
 from uchan.lib.proxy_request import get_request_ip4_str
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import check_csrf_token, with_token
@@ -16,6 +17,7 @@ from uchan.view import check_csrf_token, with_token
 def mod_site():
     site_config_row = g.config_service.get_config_by_type(SiteConfig.TYPE)
     site_config = g.config_service.load_config(site_config_row)
+    moderator = request_moderator()
 
     if request.method == 'GET':
         session_count = get_db().query(Session).count()
@@ -31,7 +33,7 @@ def mod_site():
             abort(400)
 
         try:
-            g.config_service.save_from_form(site_config, site_config_row, form, 'mod_site_')
+            g.config_service.save_from_form(moderator, site_config, site_config_row, form, 'mod_site_')
             flash('Site config updated')
             mod_log('site config updated')
             g.site_cache.invalidate_site_config()

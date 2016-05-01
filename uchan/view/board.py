@@ -3,7 +3,7 @@ from flask import render_template, abort, redirect, url_for
 from uchan import app
 from uchan import g
 from uchan.lib import roles
-from uchan.lib.moderator_request import get_authed, get_authed_moderator
+from uchan.lib.moderator_request import get_authed, request_moderator
 
 
 def get_page_details(mode, board_name):
@@ -40,7 +40,7 @@ def board(board_name, page=None):
     if board_config_cached.board_config.file_posting_enabled:
         page_details['filePostingEnabled'] = True
 
-    show_moderator_buttons = get_authed() and g.moderator_service.has_role(get_authed_moderator(), roles.ROLE_ADMIN)
+    show_moderator_buttons = get_authed() and g.moderator_service.has_role(request_moderator(), roles.ROLE_ADMIN)
 
     return render_template('board.html', board=board_cached.board, threads=board_cached.threads,
                            board_config=board_config_cached.board_config, page_index=page,

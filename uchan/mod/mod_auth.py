@@ -3,7 +3,7 @@ from flask import request, redirect, url_for, render_template, abort, flash, ses
 from uchan import g
 from uchan.lib import ArgumentError, BadRequestError
 from uchan.lib.mod_log import mod_log
-from uchan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, get_authed_moderator
+from uchan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, request_moderator
 from uchan.mod import mod
 from uchan.view import check_csrf_token, check_csrf_referer
 
@@ -65,7 +65,7 @@ def mod_auth():
         return redirect(url_for('.mod_auth'))
     else:
         authed = get_authed()
-        moderator = get_authed_moderator() if authed else None
+        moderator = request_moderator() if authed else None
         return render_template('auth.html', authed=authed, moderator=moderator)
 
 

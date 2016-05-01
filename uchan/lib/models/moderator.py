@@ -13,7 +13,6 @@ class Moderator(ModelBase):
     id = Column(Integer(), primary_key=True)
     username = Column(String(), unique=True)
     password = Column(LargeBinary())
-    # boards is a backref property
 
     roles = Column(MutableList.as_mutable(ARRAY(String)), index=True)
 

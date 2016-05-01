@@ -6,7 +6,7 @@ from uchan.lib import ArgumentError
 from uchan.lib.configs import BoardConfig, SiteConfig
 from uchan.lib.database import get_db
 from uchan.lib.models.config import Config
-from uchan.lib.moderator_request import get_authed_moderator, get_authed
+from uchan.lib.moderator_request import request_moderator, get_authed
 
 
 class ConfigService:
@@ -20,17 +20,24 @@ class ConfigService:
         except NoResultFound:
             return None
 
-    def load_config(self, config_row):
+    def load_config(self, config_row, moderator=None):
         config = self._get_config_cls(config_row.type)()
 
         deserialized = self._get_deserialized(config_row)
 
+        items = []
         for config_item in config.configs:
+            if moderator and not self._has_permission(moderator, config_item):
+                continue
+
             set_value = self._search_value(config_row, deserialized, config_item.name)
             if set_value is None:
                 set_value = config_item.default_value
 
             config_item.value = set_value
+
+            items.append(config_item)
+        config.configs = items
 
         return config
 
@@ -65,18 +72,13 @@ class ConfigService:
 
         return config_row
 
-    def save_from_form(self, config, config_row, form, prefix='config_'):
-        moderator = get_authed_moderator() if get_authed() else None
-
+    def save_from_form(self, moderator, config, config_row, form, prefix='config_'):
         for config_item in config.configs:
+            if not self._has_permission(moderator, config_item):
+                continue
+
             form_value = form.get(prefix + config_item.name, None)
             if form_value is not None:
-                if config_item.roles is not None:
-                    if moderator is None:
-                        continue
-                    if not any(i in moderator.roles for i in config_item.roles):
-                        continue
-
                 try:
                     config_item.set(form_value)
                 except ArgumentError as e:
@@ -87,6 +89,12 @@ class ConfigService:
                     config_item.value = False
 
         self.save_config(config, config_row)
+
+    def _has_permission(self, moderator, config_item):
+        if config_item.access_roles:
+            return any(i in moderator.roles for i in config_item.access_roles)
+        else:
+            return True
 
     def _get_config_cls(self, type):
         if type == BoardConfig.TYPE:

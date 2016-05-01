@@ -219,7 +219,8 @@ class PostsCache:
 
     def delete_board_cache(self, board_name):
         threads = self.find_board_cached(board_name)
-        for thread in threads.threads:
-            self.cache.delete(self.get_thread_cache_key(thread.id))
-            self.cache.delete(self.get_thread_stub_cache_key(thread.id))
-        self.invalidate_board_page_cache(board_name)
+        if threads:
+            for thread in threads.threads:
+                self.cache.delete(self.get_thread_cache_key(thread.id))
+                self.cache.delete(self.get_thread_stub_cache_key(thread.id))
+            self.invalidate_board_page_cache(board_name)

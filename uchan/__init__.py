@@ -4,38 +4,113 @@ from celery.loaders.app import AppLoader
 import config
 
 
-class Globals():
+class Globals:
     def __init__(self):
-        self.logger = None
-        self.mod_logger = None
-        self.app = None
-        self.celery = None
-        self.database = None
-        self.plugin_manager = None
+        self._logger = None
+        self._mod_logger = None
+        self._app = None
+        self._celery = None
+        self._plugin_manager = None
 
-        self.cache = None
-        self.posts_cache = None
-        self.board_cache = None
-        self.site_cache = None
-        self.page_cache = None
+        self._cache = None
+        self._posts_cache = None
+        self._board_cache = None
+        self._site_cache = None
+        self._page_cache = None
 
-        self.posts_service = None
-        self.board_service = None
-        self.moderator_service = None
-        self.config_service = None
-        self.file_service = None
-        self.ban_service = None
-        self.page_service = None
-        self.verification_service = None
-        self.report_service = None
+        self._posts_service = None
+        self._board_service = None
+        self._moderator_service = None
+        self._config_service = None
+        self._file_service = None
+        self._ban_service = None
+        self._page_service = None
+        self._verification_service = None
+        self._report_service = None
+
+    @property
+    def logger(self):
+        return self._logger
+
+    @property
+    def mod_logger(self):
+        return self._mod_logger
+
+    @property
+    def app(self):
+        return self._app
+
+    @property
+    def celery(self):
+        return self._celery
+
+    @property
+    def plugin_manager(self):
+        return self._plugin_manager
+
+    @property
+    def cache(self):
+        return self._cache
+
+    @property
+    def posts_cache(self):
+        return self._posts_cache
+
+    @property
+    def board_cache(self):
+        return self._board_cache
+
+    @property
+    def site_cache(self):
+        return self._site_cache
+
+    @property
+    def page_cache(self):
+        return self._page_cache
+
+    @property
+    def posts_service(self):
+        return self._posts_service
+
+    @property
+    def board_service(self):
+        return self._board_service
+
+    @property
+    def moderator_service(self):
+        return self._moderator_service
+
+    @property
+    def config_service(self):
+        return self._config_service
+
+    @property
+    def file_service(self):
+        return self._file_service
+
+    @property
+    def ban_service(self):
+        return self._ban_service
+
+    @property
+    def page_service(self):
+        return self._page_service
+
+    @property
+    def verification_service(self):
+        return self._verification_service
+
+    @property
+    def report_service(self):
+        return self._report_service
 
 
-g = Globals()
+g = Globals()  # Type: Globals
 app = None
 celery = None
 
 
-def setup_logger(globals):
+def setup_logger(g):
     import config
 
     global app
@@ -56,14 +131,14 @@ def setup_logger(globals):
         log_handler.setLevel(logging.INFO)
         app.logger.setLevel(logging.INFO)
 
-    globals.logger = app.logger
+    g._logger = app.logger
 
     mod_log_handler = RotatingFileHandler('log/mod.log', maxBytes=5000000, backupCount=5)
     mod_log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s"))
 
-    globals.mod_logger = logging.getLogger('mod log')
-    globals.mod_logger.addHandler(mod_log_handler)
-    globals.mod_logger.setLevel(logging.INFO)
+    g._mod_logger = logging.getLogger('mod log')
+    g._mod_logger.addHandler(mod_log_handler)
+    g._mod_logger.setLevel(logging.INFO)
 
 
 class CustomCeleryLoader(AppLoader):
@@ -76,24 +151,22 @@ def init():
     print('Initializing')
 
     global g, app, celery
-    assert isinstance(g, Globals)
 
     import uchan.lib.database as database
-    g.database = database
     database.init_db()
 
-    celery = g.celery = Celery('uchan', loader=CustomCeleryLoader)
-    g.celery.config_from_object('config_celery')
+    celery = g._celery = Celery('uchan', loader=CustomCeleryLoader)
+    g._celery.config_from_object('config_celery')
 
     # Import it here so that the templates resolve correctly
     from uchan.web import create_web_app, CustomFlaskApp
-    app = g.app = CustomFlaskApp(__name__)
+    app = g._app = CustomFlaskApp(__name__)
     create_web_app(g, config, g.app)
 
     database.register_teardown(g.app)
 
     from uchan.lib.cache import CacheWrapper
-    g.cache = CacheWrapper(servers=config.MEMCACHED_SERVERS)
+    g._cache = CacheWrapper(servers=config.MEMCACHED_SERVERS)
 
     # Setup session handling
     from uchan.web.custom_session import CustomSessionInterface
@@ -115,30 +188,30 @@ def init():
     setup_logger(g)
 
     from uchan.lib.plugin_manager import PluginManager
-    g.plugin_manager = PluginManager()
+    g._plugin_manager = PluginManager()
 
     # Setup singletons
     from uchan.lib.service import PostsService
     from uchan.lib.cache import PostsCache
-    g.posts_cache = PostsCache(g.cache)
-    g.posts_service = PostsService()
+    g._posts_cache = PostsCache(g.cache)
+    g._posts_service = PostsService()
 
     from uchan.lib.service import BoardService
     from uchan.lib.cache import BoardCache
-    g.board_cache = BoardCache(g.cache)
-    g.board_service = BoardService()
+    g._board_cache = BoardCache(g.cache)
+    g._board_service = BoardService()
 
     from uchan.lib.service import ModeratorService
-    g.moderator_service = ModeratorService()
+    g._moderator_service = ModeratorService()
 
     from uchan.lib.service import ReportService
-    g.report_service = ReportService()
+    g._report_service = ReportService()
 
     from uchan.lib.service import ConfigService
-    g.config_service = ConfigService()
+    g._config_service = ConfigService()
 
     from uchan.lib.cache import SiteCache
-    g.site_cache = SiteCache(g.cache)
+    g._site_cache = SiteCache(g.cache)
 
     from uchan.lib.service import FileService, LocalCdn
 
@@ -147,23 +220,25 @@ def init():
     else:
         raise Exception('Unknown file cdn type')
 
-    g.file_service = FileService(config.UPLOAD_QUEUE_PATH, cdn)
+    g._file_service = FileService(config.UPLOAD_QUEUE_PATH, cdn)
 
     from uchan.lib.service import BanService
-    g.ban_service = BanService()
+    g._ban_service = BanService()
 
     from uchan.lib.service import PageService
     from uchan.lib.cache import PageCache
-    g.page_service = PageService()
-    g.page_cache = PageCache(g.cache)
+    g._page_service = PageService()
+    g._page_cache = PageCache(g.cache)
 
     from uchan.lib.service import VerificationService
-    g.verification_service = VerificationService(g.cache)
+    g._verification_service = VerificationService(g.cache)
 
     # print('Loading plugins')
 
     import uchan.plugins
-    g.plugin_manager.load_plugins(config.PLUGINS)
+    g._plugin_manager.load_plugins(config.PLUGINS)
+
+    # database.metadata_create_all()
 
     print('Done')
 
