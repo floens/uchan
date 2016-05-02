@@ -30,7 +30,8 @@ class SiteConfig(DynamicConfig):
 
         self.configs += [
             DynamicConfigItem('motd', 'MOTD', '', str, maximum=500),
-            DynamicConfigItem('footer_text', 'Footer text', 'Page served by µchan', str, maximum=100),
+            DynamicConfigItem('footer_text', 'Footer text', 'Page served by [µchan](https://github.com/Floens/uchan)',
+                              str, maximum=100),
             DynamicConfigItem('boards_top', 'Show board list at top', True, bool),
             DynamicConfigItem('default_name', 'Default posting name', 'Anonymous', str, maximum=25),
             DynamicConfigItem('posting_enabled', 'Posting enabled', True, bool),

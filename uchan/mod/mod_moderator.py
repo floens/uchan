@@ -83,8 +83,10 @@ def mod_moderator(moderator_id):
     moderator = get_moderator_or_abort(moderator_id)
 
     all_roles = ', '.join(roles.ALL_ROLES)
+    all_board_roles = ', '.join(roles.ALL_BOARD_ROLES)
 
-    return render_template('mod_moderator.html', moderator=moderator, all_roles=all_roles)
+    return render_template('mod_moderator.html', moderator=moderator, all_roles=all_roles,
+                           all_board_roles=all_board_roles)
 
 
 @mod.route('/mod_moderator/<int:moderator_id>/board_add', methods=['POST'])
@@ -94,13 +96,21 @@ def mod_moderator_board_add(moderator_id):
     moderator = get_moderator_or_abort(moderator_id)
 
     board_name = request.form['board_name']
+    board_role = request.form['board_role']
     board = g.board_service.find_board(board_name)
     if board is None:
         flash('That board does not exist')
     else:
-        g.board_service.board_add_moderator(board, moderator)
-        flash('Board added to moderator')
-        mod_log('add board to {} /{}/'.format(moderator.username, board_name))
+        if not g.moderator_service.board_role_exists(board_role):
+            flash('That board role does not exist')
+        else:
+            try:
+                g.board_service.board_add_moderator(board, moderator)
+                g.moderator_service.add_board_role(moderator, board, board_role)
+                flash('Board added to moderator')
+                mod_log('add board to {} /{}/ with role {}'.format(moderator.username, board_name, board_role))
+            except ArgumentError as e:
+                flash(e.message)
 
     return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
 
@@ -116,9 +126,12 @@ def mod_moderator_board_remove(moderator_id):
     if board is None:
         flash('That board does not exist')
     else:
-        g.board_service.board_remove_moderator(board, moderator)
-        flash('Board removed from moderator')
-        mod_log('remove board from {} /{}/'.format(moderator.username, board_name))
+        try:
+            g.board_service.board_remove_moderator(board, moderator)
+            flash('Board removed from moderator')
+            mod_log('remove board from {} /{}/'.format(moderator.username, board_name))
+        except ArgumentError as e:
+            flash(e.message)
 
     return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
 

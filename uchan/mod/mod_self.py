@@ -13,7 +13,7 @@ def mod_self():
     moderator = request_moderator()
 
     board_links = []
-    for board in g.moderator_service.get_moderating_boards(moderator):
+    for board in moderator.boards:
         board_links.append((board.name, url_for('board', board_name=board.name)))
 
     return render_template('mod_self.html', moderator=moderator, board_links=board_links)

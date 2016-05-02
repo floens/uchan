@@ -6,6 +6,7 @@ import logging
 from celery import Celery
 from flask import Flask
 
+from uchan.lib import database
 from uchan.lib.cache import BoardCache
 from uchan.lib.cache import CacheWrapper
 from uchan.lib.cache import PageCache
@@ -30,6 +31,7 @@ class Globals:
         self._mod_logger = None  # type: logging.Logger
         self._app = None  # type: Flask
         self._celery = None  # type: Celery
+        self._database = None  # type: database
         self._plugin_manager = None  # type: PluginManager
 
         self._cache = None  # type: CacheWrapper
@@ -63,6 +65,10 @@ class Globals:
     @property
     def celery(self) -> Celery:
         return self._celery
+
+    @property
+    def database(self) -> database:
+        return self._database
 
     @property
     def plugin_manager(self) -> PluginManager:

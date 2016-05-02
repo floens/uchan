@@ -1,0 +1,13 @@
+{% macro render(base_url, count, index, suffix='') %}
+    {% for i in range(0, count) %}
+        {% if i == index %}
+            [{{ i + 1 }}]
+        {% else %}
+            [<a href="{{ base_url ~ ('/' ~ i if (i > 0 or suffix != '') else '') ~ suffix}}">{{ i + 1 }}</a>]
+        {% endif %}
+    {% endfor %}
+    {% if index < count - 1 %}
+        [<a href="{{ base_url ~ '/' ~ (index + 1) ~ suffix}}">Next</a>]
+    {% endif %}
+    <br>
+{% endmacro %}

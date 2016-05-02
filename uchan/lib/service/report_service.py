@@ -1,9 +1,12 @@
 from sqlalchemy import desc
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.sqltypes import String
+from sqlalchemy.sql.expression import cast
 
 from uchan import g
-from uchan.lib import roles, ArgumentError
+from uchan.lib import roles, ArgumentError, NoPermissionError
 from uchan.lib.database import get_db
 from uchan.lib.models import Report, BoardModerator, Thread, Board, Post
 from uchan.lib.tasks.report_task import ManageReportDetails
@@ -24,8 +27,9 @@ class ReportService:
             raise ArgumentError('Moderator not found')
 
         post = report.post
-        if not g.moderator_service.moderates_board(moderator, post.thread.board):
-            raise ArgumentError('No permission')
+        board = post.thread.board
+        if not g.moderator_service.has_board_roles(moderator, board, [roles.BOARD_ROLE_JANITOR]):
+            raise NoPermissionError()
 
         if manage_report_details.mode == ManageReportDetails.CLEAR:
             self.delete_report(report)
@@ -59,7 +63,7 @@ class ReportService:
         db.delete(report)
         db.commit()
 
-    def get_reports(self, moderator):
+    def get_reports(self, moderator, page, per_page, board_ids=None):
         db = get_db()
 
         reports_query = db.query(Report)
@@ -69,13 +73,21 @@ class ReportService:
             reports_query = reports_query.filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
                                                  Thread.board_id == Board.id,
                                                  Board.id == BoardModerator.board_id,
-                                                 BoardModerator.moderator_id == moderator.id)
+                                                 BoardModerator.moderator_id == moderator.id,
+                                                 BoardModerator.roles.contains(
+                                                     cast([roles.BOARD_ROLE_JANITOR], ARRAY(String))))
+        else:
+            reports_query = reports_query.filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
+                                                 Thread.board_id == Board.id)
+
+        if board_ids:
+            reports_query = reports_query.filter(Board.id.in_(board_ids))
 
         reports_query = reports_query.order_by(desc(Report.date))
         reports_query = reports_query.options(
             joinedload('post').joinedload('thread').joinedload('board')
         )
-        reports = reports_query.all()
+        reports = reports_query.offset(page * per_page).limit(per_page).all()
 
         return reports
 

@@ -38,12 +38,14 @@ def mod_board(board_name):
     board_config = g.config_service.load_config(board_config_row, moderator)
 
     if request.method == 'GET':
+        # Put the request moderator on top
         board_moderators_unsorted = sorted(board.board_moderators,
                                            key=lambda board_moderator: board_moderator.moderator.id)
         board_moderators = []
         for item in board_moderators_unsorted:
             if item.moderator == moderator:
                 board_moderators.append(item)
+                break
         for item in board_moderators_unsorted:
             if item.moderator != moderator:
                 board_moderators.append(item)

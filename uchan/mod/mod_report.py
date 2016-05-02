@@ -3,6 +3,8 @@ from uchan import g
 from uchan.filter.text_parser import parse_text
 from uchan.lib import roles, ArgumentError, BadRequestError
 from uchan.lib.cache.posts_cache import PostCacheProxy
+from uchan.lib.database import get_db
+from uchan.lib.models import Board
 from uchan.lib.moderator_request import request_moderator
 from uchan.lib.tasks.report_task import ManageReportDetails, manage_report_task
 from uchan.lib.utils import ip4_to_str
@@ -11,20 +13,53 @@ from uchan.view import with_token
 
 
 @mod.route('/mod_report')
-def mod_report():
+@mod.route('/mod_report/<int(max=14):page>')
+@mod.route('/mod_report/<int(max=14):page>/<boards>')
+def mod_report(page=0, boards=None):
+    per_page = 20
+    pages = 15
+
     moderator = request_moderator()
-    reports = g.report_service.get_reports(moderator)
+    is_admin = g.moderator_service.has_role(moderator, roles.ROLE_ADMIN)
+
+    boards_set = None
+    board_ids = []
+    if boards is not None:
+        query_set = set()
+
+        for i in boards.split(','):
+            if not g.board_service.check_board_name_validity(i):
+                raise BadRequestError('Invalid boards')
+            query_set.add(i)
+
+        if len(query_set) > 6:
+            raise BadRequestError('Maximum of 6 boards can be combined')
+
+        db = get_db()
+        query_boards = db.query(Board).filter(Board.name.in_(query_set)).all()
+        if query_boards:
+            boards_set = set()
+            for board in query_boards:
+                board_ids.append(board.id)
+                boards_set.add(board.name)
+        else:
+            raise BadRequestError('Invalid boards')
+
+    try:
+        reports = g.report_service.get_reports(moderator, page, per_page, board_ids)
+    except ArgumentError as e:
+        raise BadRequestError(e)
 
     for report in reports:
         report.post_cache = PostCacheProxy(report.post, parse_text(report.post.text))
 
-    view_ips = g.moderator_service.has_role(moderator, roles.ROLE_ADMIN)
+    view_ips = is_admin
 
-    board_links = []
-    for board in g.moderator_service.get_moderating_boards(moderator):
-        board_links.append((board.name, url_for('board', board_name=board.name)))
+    moderator_boards = moderator.boards if not is_admin else g.board_service.get_all_boards()
 
-    return render_template('mod_report.html', moderator=moderator, reports=reports, board_links=board_links,
+    pager_suffix = '/' + ','.join(boards_set) if boards_set else ''
+    return render_template('mod_report.html', page=page, pages=pages, pager_suffix=pager_suffix,
+                           moderator=moderator, reports=reports, moderator_boards=moderator_boards,
                            view_ips=view_ips, ip4_to_str=ip4_to_str)
 
 

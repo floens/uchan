@@ -10,6 +10,7 @@ class Globals:
         self._mod_logger = None
         self._app = None
         self._celery = None
+        self._database = None
         self._plugin_manager = None
 
         self._cache = None
@@ -43,6 +44,10 @@ class Globals:
     @property
     def celery(self):
         return self._celery
+
+    @property
+    def database(self):
+        return self._database
 
     @property
     def plugin_manager(self):
@@ -154,6 +159,7 @@ def init():
 
     import uchan.lib.database as database
     database.init_db()
+    g._database = database
 
     celery = g._celery = Celery('uchan', loader=CustomCeleryLoader)
     g._celery.config_from_object('config_celery')

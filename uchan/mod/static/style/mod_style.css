@@ -9,6 +9,22 @@
     max-width: 400px;
 }
 
+.report-boards {
+    list-style: none;
+    padding: 0;
+}
+
+.report-boards li {
+    display: inline-block;
+    background: #E6E6E6;
+    margin: 0 2px 0 2px;
+}
+
+.report-boards li a {
+    display: inline-block;
+    padding: 4px 8px 4px 8px;
+}
+
 .report-post {
     display: inline-block;
     width: 350px;

@@ -4,16 +4,25 @@
 
 {% import "widget/post_report.html" as post_report_widget %}
 {% import "widget/link_list.html" as link_list_widget %}
+{% import "widget/pager.html" as pager_widget %}
 
 {% block content %}
     <h2>Reports</h2>
 
-    <p>
-        Reports for moderator <b>{{ moderator.username }}</b> for boards {{ link_list_widget.render(board_links) }}
-    </p>
+    <ul class="report-boards">
+        <li><a href="{{ url_for('.mod_report') }}">all</a></li>
+        {%- for board in moderator_boards -%}
+            <li><a href="{{ url_for('.mod_report', page=0, boards=board.name) }}">{{ board.name }}</a></li>
+        {%- endfor %}
+    </ul>
+
+    {{ pager_widget.render(url_for('.mod_report'), pages, page, pager_suffix) }}
 
     {% for report in reports %}
         {{ post_report_widget.render(report, report.post_cache, report.post.thread, view_ips=view_ips, ip4_to_str=ip4_to_str) }}
     {% endfor %}
+
+    <div class="clear"></div>
+    {{ pager_widget.render(url_for('.mod_report'), pages, page, pager_suffix) }}
 
 {% endblock %}
