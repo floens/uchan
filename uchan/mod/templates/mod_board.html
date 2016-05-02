@@ -16,14 +16,74 @@
     {{ dynamic_config_widget.render(board_config, url_for('.mod_board', board_name=board.name)) }}
 
     <br>
+    <p>
+        Modify the roles of the moderators on your board.<br>
+        <b>Creator</b> The creator of the board.<br>
+        <b>Full permission</b> Can change the roles of other moderators.<br>
+        <b>Janitor</b> Moderator reports, remove posts, request bans.<br>
+        <b>Config</b> Change the board configuration.<br>
+    </p>
+    <table class="datatable">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Roles</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for board_moderator in board_moderators %}
+            <tr>
+                <td>{{ board_moderator.moderator.username }}</td>
+                <td>
+                    <form action="{{ url_for('.mod_board_roles_update', board_name=board.name) }}" method="POST">
+                        {{ csrf_html() }}
+                        <input type="hidden" name="username" value="{{ board_moderator.moderator.username }}"/>
+                        {% for board_role in all_board_roles %}
+                            <label><input type="checkbox" name="{{ board_role }}"
+                                    {{- ' disabled' if board_role == 'creator' -}}
+                                    {{- ' checked' if board_role in board_moderator.roles -}}>{{- board_role -}}
+                            </label><br>
+                        {% endfor %}
+                        <input type="submit" value="Update">
+                    </form>
+                </td>
+                <td>
+                    <form action="{{ url_for('.mod_board_moderator_remove', board_name=board.name) }}" method="POST">
+                        {{ csrf_html() }}
+                        <button name="username" value="{{ board_moderator.moderator.username }}">Remove</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    <hr class="content-divider">
+
+    <h3>Invite moderators</h3>
+    <form action="{{ url_for('.mod_board_moderator_invite', board_name=board.name) }}" method="POST">
+        {{ csrf_html() }}
+
+        <label>Username:<br>
+            <input type="text" name="username">
+
+            <input type="submit" value="Invite">
+        </label>
+    </form>
+
+    <br>
     <hr class="content-divider">
     <br>
 
-    <form action="{{ url_for('.mod_board_delete') }}" method="POST">
-        {{ csrf_html() }}
-        <button name="board_name" value="{{ board.name }}">Delete board</button>
-        <br>
-        <b>This will permanently delete the whole board!</b>
-    </form>
+    {% if can_delete %}
+        <form action="{{ url_for('.mod_board_delete') }}" method="POST">
+            {{ csrf_html() }}
+            <button name="board_name" value="{{ board.name }}">Delete board</button>
+            <br>
+            <b>This will permanently delete the whole board!</b>
+        </form>
+    {% endif %}
 
 {% endblock %}
