@@ -7,16 +7,11 @@ from uchan.lib.database import ModelBase
 from uchan.lib.models import MutableList
 
 
-class BoardModerator(ModelBase):
-    __tablename__ = 'boardmoderator'
-
-    board_id = Column(Integer, ForeignKey('board.id'), primary_key=True)
-    moderator_id = Column(Integer, ForeignKey('moderator.id'), primary_key=True)
-
-    roles = Column(MutableList.as_mutable(ARRAY(String)), index=True, nullable=False)
-
-    board = relationship(Board, backref=backref('board_moderators', cascade='all, delete-orphan'))
-    moderator = relationship('Moderator')
+def create_moderator_for_proxy(moderator):
+    board_moderator = BoardModerator()
+    board_moderator.moderator = moderator
+    board_moderator.roles = []
+    return board_moderator
 
 
 class Board(ModelBase):
@@ -29,4 +24,16 @@ class Board(ModelBase):
     config = relationship('Config', cascade='all')
     threads = relationship('Thread', backref='board', cascade='all, delete-orphan')
 
-    moderators = association_proxy('board_moderators', 'board')
+    moderators = association_proxy('board_moderators', 'moderator', creator=create_moderator_for_proxy)
+
+
+class BoardModerator(ModelBase):
+    __tablename__ = 'boardmoderator'
+
+    board_id = Column(Integer, ForeignKey('board.id'), primary_key=True)
+    moderator_id = Column(Integer, ForeignKey('moderator.id'), primary_key=True)
+
+    roles = Column(MutableList.as_mutable(ARRAY(String)), index=True, nullable=False)
+
+    board = relationship(Board, backref=backref('board_moderators', cascade='all, delete-orphan'))
+    moderator = relationship('Moderator', backref=backref('board_moderators', cascade='all, delete-orphan'))

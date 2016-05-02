@@ -45,11 +45,7 @@ class BoardService:
         if board in moderator.boards:
             raise ArgumentError('Board already added to moderator')
 
-        board_moderator = BoardModerator()
-        board_moderator.roles = []
-        board_moderator.moderator = moderator
-        board.board_moderator.append(board_moderator)
-        db.add(board_moderator)
+        board.moderators.append(moderator)
         db.commit()
 
     def board_remove_moderator(self, board, moderator):

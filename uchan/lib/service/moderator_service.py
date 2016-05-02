@@ -31,10 +31,7 @@ class ModeratorService:
         if self.has_role(moderator, roles.ROLE_ADMIN):
             return g.board_service.get_all_boards()
 
-        boards = []
-        for board_moderator in moderator.board_moderator:
-            boards.append(board_moderator.board)
-        return boards
+        return moderator.boards
 
     def moderates_board(self, moderator, board):
         if self.has_role(moderator, roles.ROLE_ADMIN):
@@ -103,24 +100,16 @@ class ModeratorService:
             #            .values(roles=board_moderator_roles))
 
     def user_create_board(self, moderator, board):
-        db = get_db()
-
         is_admin = self.has_role(moderator, roles.ROLE_ADMIN)
 
         if not is_admin:
-            # Queries the boardmoderator linking table for how many
-            # boards this moderator is the creator of
-            result = db.execute('SELECT count(*) AS rolecount FROM boardmoderator bm '
-                                'WHERE bm.moderator_id = :moderator_id AND '
-                                'bm.roles @> ARRAY[:role]::VARCHAR[];', {
-                                    'moderator_id': moderator.id,
-                                    'role': roles.BOARD_ROLE_CREATOR
-                                })
+            creator_roles = 0
+            for board_moderator in moderator.board_moderators:
+                if roles.BOARD_ROLE_CREATOR in board_moderator.roles:
+                    creator_roles += 1
 
-            count = result.fetchone()[0]
-
-            if count >= self.BOARDS_PER_MODERATOR:
-                raise ArgumentError('You cannot create a new board')
+            if creator_roles >= self.BOARDS_PER_MODERATOR:
+                raise ArgumentError('Max boards limit reached ({})'.format(self.BOARDS_PER_MODERATOR))
 
         g.board_service.add_board(board)
         g.board_service.board_add_moderator(board, moderator)

@@ -22,9 +22,7 @@ def get_board_or_abort(board_name):
 
 @mod.route('/mod_board')
 def mod_boards():
-    boards = g.moderator_service.get_moderating_boards(request_moderator())
-
-    return render_template('mod_boards.html', boards=boards)
+    return render_template('mod_boards.html', moderator=request_moderator())
 
 
 @mod.route('/mod_board/<board_name>', methods=['GET', 'POST'])

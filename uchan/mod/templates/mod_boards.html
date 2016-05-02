@@ -26,14 +26,16 @@
         <thead>
         <tr>
             <th>Name</th>
+            <th>Roles</th>
             <th></th>
         </tr>
         </thead>
         <tbody>
-        {% for board in boards %}
+        {% for board_moderator in moderator.board_moderators %}
             <tr>
-                <td>{{ board.name }}</td>
-                <td>[<a href="{{ url_for('.mod_board', board_name=board.name) }}">Modify</a>]</td>
+                <td>{{ board_moderator.board.name }}</td>
+                <td><b>{{ board_moderator.roles|join(', ') }}</b></td>
+                <td>[<a href="{{ url_for('.mod_board', board_name=board_moderator.board.name) }}">Modify</a>]</td>
             </tr>
         {% endfor %}
         </tbody>
