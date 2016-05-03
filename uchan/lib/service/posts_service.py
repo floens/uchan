@@ -3,7 +3,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 import config
 from uchan import g
-from uchan.lib import BadRequestError, ArgumentError
+from uchan.lib import BadRequestError, ArgumentError, NoPermissionError
 from uchan.lib import roles
 from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.database import get_db
@@ -127,9 +127,8 @@ class PostsService:
         post.date = now()
         post.ip4 = post_details.ip4
 
-        if moderator is not None:
+        if moderator is not None and g.moderator_service.moderates_board(moderator, board):
             post.moderator = moderator
-            post.with_mod_name = post_details.with_mod_name
 
         db.add(post)
 
@@ -272,8 +271,13 @@ class PostsService:
                 else:
                     raise BadRequestError('Post not found')
 
-            can_delete = (moderator is not None and g.moderator_service.moderates_board(moderator, board)) or \
-                         (details.password is not None and details.password == post.password)
+            can_delete = False
+            delete_roles = [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_JANITOR]
+            if moderator is not None and g.moderator_service.has_board_roles(moderator, board, delete_roles):
+                can_delete = True
+            elif details.password is not None and details.password == post.password:
+                can_delete = True
+
             if can_delete:
                 mod_log('post {} delete'.format(details.post_id), ip4_str=ip4_to_str(details.ip4),
                         moderator_name=moderator_name)
@@ -293,21 +297,23 @@ class PostsService:
             mod_log('post {} reported'.format(post.id), ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
             g.report_service.add_report(report)
         elif details.mode == ManagePostDetails.TOGGLE_STICKY:
-            if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
+            req_roles = [roles.BOARD_ROLE_FULL_PERMISSION]
+            if moderator is not None and g.moderator_service.has_board_roles(moderator, board, req_roles):
                 mod_log('sticky on /{}/{} {}'.format(
                     thread.board.name, thread.id, 'disabled' if thread.sticky else 'enabled'),
                     ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 self.toggle_thread_sticky(thread)
             else:
-                raise BadRequestError()
+                raise NoPermissionError()
         elif details.mode == ManagePostDetails.TOGGLE_LOCKED:
-            if moderator is not None and g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
+            req_roles = [roles.BOARD_ROLE_FULL_PERMISSION]
+            if moderator is not None and g.moderator_service.has_board_roles(moderator, board, req_roles):
                 mod_log('lock on /{}/{} {}'.format(
                     thread.board.name, thread.id, 'disabled' if thread.locked else 'enabled'),
                     ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 self.toggle_thread_locked(thread)
             else:
-                raise BadRequestError()
+                raise NoPermissionError()
         else:
             raise Exception()
 

@@ -47,6 +47,7 @@ class ModeratorService:
         g.board_service.add_board(board)
         g.board_service.board_add_moderator(board, moderator)
         self.add_board_role(moderator, board, roles.BOARD_ROLE_CREATOR)
+        self.add_board_role(moderator, board, roles.BOARD_ROLE_FULL_PERMISSION)
 
         return board
 
@@ -194,6 +195,16 @@ class ModeratorService:
         if self.has_role(moderator, roles.ROLE_ADMIN):
             return True
         return board in moderator.boards
+
+    def moderates_board_id(self, moderator, board_id):
+        if self.has_role(moderator, roles.ROLE_ADMIN):
+            return True
+        db = get_db()
+        try:
+            db.query(BoardModerator).filter_by(moderator_id=moderator.id, board_id=board_id).one()
+            return True
+        except NoResultFound:
+            return False
 
     def board_role_exists(self, role):
         return role is not None and role in roles.ALL_BOARD_ROLES

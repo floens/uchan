@@ -14,6 +14,15 @@ def get_page_details(mode, board_name):
     }
 
 
+def show_moderator_buttons(board_id):
+    if get_authed():
+        moderator = request_moderator()
+        if g.moderator_service.moderates_board_id(moderator, board_id):
+            return True
+
+    return False
+
+
 @app.route('/<string(maxlength=20):board_name>/')
 @app.route('/<string(maxlength=20):board_name>/<int:page>')
 def board(board_name, page=None):
@@ -40,11 +49,10 @@ def board(board_name, page=None):
     if board_config_cached.board_config.file_posting_enabled:
         page_details['filePostingEnabled'] = True
 
-    show_moderator_buttons = get_authed() and g.moderator_service.has_role(request_moderator(), roles.ROLE_ADMIN)
-
     return render_template('board.html', board=board_cached.board, threads=board_cached.threads,
                            board_config=board_config_cached.board_config, page_index=page,
-                           page_details=page_details, show_moderator_buttons=show_moderator_buttons)
+                           page_details=page_details,
+                           show_moderator_buttons=show_moderator_buttons(board_cached.board.id))
 
 
 @app.route('/<string(maxlength=20):board_name>/catalog')

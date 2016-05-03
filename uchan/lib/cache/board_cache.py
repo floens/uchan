@@ -14,6 +14,7 @@ class BoardCacheProxy(CacheDict):
     def __init__(self, board):
         super().__init__()
         self.name = board.name
+        self.id = board.id
 
 
 class BoardConfigCacheProxy(CacheDict):

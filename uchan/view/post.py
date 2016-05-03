@@ -82,9 +82,6 @@ def post():
         if moderator is not None:
             post_details.mod_id = moderator.id
 
-            with_mod_name = form.get('with_mod_name', type=bool)
-            post_details.with_mod_name = with_mod_name is True
-
     # Queue the post check task
     try:
         post_check_task.delay(post_details).get()

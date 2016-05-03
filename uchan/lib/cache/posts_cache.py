@@ -10,6 +10,7 @@ class BoardCacheProxy(CacheDict):
     def __init__(self, board):
         super().__init__(self)
         self.name = board.name
+        self.id = board.id
 
 
 # Object to be memcached, containing threads with their last n replies
@@ -49,10 +50,13 @@ class PostCacheProxy(CacheDict):
         self.mod_code = None
         if post.moderator is not None:
             moderator = post.moderator
-            self.mod_code = '## ' + roles.get_role_name(moderator.roles)
-            if post.with_mod_name:
-                self.name = ''
-                self.mod_code = moderator.username + ' ' + self.mod_code
+
+            if roles.ROLE_ADMIN in moderator.roles:
+                role_name = 'Admin'
+            else:
+                role_name = 'Board moderator'
+
+            self.mod_code = '## ' + role_name
 
         self.has_file = post.file is not None
         if self.has_file:
@@ -97,7 +101,8 @@ class PostsCache:
             return None, None
         board_cache = BoardCacheProxy(thread.board).convert()
 
-        thread_cache = ThreadCacheProxy(thread, board_cache, [PostCacheProxy(i, parse_text(i.text)) for i in thread.posts]).convert()
+        thread_cache = ThreadCacheProxy(thread, board_cache,
+                                        [PostCacheProxy(i, parse_text(i.text)) for i in thread.posts]).convert()
 
         self.cache.set(key, thread_cache, timeout=0)
 
@@ -106,7 +111,8 @@ class PostsCache:
 
         for i in total_snippets_original:
             # TODO: clean up view code
-            html = parse_text(i.text, maxlines=self.BOARD_SNIPPET_MAX_LINES, maxlinestext='<span class="abbreviated">Comment too long, view thread to read.</span>')
+            html = parse_text(i.text, maxlines=self.BOARD_SNIPPET_MAX_LINES,
+                              maxlinestext='<span class="abbreviated">Comment too long, view thread to read.</span>')
             total_snippets_shortened.append(PostCacheProxy(i, html))
 
         thread_cache_stub = ThreadCacheProxy(thread, board_cache, total_snippets_shortened).convert()

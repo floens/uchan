@@ -26,4 +26,3 @@ class Post(ModelBase):
     refno = Column(Integer(), nullable=False, index=True)
     password = Column(String())
     ip4 = Column(BigInteger(), nullable=False, index=True)
-    with_mod_name = Column(Boolean(), nullable=False, default=False)

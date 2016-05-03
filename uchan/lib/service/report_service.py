@@ -28,7 +28,8 @@ class ReportService:
 
         post = report.post
         board = post.thread.board
-        if not g.moderator_service.has_board_roles(moderator, board, [roles.BOARD_ROLE_JANITOR]):
+        req_roles = [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_JANITOR]
+        if not g.moderator_service.has_board_roles(moderator, board, req_roles):
             raise NoPermissionError()
 
         if manage_report_details.mode == ManageReportDetails.CLEAR:

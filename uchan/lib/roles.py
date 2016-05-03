@@ -2,13 +2,6 @@ ROLE_ADMIN = 'admin'
 
 ALL_ROLES = [ROLE_ADMIN]
 
-
-def get_role_name(roles):
-    if ROLE_ADMIN in roles:
-        return 'Admin'
-    raise Exception('Unknown roles')
-
-
 BOARD_ROLE_CREATOR = 'creator'
 BOARD_ROLE_FULL_PERMISSION = 'full_permission'
 BOARD_ROLE_JANITOR = 'janitor'
