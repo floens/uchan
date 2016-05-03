@@ -1,12 +1,10 @@
 import json
 
 from sqlalchemy.orm.exc import NoResultFound
-
 from uchan.lib import ArgumentError
 from uchan.lib.configs import BoardConfig, SiteConfig
 from uchan.lib.database import get_db
 from uchan.lib.models.config import Config
-from uchan.lib.moderator_request import request_moderator, get_authed
 
 
 class ConfigService:
@@ -23,7 +21,7 @@ class ConfigService:
     def load_config(self, config_row, moderator=None):
         config = self._get_config_cls(config_row.type)()
 
-        deserialized = self._get_deserialized(config_row)
+        deserialized = config_row.config
 
         items = []
         for config_item in config.configs:
@@ -63,7 +61,7 @@ class ConfigService:
             config_row = Config()
             add = True
         config_row.type = config.TYPE
-        config_row.config = json.dumps(output)
+        config_row.config = output
 
         db = get_db()
         if add:
@@ -110,6 +108,3 @@ class ConfigService:
                 return item['value']
 
         return None
-
-    def _get_deserialized(self, config_row):
-        return json.loads(config_row.config)
