@@ -107,7 +107,7 @@ class CustomSessionInterface(SessionInterface):
             try:
                 session_model = get_db().query(Session).filter_by(session_id=session_id).one()
 
-                session = CustomSession(initial=json.loads(session_model.data),
+                session = CustomSession(initial=session_model.data,
                                         session_id=session_id, expires=session_model.expires)
 
                 self.store_session_cache(session)
@@ -126,7 +126,7 @@ class CustomSessionInterface(SessionInterface):
         response.delete_cookie(app.session_cookie_name, domain=self.get_cookie_domain(app))
 
     def store_session_db(self, session):
-        session_model = Session(session_id=session.session_id, data=json.dumps(session), expires=session.expires)
+        session_model = Session(session_id=session.session_id, data=session, expires=session.expires)
 
         db = get_db()
         db.add(db.merge(session_model))
