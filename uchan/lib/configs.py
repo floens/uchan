@@ -16,7 +16,7 @@ class BoardConfig(DynamicConfig):
                               access_roles=[]),
             DynamicConfigItem('bump_limit', 'Max count of posts in a thread that will bump', 300, int, minimum=100,
                               maximum=500),
-            DynamicConfigItem('file_posting_enabled', 'File posting enabled', True, bool),
+            DynamicConfigItem('file_posting_enabled', 'File posting enabled', False, bool),
             DynamicConfigItem('posting_verification_required', 'Posting requires verification', False, bool)
         ]
 
