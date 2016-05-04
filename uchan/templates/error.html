@@ -9,7 +9,9 @@
         <div class="jsonly">
             <br>
             [<a href="javascript:history.back();">Back</a>]
-            [<a href="javascript:location.reload();">Retry</a>]
+            {% if with_retry %}
+                [<a href="javascript:location.reload();">Retry</a>]
+            {% endif %}
         </div>
     </div>
 {% endblock %}

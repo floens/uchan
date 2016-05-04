@@ -63,7 +63,7 @@ def create_web_app(g, config, app):
     @app.errorhandler(VerificationError)
     def not_verified_handler(error):
         g.verification_service.handle_not_verified(error, request, get_request_ip4())
-        return render_error(str(error))
+        return render_error(str(error), with_retry=True)
 
     @app.after_request
     def after_request_handler(response):

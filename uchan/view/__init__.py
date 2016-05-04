@@ -99,7 +99,7 @@ def check_csrf_referer(request):
     return '{}://{}'.format(parsed_url.scheme, parsed_url.hostname) == config.SITE_URL
 
 
-def render_error(user_message, code=400):
+def render_error(user_message, code=400, with_retry=False):
     if request.is_xhr:
         xhr_response = {
             'error': True
@@ -110,7 +110,7 @@ def render_error(user_message, code=400):
 
         return jsonify(xhr_response), code
     else:
-        return render_template('error.html', message=user_message), code
+        return render_template('error.html', message=user_message, with_retry=with_retry), code
 
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
