@@ -4,7 +4,7 @@
     <div class="report-post" id="p{{ post.refno }}">
         <div class="report-post-header">
             <a target="_blank" href="{{ url_for_post(thread.board.name, thread.id, post.refno) }}">
-                /{{ thread.board.name }}/{{ thread.id }}#{{ post.id }}</a>
+                /{{ thread.board.name }}/{{ thread.id }}#{{ post.refno }}</a>
             reported {{ report.count|pluralize('once', report.count ~ ' times') }}<br>
             <span title="{{ report.date|formatted_time }}">{{ report.date|time_remaining }}</span><br>
             {% if view_ips %}
