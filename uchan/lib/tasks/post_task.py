@@ -44,6 +44,7 @@ class ManagePostDetails:
         self.mod_id = None
         self.mode = None
         self.password = None
+        self.report_verification_data = None
 
 
 @celery.task

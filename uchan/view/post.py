@@ -152,6 +152,8 @@ def post_manage():
     elif mode_string == 'report':
         details.mode = ManagePostDetails.REPORT
         success_message = 'Post reported'
+        data = g.verification_service.get_verification_data_for_request(request, ip4, 'report')
+        details.report_verification_data = data
     elif mode_string == 'toggle_sticky':
         details.mode = ManagePostDetails.TOGGLE_STICKY
         success_message = 'Toggled sticky'
@@ -160,8 +162,6 @@ def post_manage():
         success_message = 'Toggled locked'
     else:
         abort(400)
-
-    # details.
 
     moderator = request_moderator() if get_authed() else None
     if moderator is not None:

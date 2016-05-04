@@ -97,7 +97,12 @@ class ActionAuthorizer:
             if not can_delete:
                 raise NoPermissionError()
         elif action is PostAction.POST_REPORT:
-            pass
+            if post_details.report_verification_data is None or \
+                    not g.verification_service.data_is_verified(post_details.report_verification_data):
+                e = VerificationError('[Please verify here first](_{})'.format('/verify/'))
+                e.for_name = 'report'
+                e.request_message = 'reporting'
+                raise e
         elif action is PostAction.THREAD_STICKY_TOGGLE or action is PostAction.THREAD_LOCKED_TOGGLE:
             req_roles = [roles.BOARD_ROLE_FULL_PERMISSION]
             if not g.moderator_service.has_board_roles(actor, board, req_roles):
