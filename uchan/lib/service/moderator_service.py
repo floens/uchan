@@ -254,6 +254,7 @@ class ModeratorService:
         moderator.password = self.hash_password(password)
 
         db = get_db()
+
         db.add(moderator)
         try:
             db.commit()
@@ -279,7 +280,8 @@ class ModeratorService:
 
         db = get_db()
         try:
-            return db.query(Moderator).filter_by(username=username).one()
+            # Username chars are safe because it is checked above
+            return db.query(Moderator).filter(Moderator.username.ilike(username)).one()
         except NoResultFound:
             return None
 
