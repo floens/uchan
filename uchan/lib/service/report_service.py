@@ -7,6 +7,7 @@ from sqlalchemy.sql.expression import cast
 
 from uchan import g
 from uchan.lib import roles, ArgumentError, NoPermissionError
+from uchan.lib.action_authorizer import ReportAction, PostAction
 from uchan.lib.database import get_db
 from uchan.lib.models import Report, BoardModerator, Thread, Board, Post
 from uchan.lib.tasks.report_task import ManageReportDetails
@@ -28,16 +29,16 @@ class ReportService:
 
         post = report.post
         board = post.thread.board
-        req_roles = [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_JANITOR]
-        if not g.moderator_service.has_board_roles(moderator, board, req_roles):
-            raise NoPermissionError()
 
         if manage_report_details.mode == ManageReportDetails.CLEAR:
+            g.action_authorizer.authorize_report_action(moderator, board, report, ReportAction.REPORT_CLEAR)
             self.delete_report(report)
         elif manage_report_details.mode == ManageReportDetails.DELETE_POST:
+            g.action_authorizer.authorize_post_action(moderator, PostAction.POST_DELETE, post)
             # Report gets deleted with a cascade
             g.posts_service.delete_post(post)
         elif manage_report_details.mode == ManageReportDetails.DELETE_FILE:
+            g.action_authorizer.authorize_post_action(moderator, PostAction.POST_DELETE_FILE, post)
             g.posts_service.delete_file(post)
 
     def add_report(self, report):

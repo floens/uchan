@@ -8,25 +8,11 @@ from sqlalchemy.orm.exc import NoResultFound
 from uchan import g
 from uchan.lib import ArgumentError, NoPermissionError
 from uchan.lib import roles
+from uchan.lib.action_authorizer import ModeratorAction, ModeratorBoardAction
 from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Moderator
 from uchan.lib.models.board import BoardModerator
-
-
-class ModeratorAction(Enum):
-    BOARD_CREATE = 1
-    BOARD_DELETE = 2
-
-
-class ModeratorBoardAction(Enum):
-    MODERATOR_ADD = 1
-    MODERATOR_REMOVE = 2
-    MODERATOR_REMOVE_SELF = 3
-    ROLES_UPDATE = 4
-    ROLE_ADD = 5
-    ROLE_REMOVE = 6
-    CONFIG_UPDATE = 7
 
 
 class ModeratorService:
@@ -42,7 +28,7 @@ class ModeratorService:
         pass
 
     def user_create_board(self, moderator, board):
-        self.authorize_action(moderator, ModeratorAction.BOARD_CREATE)
+        g.action_authorizer.authorize_action(moderator, ModeratorAction.BOARD_CREATE)
 
         g.board_service.add_board(board)
         g.board_service.board_add_moderator(board, moderator)
@@ -52,15 +38,15 @@ class ModeratorService:
         return board
 
     def user_delete_board(self, moderator, board):
-        self.authorize_action(moderator, ModeratorAction.BOARD_DELETE)
+        g.action_authorizer.authorize_action(moderator, ModeratorAction.BOARD_DELETE)
         g.board_service.delete_board(board)
 
     def user_update_board_config(self, moderator, board, board_config, board_config_row, form):
-        self.authorize_board_action(moderator, board, ModeratorBoardAction.CONFIG_UPDATE)
+        g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.CONFIG_UPDATE)
         g.config_service.save_from_form(moderator, board_config, board_config_row, form)
 
     def user_invite_moderator(self, moderator, board, username):
-        self.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_ADD)
+        g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_ADD)
 
         invitee = g.moderator_service.find_moderator_username(username)
         if not invitee:
@@ -77,16 +63,16 @@ class ModeratorService:
             raise ArgumentError('Cannot remove creator')
 
         if moderator == member:
-            self.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_REMOVE_SELF)
+            g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_REMOVE_SELF)
             g.board_service.board_remove_moderator(board, member)
             return True
         else:
-            self.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_REMOVE)
+            g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_REMOVE)
             g.board_service.board_remove_moderator(board, member)
             return False
 
     def user_update_roles(self, moderator, board, username, new_roles):
-        self.authorize_board_action(moderator, board, ModeratorBoardAction.ROLES_UPDATE)
+        g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.ROLES_UPDATE)
 
         subject = g.moderator_service.find_moderator_username(username)
         if not subject:
@@ -114,11 +100,11 @@ class ModeratorService:
                     removed.append(i)
 
             for add in added:
-                self.authorize_board_action(moderator, board, ModeratorBoardAction.ROLE_ADD, add)
+                g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.ROLE_ADD, add)
                 self.add_board_role(subject, board, add)
 
             for remove in removed:
-                self.authorize_board_action(moderator, board, ModeratorBoardAction.ROLE_REMOVE, remove)
+                g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.ROLE_REMOVE, remove)
                 self.remove_board_role(subject, board, remove)
 
     def user_register(self, username, password, password_repeat):
@@ -143,50 +129,6 @@ class ModeratorService:
         mod_log('User {} registered'.format(username))
 
         return moderator
-
-    def authorize_action(self, actor, action):
-        if self.has_role(actor, roles.ROLE_ADMIN):
-            return
-
-        if action is ModeratorAction.BOARD_CREATE:
-            creator_roles = 0
-            for board_moderator in actor.board_moderators:
-                if roles.BOARD_ROLE_CREATOR in board_moderator.roles:
-                    creator_roles += 1
-
-            if creator_roles >= self.BOARDS_PER_MODERATOR:
-                raise ArgumentError('Max boards limit reached ({})'.format(self.BOARDS_PER_MODERATOR))
-        else:
-            raise Exception('Unknown action')
-
-    def authorize_board_action(self, actor, board, action, data=None):
-        if self.has_role(actor, roles.ROLE_ADMIN):
-            return
-
-        if action is ModeratorBoardAction.ROLES_UPDATE:
-            if not self.has_board_roles(actor, board, [roles.BOARD_ROLE_FULL_PERMISSION]):
-                raise NoPermissionError()
-        elif action is ModeratorBoardAction.ROLE_ADD:
-            adding_role = data
-            if adding_role == roles.BOARD_ROLE_CREATOR:
-                raise NoPermissionError()
-        elif action is ModeratorBoardAction.ROLE_REMOVE:
-            removing_role = data
-            if removing_role == roles.BOARD_ROLE_CREATOR:
-                raise NoPermissionError()
-        elif action is ModeratorBoardAction.MODERATOR_ADD:
-            if not self.has_board_roles(actor, board, [roles.BOARD_ROLE_FULL_PERMISSION]):
-                raise NoPermissionError()
-        elif action is ModeratorBoardAction.MODERATOR_REMOVE:
-            if not self.has_board_roles(actor, board, [roles.BOARD_ROLE_FULL_PERMISSION]):
-                raise NoPermissionError()
-        elif action is ModeratorBoardAction.MODERATOR_REMOVE_SELF:
-            pass  # Allow, creator check is done before
-        elif action is ModeratorBoardAction.CONFIG_UPDATE:
-            if not self.has_board_roles(actor, board, [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_CONFIG]):
-                raise NoPermissionError()
-        else:
-            raise Exception('Unknown board action')
 
     def get_moderating_boards(self, moderator):
         return moderator.boards
@@ -215,7 +157,7 @@ class ModeratorService:
 
         board_moderator = self.get_board_moderator(moderator, board)
         if board_moderator is None:
-            raise ArgumentError('Not a moderator of that board')
+            return False
 
         return any(role in board_moderator.roles for role in roles)
 

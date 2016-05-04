@@ -13,6 +13,7 @@ from uchan.lib.cache import PageCache
 from uchan.lib.cache import PostsCache
 from uchan.lib.cache import SiteCache
 from uchan.lib.plugin_manager import PluginManager
+from uchan.lib.action_authorizer import ActionAuthorizer
 from uchan.lib.service import BanService
 from uchan.lib.service import BoardService
 from uchan.lib.service import ConfigService
@@ -33,6 +34,7 @@ class Globals:
         self._celery = None  # type: Celery
         self._database = None  # type: database
         self._plugin_manager = None  # type: PluginManager
+        self._action_authorizer = None  # type: ActionAuthorizer
 
         self._cache = None  # type: CacheWrapper
         self._posts_cache = None  # type: PostsCache
@@ -73,6 +75,10 @@ class Globals:
     @property
     def plugin_manager(self) -> PluginManager:
         return self._plugin_manager
+
+    @property
+    def action_authorizer(self) -> ActionAuthorizer:
+        return self._action_authorizer
 
     @property
     def cache(self) -> CacheWrapper:

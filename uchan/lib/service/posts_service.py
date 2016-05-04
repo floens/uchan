@@ -5,6 +5,7 @@ import config
 from uchan import g
 from uchan.lib import BadRequestError, ArgumentError, NoPermissionError
 from uchan.lib import roles
+from uchan.lib.action_authorizer import PostAction
 from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
@@ -71,10 +72,11 @@ class PostsService:
 
         if post_details.password is not None:
             if len(post_details.password) < self.MIN_PASSWORD_LENGTH:
-                raise ArgumentError('Password too short, min ' + str(self.MIN_PASSWORD_LENGTH))
+                raise ArgumentError(
+                    'Password too short, at least {} characters required'.format(self.MIN_PASSWORD_LENGTH))
 
             if len(post_details.password) > self.MAX_PASSWORD_LENGTH:
-                raise ArgumentError('Password too long, max ' + str(self.MAX_PASSWORD_LENGTH))
+                raise ArgumentError('Password too long, at most {} characters allowed'.format(self.MAX_PASSWORD_LENGTH))
 
     def handle_post(self, post_details):
         start_time = now()
@@ -210,8 +212,8 @@ class PostsService:
             total += post_details.file_time
             file_time = 'file: {}ms, '.format(post_details.file_time)
 
-        return 'check: {}ms, {}db: {}ms, caches: {}ms, total: {}ms'.format(post_details.check_time, file_time,
-                                                                           insert_time, cache_time, total)
+        s = 'check: {}ms, {}db: {}ms, caches: {}ms, total: {}ms'
+        return s.format(post_details.check_time, file_time, insert_time, cache_time, total)
 
     def get_board_thread(self, post_details):
         board = g.board_service.find_board(post_details.board_name)
@@ -260,60 +262,50 @@ class PostsService:
                 moderator_name = moderator.username
 
         # You cannot manage when you are banned
-        if moderator is None or not g.moderator_service.has_role(moderator, roles.ROLE_ADMIN):
-            if g.ban_service.is_request_banned(details.ip4, board):
-                raise RequestBannedException()
+        if g.ban_service.is_request_banned(details.ip4, board):
+            raise RequestBannedException()
 
-        if details.mode == ManagePostDetails.DELETE:
+        if details.mode == ManagePostDetails.DELETE or details.mode == ManagePostDetails.REPORT:
             if post is None:
                 if not details.post_id:
                     raise BadRequestError('No post selected')
                 else:
                     raise BadRequestError('Post not found')
 
-            can_delete = False
-            delete_roles = [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_JANITOR]
-            if moderator is not None and g.moderator_service.has_board_roles(moderator, board, delete_roles):
-                can_delete = True
-            elif details.password is not None and details.password == post.password:
-                can_delete = True
-
-            if can_delete:
-                mod_log('post {} delete'.format(details.post_id), ip4_str=ip4_to_str(details.ip4),
+            if details.mode == ManagePostDetails.DELETE:
+                try:
+                    g.action_authorizer.authorize_post_action(moderator, PostAction.POST_DELETE, post, details)
+                    mod_log('post {} delete'.format(details.post_id), ip4_str=ip4_to_str(details.ip4),
+                            moderator_name=moderator_name)
+                    self.delete_post(post)
+                except NoPermissionError as e:
+                    mod_log('post {} delete failed, {}'.format(details.post_id, str(e)),
+                            ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
+                    raise BadRequestError('Password invalid')
+            elif details.mode == ManagePostDetails.REPORT:
+                g.action_authorizer.authorize_post_action(moderator, PostAction.POST_REPORT, post, details)
+                report = Report(post_id=post.id)
+                mod_log('post {} reported'.format(post.id), ip4_str=ip4_to_str(details.ip4),
                         moderator_name=moderator_name)
-                self.delete_post(post)
-            else:
-                mod_log('post {} delete failed, invalid password'.format(details.post_id),
-                        ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
-                raise BadRequestError('Password invalid')
-        elif details.mode == ManagePostDetails.REPORT:
-            if post is None:
-                if not details.post_id:
-                    raise BadRequestError('No post selected')
-                else:
-                    raise BadRequestError('Post not found')
+                g.report_service.add_report(report)
+        elif details.mode == ManagePostDetails.TOGGLE_STICKY or details.mode == ManagePostDetails.TOGGLE_LOCKED:
+            if moderator is None:
+                raise BadRequestError('Moderator not found')
 
-            report = Report(post_id=post.id)
-            mod_log('post {} reported'.format(post.id), ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
-            g.report_service.add_report(report)
-        elif details.mode == ManagePostDetails.TOGGLE_STICKY:
-            req_roles = [roles.BOARD_ROLE_FULL_PERMISSION]
-            if moderator is not None and g.moderator_service.has_board_roles(moderator, board, req_roles):
+            if details.mode == ManagePostDetails.TOGGLE_STICKY:
+                g.action_authorizer.authorize_post_action(moderator, PostAction.THREAD_STICKY_TOGGLE, thread=thread)
+
                 mod_log('sticky on /{}/{} {}'.format(
                     thread.board.name, thread.id, 'disabled' if thread.sticky else 'enabled'),
                     ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 self.toggle_thread_sticky(thread)
-            else:
-                raise NoPermissionError()
-        elif details.mode == ManagePostDetails.TOGGLE_LOCKED:
-            req_roles = [roles.BOARD_ROLE_FULL_PERMISSION]
-            if moderator is not None and g.moderator_service.has_board_roles(moderator, board, req_roles):
+            elif details.mode == ManagePostDetails.TOGGLE_LOCKED:
+                g.action_authorizer.authorize_post_action(moderator, PostAction.THREAD_LOCKED_TOGGLE, thread=thread)
+
                 mod_log('lock on /{}/{} {}'.format(
                     thread.board.name, thread.id, 'disabled' if thread.locked else 'enabled'),
                     ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 self.toggle_thread_locked(thread)
-            else:
-                raise NoPermissionError()
         else:
             raise Exception()
 

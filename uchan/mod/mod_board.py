@@ -32,7 +32,7 @@ def mod_board(board_name):
 
     moderator = request_moderator()
     if not g.moderator_service.moderates_board(moderator, board):
-        raise NoPermissionError()
+        abort(404)
 
     board_config_row = board.config
     board_config = g.config_service.load_config(board_config_row, moderator)

@@ -12,6 +12,7 @@ class Globals:
         self._celery = None
         self._database = None
         self._plugin_manager = None
+        self._action_authorizer = None
 
         self._cache = None
         self._posts_cache = None
@@ -52,6 +53,10 @@ class Globals:
     @property
     def plugin_manager(self):
         return self._plugin_manager
+
+    @property
+    def action_authorizer(self):
+        return self._action_authorizer
 
     @property
     def cache(self):
@@ -192,6 +197,9 @@ def init():
     app.register_blueprint(api)
 
     setup_logger(g)
+
+    from uchan.lib.action_authorizer import ActionAuthorizer
+    g._action_authorizer = ActionAuthorizer()
 
     from uchan.lib.plugin_manager import PluginManager
     g._plugin_manager = PluginManager()
