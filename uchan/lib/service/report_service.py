@@ -2,11 +2,10 @@ from sqlalchemy import desc
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.sql.sqltypes import String
 from sqlalchemy.sql.expression import cast
-
+from sqlalchemy.sql.sqltypes import String
 from uchan import g
-from uchan.lib import roles, ArgumentError, NoPermissionError
+from uchan.lib import roles, ArgumentError
 from uchan.lib.action_authorizer import ReportAction, PostAction
 from uchan.lib.database import get_db
 from uchan.lib.models import Report, BoardModerator, Thread, Board, Post

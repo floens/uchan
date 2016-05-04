@@ -2,7 +2,6 @@ from flask import render_template, abort, redirect, url_for
 
 from uchan import app
 from uchan import g
-from uchan.lib import roles
 from uchan.lib.moderator_request import get_authed, request_moderator
 
 

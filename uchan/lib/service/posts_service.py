@@ -1,28 +1,14 @@
 from sqlalchemy.orm import lazyload
 from sqlalchemy.orm.exc import NoResultFound
-
-import config
 from uchan import g
-from uchan.lib import BadRequestError, ArgumentError, NoPermissionError
-from uchan.lib import roles
-from uchan.lib.action_authorizer import PostAction
+from uchan.lib import BadRequestError, ArgumentError
+from uchan.lib.action_authorizer import PostAction, NoPermissionError, RequestBannedException
 from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Post, Report, Thread, File
 from uchan.lib.tasks.post_task import ManagePostDetails
 from uchan.lib.utils import now, ip4_to_str
-
-
-class RequestBannedException(ArgumentError):
-    def __init__(self, *args):
-        ArgumentError.__init__(self, *args)
-
-
-class RequestSuspendedException(ArgumentError):
-    def __init__(self, *args):
-        ArgumentError.__init__(self, *args)
-        self.suspend_time = 0
 
 
 class PostsService:
@@ -38,18 +24,18 @@ class PostsService:
 
         g.plugin_manager.execute_hook('on_handle_post_check', post_details)
 
+        # Get moderator if mod_id was set
+        moderator = None
+        if post_details.mod_id is not None:
+            moderator = g.moderator_service.find_moderator_id(post_details.mod_id)
+            if moderator is None:
+                raise Exception('Moderator not found')
+
         if thread is not None and thread.locked:
             raise ArgumentError('Thread is locked')
 
-        if g.ban_service.is_request_banned(post_details.ip4, board):
-            raise RequestBannedException()
-
-        if config.ENABLE_COOLDOWN_CHECKING:
-            suspended, suspend_time = g.ban_service.is_request_suspended(post_details.ip4, board, thread)
-            if suspended:
-                e = RequestSuspendedException()
-                e.suspend_time = suspend_time
-                raise e
+        g.action_authorizer.authorize_post_action(moderator, PostAction.POST_CREATE, post_details=post_details,
+                                                  board=board, thread=thread)
 
         board_config_cached = g.board_cache.find_board_config_cached(board.name)
         if post_details.has_file and not board_config_cached.board_config.file_posting_enabled:
@@ -293,14 +279,14 @@ class PostsService:
                 raise BadRequestError('Moderator not found')
 
             if details.mode == ManagePostDetails.TOGGLE_STICKY:
-                g.action_authorizer.authorize_post_action(moderator, PostAction.THREAD_STICKY_TOGGLE, thread=thread)
+                g.action_authorizer.authorize_post_action(moderator, PostAction.THREAD_STICKY_TOGGLE, board=board)
 
                 mod_log('sticky on /{}/{} {}'.format(
                     thread.board.name, thread.id, 'disabled' if thread.sticky else 'enabled'),
                     ip4_str=ip4_to_str(details.ip4), moderator_name=moderator_name)
                 self.toggle_thread_sticky(thread)
             elif details.mode == ManagePostDetails.TOGGLE_LOCKED:
-                g.action_authorizer.authorize_post_action(moderator, PostAction.THREAD_LOCKED_TOGGLE, thread=thread)
+                g.action_authorizer.authorize_post_action(moderator, PostAction.THREAD_LOCKED_TOGGLE, board=board)
 
                 mod_log('lock on /{}/{} {}'.format(
                     thread.board.name, thread.id, 'disabled' if thread.locked else 'enabled'),

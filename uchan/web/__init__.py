@@ -1,7 +1,5 @@
-from flask import Flask
+from flask import Flask, request
 from werkzeug.contrib.fixers import ProxyFix
-
-from uchan.lib import NoPermissionError
 
 
 class CustomFlaskApp(Flask):
@@ -39,10 +37,6 @@ def create_web_app(g, config, app):
         g.logger.exception(error)
         return app.send_static_file('404.html'), 404
 
-    from flask import request, jsonify
-
-    from uchan.filter.app_filters import page_formatting
-
     from uchan.view import render_error
 
     def bad_request_message(e):
@@ -58,9 +52,18 @@ def create_web_app(g, config, app):
 
         return render_error(user_message, 400)
 
+    from uchan.lib.action_authorizer import NoPermissionError, VerificationError
+
     @app.errorhandler(NoPermissionError)
     def no_permission_handler(error):
         return render_error('No permission', 401)
+
+    from uchan.lib.proxy_request import get_request_ip4
+
+    @app.errorhandler(VerificationError)
+    def not_verified_handler(error):
+        g.verification_service.handle_not_verified(error, request, get_request_ip4())
+        return render_error(str(error))
 
     @app.after_request
     def after_request_handler(response):

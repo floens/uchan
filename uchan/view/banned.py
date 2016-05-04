@@ -1,13 +1,14 @@
-from flask import render_template
+from flask import render_template, request
 
 from uchan import app
 from uchan import g
-from uchan.view import require_verification
+from uchan.lib.proxy_request import get_request_ip4
 
 
 @app.route('/banned/')
-@require_verification('ban_check', 'Verify here before checking your ban', 'ban checking')
 def banned():
+    g.action_authorizer.authorize_ban_check_action(request, get_request_ip4())
+
     bans = g.ban_service.get_request_bans()
 
     return render_template('banned.html', is_banned=len(bans) > 0, bans=bans)

@@ -3,9 +3,11 @@ from flask import request, abort, redirect, url_for, render_template, jsonify
 from uchan import app, g
 from uchan.filter.app_filters import time_remaining
 from uchan.lib import BadRequestError, ArgumentError
+from uchan.lib.action_authorizer import RequestBannedException
+from uchan.lib.action_authorizer import RequestSuspendedException
 from uchan.lib.moderator_request import request_moderator, get_authed
+from uchan.lib.proxy_request import get_request_ip4
 from uchan.lib.service import BoardService
-from uchan.lib.service.posts_service import RequestBannedException, RequestSuspendedException
 from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task, post_check_task
 from uchan.lib.utils import now
 from uchan.view import check_csrf_referer
@@ -58,23 +60,14 @@ def post():
     if has_file and not site_config.file_posting_enabled:
         raise BadRequestError('File posting is disabled')
 
-    ip4 = g.ban_service.get_request_ip4()
+    ip4 = get_request_ip4()
 
     board_config_cached = g.board_cache.find_board_config_cached(board_name)
     if not board_config_cached:
         abort(404)
 
-    if board_config_cached.board_config.posting_verification_required:
-        verification_data = g.verification_service.get_verification_data_for_request(request, ip4, 'post')
-        if verification_data is None:
-            g.verification_service.set_verification(
-                request, ip4, 'post', False,
-                request_message='posting')
-
-        if not g.verification_service.is_verification_data_verified(verification_data):
-            raise BadRequestError('[Please verify here first](_{})'.format(url_for('verify')))
-
     post_details = PostDetails(form, board_name, thread_id, text, name, subject, password, has_file, ip4)
+    post_details.verification_data = g.verification_service.get_verification_data_for_request(request, ip4, 'post')
 
     with_mod = form.get('with_mod', type=bool)
     if with_mod is True:
@@ -147,7 +140,7 @@ def post_manage():
     if not password or len(password) > g.posts_service.MAX_PASSWORD_LENGTH:
         password = None
 
-    ip4 = g.ban_service.get_request_ip4()
+    ip4 = get_request_ip4()
 
     details = ManagePostDetails(thread_id, post_id, ip4)
     mode_string = form.get('mode')
@@ -167,6 +160,8 @@ def post_manage():
         success_message = 'Toggled locked'
     else:
         abort(400)
+
+    # details.
 
     moderator = request_moderator() if get_authed() else None
     if moderator is not None:

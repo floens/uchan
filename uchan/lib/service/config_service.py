@@ -1,5 +1,3 @@
-import json
-
 from sqlalchemy.orm.exc import NoResultFound
 from uchan.lib import ArgumentError
 from uchan.lib.configs import BoardConfig, SiteConfig

@@ -23,6 +23,15 @@ def mod_index():
     return redirect(url_for('.mod_auth'))
 
 
+def verify_method():
+    method = g.verification_service.get_method()
+    try:
+        if not method.verify_request(request):
+            raise BadRequestError()
+    except ArgumentError as e:
+        raise BadRequestError(e.message)
+
+
 @mod.route('/auth', methods=['GET', 'POST'])
 def mod_auth():
     if request.method == 'POST':
@@ -39,6 +48,8 @@ def mod_auth():
         else:
             if not check_csrf_referer(request):
                 raise BadRequestError('Bad referer header')
+
+            verify_method()
 
             username = request.form['username']
             password = request.form['password']
@@ -66,13 +77,21 @@ def mod_auth():
     else:
         authed = get_authed()
         moderator = request_moderator() if authed else None
-        return render_template('auth.html', authed=authed, moderator=moderator)
+
+        method_html = None
+        if not authed:
+            method = g.verification_service.get_method()
+            method_html = method.get_html()
+
+        return render_template('auth.html', authed=authed, moderator=moderator, method_html=method_html)
 
 
 @mod.route('/auth/reg', methods=['POST'])
 def mod_reg():
     if not check_csrf_referer(request):
         raise BadRequestError('Bad referer header')
+
+    verify_method()
 
     username = request.form['username']
     password = request.form['password']

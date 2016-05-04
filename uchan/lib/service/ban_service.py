@@ -1,11 +1,10 @@
 from sqlalchemy import desc
 from sqlalchemy.orm.exc import NoResultFound
 
-from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib.database import get_db
 from uchan.lib.models import Ban, Post
-from uchan.lib.proxy_request import get_request_ip4_str
+from uchan.lib.proxy_request import get_request_ip4
 from uchan.lib.utils import now
 
 
@@ -47,17 +46,8 @@ class BanService:
         return posts
 
     def get_request_bans(self):
-        ip4 = self.get_request_ip4()
+        ip4 = get_request_ip4()
         return self.find_bans(ip4)
-
-    def get_request_ip4(self):
-        # TODO: move method
-        try:
-            ip4 = self.parse_ip4(get_request_ip4_str())
-        except ValueError:
-            g.logger.exception('Failed to parse request ip4')
-            raise ArgumentError('Invalid request')
-        return ip4
 
     def find_bans(self, ip4):
         db = get_db()
@@ -113,20 +103,3 @@ class BanService:
     def get_all_bans(self):
         db = get_db()
         return db.query(Ban).all()
-
-    def parse_ip4(self, ip4_str):
-        ip_parts = ip4_str.split('.')
-        if len(ip_parts) != 4:
-            raise ValueError()
-
-        ip_nums = []
-        for ip_part in ip_parts:
-            if ip_part == '*':
-                ip_nums.append(0)
-            else:
-                n = int(ip_part)
-                if n < 0 or n > 255:
-                    raise ValueError()
-                ip_nums.append(n)
-
-        return (ip_nums[0] << 24) + (ip_nums[1] << 16) + (ip_nums[2] << 8) + ip_nums[3]

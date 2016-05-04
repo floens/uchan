@@ -1,6 +1,5 @@
-from functools import wraps
-
 from flask import Blueprint, jsonify
+from functools import wraps
 
 api = Blueprint('api', __name__, url_prefix='/api')
 

@@ -18,6 +18,9 @@
                 {% endif %}
                 <b>You're verified for:</b>
                 {{ verified_message|page_formatting }}
+                {% if not request_message %}
+                    <br><i>You may now close this tab.</i>
+                {% endif %}
             {% endif %}
         {% endif %}
         {% if method_html %}

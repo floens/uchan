@@ -1,7 +1,6 @@
 import time
 
 from markupsafe import Markup, escape
-
 from uchan import app
 from uchan.filter.text_parser import parse_text
 from uchan.lib.utils import now

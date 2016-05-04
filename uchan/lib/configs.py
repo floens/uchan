@@ -1,4 +1,3 @@
-from uchan.lib import roles
 from uchan.lib.dynamic_config import DynamicConfig, DynamicConfigItem
 
 

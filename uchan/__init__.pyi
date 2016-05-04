@@ -5,15 +5,14 @@ import logging
 
 from celery import Celery
 from flask import Flask
-
 from uchan.lib import database
+from uchan.lib.action_authorizer import ActionAuthorizer
 from uchan.lib.cache import BoardCache
 from uchan.lib.cache import CacheWrapper
 from uchan.lib.cache import PageCache
 from uchan.lib.cache import PostsCache
 from uchan.lib.cache import SiteCache
 from uchan.lib.plugin_manager import PluginManager
-from uchan.lib.action_authorizer import ActionAuthorizer
 from uchan.lib.service import BanService
 from uchan.lib.service import BoardService
 from uchan.lib.service import ConfigService
@@ -21,8 +20,8 @@ from uchan.lib.service import FileService
 from uchan.lib.service import ModeratorService
 from uchan.lib.service import PageService
 from uchan.lib.service import PostsService
-from uchan.lib.service import VerificationService
 from uchan.lib.service import ReportService
+from uchan.lib.service import VerificationService
 
 
 # TODO: The @property methods are a workaround for type checking to work. bug in intellij?

@@ -4,7 +4,6 @@ from uuid import uuid4
 from flask import g as flaskg
 from sqlalchemy.orm.attributes import flag_modified
 from sqlalchemy.orm.exc import NoResultFound
-
 from uchan import g
 from uchan.lib.cache import CacheDict
 from uchan.lib.database import get_db
@@ -32,6 +31,7 @@ class VerificationService:
     """
     This verification service is seperate from the normal session cookie so that it can easily be
     managed with varnish. The verification should never change GET requests except for /verify/.
+    Verifications are also bound to an ip4 address to avoid sharing verifications with multiple users.
 
     Endpoints can check verification with the require_verification decorator.
     """
@@ -52,12 +52,28 @@ class VerificationService:
 
         return self.methods[0]
 
-    def is_verified(self, request, ip4, name):
-        verification_data = self.get_verification_data_for_request(request, ip4, name)
-        return self.is_verification_data_verified(verification_data)
+    def handle_not_verified(self, verification_error, request, ip4):
+        name = verification_error.for_name
+        message = verification_error.request_message
+        single_shot = verification_error.single_shot
 
-    def is_verification_data_verified(self, verification_data):
-        return verification_data is not None and verification_data['verified'] == True
+        self.set_verification(request, ip4, name, False, request_message=message, single_shot=single_shot)
+
+    def process_request(self, request, ip4, name):
+        verification_data = g.verification_service.get_verification_data_for_request(request, ip4, name)
+        if verification_data is None:
+            return False
+
+        ret = verification_data['verified'] is True
+        if 'single_shot' in verification_data and verification_data['single_shot']:
+            # Update verified to false again, not changing the other options
+            self.set_verification(request, ip4, name, False)
+        return ret
+
+    def data_is_verified(self, verification_data):
+        if verification_data is None:
+            return False
+        return verification_data['verified'] is True
 
     def get_verification_data_for_request(self, request, ip4, name):
         verification = self.get_verification_for_request(request, ip4)
@@ -83,7 +99,7 @@ class VerificationService:
 
         return verification
 
-    def set_verification(self, request, ip4, name, verified, request_message=None, extra_data=None):
+    def set_verification(self, request, ip4, name, verified, request_message=None, single_shot=None, extra_data=None):
         verification = self.get_verification_for_request(request, ip4, with_cache=False)
 
         db = get_db()
@@ -110,6 +126,9 @@ class VerificationService:
         data[name]['verified'] = verified
         if request_message:
             data[name]['request_message'] = request_message
+
+        if single_shot is not None:
+            data[name]['single_shot'] = bool(single_shot)
 
         if extra_data is not None:
             for item in extra_data:

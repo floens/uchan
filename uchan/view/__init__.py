@@ -1,18 +1,15 @@
-import random
 import string
-from functools import wraps
 from urllib.parse import urlparse
 
+import config
+import random
 from flask import send_from_directory, session, request, abort, url_for, render_template, jsonify
+from functools import wraps
 from markupsafe import escape, Markup
 from sqlalchemy.orm.exc import NoResultFound
-
-import config
 from uchan import g, app
 from uchan.filter.app_filters import page_formatting
-from uchan.lib import BadRequestError
 from uchan.lib.database import get_db
-from uchan.lib.moderator_request import get_authed
 from uchan.lib.service import PageService
 
 
@@ -79,32 +76,6 @@ def with_token():
         def decorated_function(*args, **kwargs):
             if not check_csrf_token(request.form.get('token')):
                 abort(400)
-
-            return f(*args, **kwargs)
-
-        return decorated_function
-
-    return decorator
-
-
-def require_verification(name, link_message=None, request_message=None, *user_args, **user_kwargs):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            # ip4 of the request
-            ip4 = g.ban_service.get_request_ip4()
-
-            verification_data = g.verification_service.get_verification_data_for_request(request, ip4, name)
-            if verification_data is None:
-                g.verification_service.set_verification(
-                    request, ip4, name, False, request_message=request_message, *user_args, **user_kwargs)
-
-            if not g.verification_service.is_verification_data_verified(verification_data):
-                real_link_message = link_message
-                if real_link_message is None:
-                    real_link_message = 'Please verify here first'
-
-                raise BadRequestError('[{}](_{})'.format(real_link_message, url_for('verify')))
 
             return f(*args, **kwargs)
 

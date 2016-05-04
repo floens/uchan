@@ -4,6 +4,7 @@ from uchan import g
 from uchan.lib import roles, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Ban
+from uchan.lib.proxy_request import parse_ip4
 from uchan.lib.utils import now, ip4_to_str
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
@@ -39,10 +40,10 @@ def mod_ban_add():
     reason = request.form['ban_reason']
 
     try:
-        ip4 = g.ban_service.parse_ip4(ip4_raw)
+        ip4 = parse_ip4(ip4_raw)
         ip4_end = None
         if ip4_end_raw:
-            ip4_end = g.ban_service.parse_ip4(ip4_end_raw)
+            ip4_end = parse_ip4(ip4_end_raw)
     except ValueError:
         flash('Invalid ip')
         return redirect(url_for('.mod_bans'))

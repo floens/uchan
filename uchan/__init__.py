@@ -1,7 +1,6 @@
+import config
 from celery import Celery
 from celery.loaders.app import AppLoader
-
-import config
 
 
 class Globals:

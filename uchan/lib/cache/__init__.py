@@ -1,11 +1,10 @@
 import json
 from time import time
 
-from werkzeug.contrib.cache import MemcachedCache
-
 import config
 from uchan import g
 from uchan.lib.utils import now
+from werkzeug.contrib.cache import MemcachedCache
 
 
 def make_attr_dict(value):

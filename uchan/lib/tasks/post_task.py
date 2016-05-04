@@ -13,6 +13,7 @@ class PostDetails:
         self.has_file = has_file
         self.ip4 = ip4
         self.mod_id = None
+        self.verification_data = None
 
         self.uploaded_file = None
 

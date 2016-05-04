@@ -3,12 +3,13 @@ from flask import render_template, request, url_for, redirect
 from uchan import app, g
 from uchan.lib import ArgumentError
 from uchan.lib import BadRequestError
+from uchan.lib.proxy_request import get_request_ip4
 from uchan.view import check_csrf_referer
 
 
 @app.route('/verify/')
 def verify():
-    ip4 = g.ban_service.get_request_ip4()
+    ip4 = get_request_ip4()
     verification = g.verification_service.get_verification_for_request(request, ip4)
 
     method_html = ''
@@ -49,7 +50,7 @@ def verify_do():
     if not check_csrf_referer(request):
         raise BadRequestError('Bad referer header')
 
-    ip4 = g.ban_service.get_request_ip4()
+    ip4 = get_request_ip4()
 
     try:
         g.verification_service.do_verify(request, ip4)

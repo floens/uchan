@@ -1,11 +1,10 @@
+import string
+
 import os
 import random
-import string
-from shutil import copyfile
-
 from PIL import Image
+from shutil import copyfile
 from sqlalchemy.event import listen
-
 from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib.models import File

@@ -1,6 +1,5 @@
-import requests
-
 import config
+import requests
 from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib.service.verification_service import VerificationMethod
@@ -38,21 +37,29 @@ class Recaptcha2Method(VerificationMethod):
         self.html = """
         <script>
 
-        window.recaptchaOnloadCallback = function() {
-        };
-
         (function() {
-            var recaptchaScript = document.createElement('script');
-            recaptchaScript.type = 'text/javascript';
-            recaptchaScript.async = true;
-            recaptchaScript.defer = true;
-            recaptchaScript.src = 'https://www.google.com/recaptcha/api.js?onload=recaptchaOnloadCallback';
-            var s = document.getElementsByTagName('script')[0];
-            s.parentNode.insertBefore(recaptchaScript, s);
+            if (!window.recaptchaOnloadCallback) {
+                window.recaptchaContainers = [];
+                window.recaptchaOnloadCallback = function() {
+                    for (var i = 0; i < recaptchaContainers.length; i++) {
+                        var container = recaptchaContainers[i];
+                        grecaptcha.render(container, {'sitekey': '__sitekey__'});
+                    }
+                };
+                var recaptchaScript = document.createElement('script');
+                recaptchaScript.type = 'text/javascript';
+                recaptchaScript.async = true;
+                recaptchaScript.defer = true;
+                recaptchaScript.src = 'https://www.google.com/recaptcha/api.js?onload=recaptchaOnloadCallback&render=explicit';
+                var s = document.getElementsByTagName('script')[0];
+                s.parentNode.insertBefore(recaptchaScript, s);
+            }
+
+            var containerName = 'g-recaptcha-' + recaptchaContainers.length;
+            recaptchaContainers.push(containerName);
+            document.write('<div id="' + containerName + '"></div>');
         })();
         </script>
-
-        <div class="g-recaptcha" data-sitekey="__sitekey__"></div>
         """.replace('__sitekey__', self.sitekey)
 
     def get_html(self):
@@ -82,7 +89,7 @@ class Recaptcha2Method(VerificationMethod):
             'response': response
         })
         res_json = res.json()
-        return 'success' in res_json and res_json['success'] == True
+        return 'success' in res_json and res_json['success'] is True
 
 
 def on_enable():

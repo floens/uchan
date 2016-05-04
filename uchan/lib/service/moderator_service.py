@@ -1,12 +1,10 @@
 import string
-from enum import Enum
 
 import bcrypt
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
-
 from uchan import g
-from uchan.lib import ArgumentError, NoPermissionError
+from uchan.lib import ArgumentError
 from uchan.lib import roles
 from uchan.lib.action_authorizer import ModeratorAction, ModeratorBoardAction
 from uchan.lib.database import get_db
