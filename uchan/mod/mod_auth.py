@@ -1,5 +1,6 @@
 from flask import request, redirect, url_for, render_template, abort, flash, session
 
+import config
 from uchan import g
 from uchan.lib import ArgumentError, BadRequestError
 from uchan.lib.mod_log import mod_log
@@ -49,7 +50,8 @@ def mod_auth():
             if not check_csrf_referer(request):
                 raise BadRequestError('Bad referer header')
 
-            verify_method()
+            if not config.DEBUG:
+                verify_method()
 
             username = request.form['username']
             password = request.form['password']
@@ -79,7 +81,7 @@ def mod_auth():
         moderator = request_moderator() if authed else None
 
         method_html = None
-        if not authed:
+        if not authed and not config.DEBUG:
             method = g.verification_service.get_method()
             method_html = method.get_html()
 
@@ -91,7 +93,8 @@ def mod_reg():
     if not check_csrf_referer(request):
         raise BadRequestError('Bad referer header')
 
-    verify_method()
+    if not config.DEBUG:
+        verify_method()
 
     username = request.form['username']
     password = request.form['password']
