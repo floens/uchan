@@ -20,6 +20,13 @@
                 {{ verified_message|page_formatting }}
                 {% if not request_message %}
                     <br><i>You may now close this tab.</i>
+                    <script>
+                        // Close the verify page if the source was the posting page and retry posting
+                        if (window.opener && window.opener.location.pathname == '{{ url_for('.post') }}') {
+                            window.opener.location.reload();
+                            window.close();
+                        }
+                    </script>
                 {% endif %}
             {% endif %}
         {% endif %}
@@ -28,6 +35,11 @@
             <hr class="content-divider">
             <br>
             <form action="{{ url_for('verify_do') }}" method="post">
+                <script>
+                    window.globalCaptchaEntered = function () {
+                        document.forms[0].submit();
+                    }
+                </script>
                 {{ method_html|safe }}<br>
                 <input type="submit" value="Verify">
             </form>

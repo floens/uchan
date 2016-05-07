@@ -43,7 +43,10 @@ class Recaptcha2Method(VerificationMethod):
                 window.recaptchaOnloadCallback = function() {
                     for (var i = 0; i < recaptchaContainers.length; i++) {
                         var container = recaptchaContainers[i];
-                        grecaptcha.render(container, {'sitekey': '__sitekey__'});
+                        grecaptcha.render(container, {
+                            'sitekey': '__sitekey__',
+                            'callback': window['globalCaptchaEntered']
+                        });
                     }
                 };
                 var recaptchaScript = document.createElement('script');
