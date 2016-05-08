@@ -23,6 +23,7 @@ class Board(ModelBase):
 
     config = relationship('Config', cascade='all')
     threads = relationship('Thread', backref='board', cascade='all, delete-orphan')
+    logs = relationship('ModeratorLog', backref='board')
 
     moderators = association_proxy('board_moderators', 'moderator', creator=create_moderator_for_proxy)
 

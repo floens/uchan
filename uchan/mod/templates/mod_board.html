@@ -7,7 +7,8 @@
 {% block content %}
     <h2>Modify board</h2>
 
-    [<a href="{{ url_for('.mod_boards') }}">Back</a>]<br>
+    [<a href="{{ url_for('.mod_boards') }}">Back</a>]
+    [<a href="{{ url_for('.mod_board_log', board_name=board.name) }}">View log</a>]<br>
     <br>
 
     Changing board <b>{{ board.name }}</b><br>

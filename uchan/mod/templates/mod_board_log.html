@@ -1,0 +1,39 @@
+{% extends "mod_base.html" %}
+
+{% block title %}Moderator log{% endblock %}
+
+{% import "widget/pager.html" as pager_widget %}
+
+{% block content %}
+    <h2>/{{ board.name }}/ moderator log</h2>
+
+    [<a href="{{ url_for('.mod_board', board_name=board.name) }}">Back</a>]<br>
+    <br>
+
+    {{ pager_widget.render(url_for('.mod_board_log', board_name=board.name), pages, page) }}<br>
+
+    <table class="datatable">
+        <thead>
+        <tr>
+            <th style="width: 140px;">Date</th>
+            <th style="width: 140px;">Moderator</th>
+            <th style="width: 140px;">Type</th>
+            <th style="width: 500px;">Text</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for log in logs %}
+            <tr>
+                <td title="{{ log.date|formatted_time }}">{{ log.date|time_remaining }}</td>
+                <td>{% if log.moderator %}{{ log.moderator.username }}{% endif %}</td>
+                <td>{{ get_log_type(log.type) }}</td>
+                <td>{{ log.text }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <br>
+    {{ pager_widget.render(url_for('.mod_board_log', board_name=board.name), pages, page) }}<br>
+
+{% endblock %}

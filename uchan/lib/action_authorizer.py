@@ -44,6 +44,7 @@ class ModeratorBoardAction(Enum):
     ROLE_ADD = 5
     ROLE_REMOVE = 6
     CONFIG_UPDATE = 7
+    VIEW_LOG = 8
 
 
 @unique
@@ -158,6 +159,9 @@ class ActionAuthorizer:
             pass  # Allow, creator check is done before
         elif action is ModeratorBoardAction.CONFIG_UPDATE:
             if not self.has_board_roles(actor, board, [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_CONFIG]):
+                raise NoPermissionError()
+        elif action is ModeratorBoardAction.VIEW_LOG:
+            if board not in actor.boards:
                 raise NoPermissionError()
         else:
             raise Exception('Unknown board action')

@@ -31,3 +31,4 @@ from .file import File
 from .ban import Ban
 from .page import Page
 from .verification import Verification
+from .moderator_log import ModeratorLog

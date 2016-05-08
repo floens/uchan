@@ -1,16 +1,20 @@
 import string
 
 import bcrypt
+from sqlalchemy import desc
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
+
 from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib import roles
 from uchan.lib.action_authorizer import ModeratorAction, ModeratorBoardAction
 from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
-from uchan.lib.models import Moderator
-from uchan.lib.models.board import BoardModerator
+from uchan.lib.models import BoardModerator, ModeratorLog, Moderator
+from uchan.lib.models.moderator_log import ModeratorLogType
+from uchan.lib.utils import now
 
 
 class ModeratorService:
@@ -33,15 +37,20 @@ class ModeratorService:
         self.add_board_role(moderator, board, roles.BOARD_ROLE_CREATOR)
         self.add_board_role(moderator, board, roles.BOARD_ROLE_FULL_PERMISSION)
 
+        mod_log('Board {} created'.format(board.name))
+
         return board
 
     def user_delete_board(self, moderator, board):
         g.action_authorizer.authorize_action(moderator, ModeratorAction.BOARD_DELETE)
+        board_name = board.name
         g.board_service.delete_board(board)
+        mod_log('Board {} deleted'.format(board_name))
 
     def user_update_board_config(self, moderator, board, board_config, board_config_row, form):
         g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.CONFIG_UPDATE)
         g.config_service.save_from_form(moderator, board_config, board_config_row, form)
+        self.log(ModeratorLogType.CONFIG_UPDATE, moderator, board, 'Config updated')
 
     def user_invite_moderator(self, moderator, board, username):
         g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_ADD)
@@ -51,6 +60,8 @@ class ModeratorService:
             raise ArgumentError('Moderator not found')
 
         g.board_service.board_add_moderator(board, invitee)
+
+        self.log(ModeratorLogType.MODERATOR_INVITE, moderator, board, 'Invited {}'.format(invitee.username))
 
     def user_remove_moderator(self, moderator, board, username):
         member = g.moderator_service.find_moderator_username(username)
@@ -63,10 +74,12 @@ class ModeratorService:
         if moderator == member:
             g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_REMOVE_SELF)
             g.board_service.board_remove_moderator(board, member)
+            self.log(ModeratorLogType.MODERATOR_REMOVE, moderator, board, 'Removed self')
             return True
         else:
             g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_REMOVE)
             g.board_service.board_remove_moderator(board, member)
+            self.log(ModeratorLogType.MODERATOR_REMOVE, moderator, board, 'Removed {}'.format(member.username))
             return False
 
     def user_update_roles(self, moderator, board, username, new_roles):
@@ -100,10 +113,14 @@ class ModeratorService:
             for add in added:
                 g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.ROLE_ADD, add)
                 self.add_board_role(subject, board, add)
+                self.log(ModeratorLogType.MODERATOR_ROLE_ADD, moderator, board,
+                         'Added role {} to {}'.format(add, subject.username))
 
             for remove in removed:
                 g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.ROLE_REMOVE, remove)
                 self.remove_board_role(subject, board, remove)
+                self.log(ModeratorLogType.MODERATOR_ROLE_REMOVE, moderator, board,
+                         'Removed role {} from {}'.format(remove, subject.username))
 
     def user_register(self, username, password, password_repeat):
         if not self.check_username_validity(username):
@@ -127,6 +144,31 @@ class ModeratorService:
         mod_log('User {} registered'.format(username))
 
         return moderator
+
+    def user_get_logs(self, moderator, board, page, per_page):
+        g.action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.VIEW_LOG)
+
+        db = get_db()
+        logs = db.query(ModeratorLog) \
+            .filter(ModeratorLog.board == board) \
+            .order_by(desc(ModeratorLog.date)) \
+            .options(joinedload('moderator')) \
+            .offset(page * per_page).limit(per_page).all()
+        return logs
+
+    def log(self, log_type: ModeratorLogType, moderator, board, text):
+        db = get_db()
+        row = ModeratorLog()
+        row.date = now()
+        row.type = log_type.value
+        row.text = text
+        if moderator is not None:
+            row.moderator = moderator
+        if board is not None:
+            row.board = board
+
+        db.add(row)
+        db.commit()
 
     def get_moderating_boards(self, moderator):
         return moderator.boards

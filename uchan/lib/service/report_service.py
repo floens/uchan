@@ -9,6 +9,7 @@ from uchan.lib import roles, ArgumentError
 from uchan.lib.action_authorizer import ReportAction, PostAction
 from uchan.lib.database import get_db
 from uchan.lib.models import Report, BoardModerator, Thread, Board, Post
+from uchan.lib.models.moderator_log import ModeratorLogType
 from uchan.lib.tasks.report_task import ManageReportDetails
 from uchan.lib.utils import now
 
@@ -26,19 +27,27 @@ class ReportService:
         if not moderator:
             raise ArgumentError('Moderator not found')
 
+        report_id = report.id
         post = report.post
+        post_id = post.id
         board = post.thread.board
 
         if manage_report_details.mode == ManageReportDetails.CLEAR:
             g.action_authorizer.authorize_report_action(moderator, board, report, ReportAction.REPORT_CLEAR)
             self.delete_report(report)
+            g.moderator_service.log(ModeratorLogType.REPORT_CLEAR, moderator, board,
+                                    'Cleared report id {}'.format(report_id))
         elif manage_report_details.mode == ManageReportDetails.DELETE_POST:
             g.action_authorizer.authorize_post_action(moderator, PostAction.POST_DELETE, post)
             # Report gets deleted with a cascade
             g.posts_service.delete_post(post)
+            g.moderator_service.log(ModeratorLogType.REPORT_POST_DELETE, moderator, board,
+                                    'Post id {}'.format(post_id))
         elif manage_report_details.mode == ManageReportDetails.DELETE_FILE:
             g.action_authorizer.authorize_post_action(moderator, PostAction.POST_DELETE_FILE, post)
             g.posts_service.delete_file(post)
+            g.moderator_service.log(ModeratorLogType.REPORT_POST_DELETE_FILE, moderator, board,
+                                    'Post id {}'.format(post_id))
 
     def add_report(self, report):
         db = get_db()

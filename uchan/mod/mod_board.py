@@ -4,6 +4,7 @@ from uchan.lib import ArgumentError
 from uchan.lib import roles
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Board
+from uchan.lib.models.moderator_log import ModeratorLogType
 from uchan.lib.moderator_request import request_moderator
 from uchan.mod import mod
 from uchan.view import check_csrf_token, with_token
@@ -70,6 +71,28 @@ def mod_board(board_name):
             flash(str(e))
 
         return redirect(url_for('.mod_board', board_name=board_name))
+
+
+@mod.route('/mod_board/<board_name>/log')
+@mod.route('/mod_board/<board_name>/log/<int(max=14):page>')
+def mod_board_log(board_name, page=0):
+    per_page = 100
+    pages = 15
+
+    board = get_board_or_abort(board_name)
+
+    moderator = request_moderator()
+
+    logs = g.moderator_service.user_get_logs(moderator, board, page, per_page)
+
+    def get_log_type(typeid):
+        try:
+            return ModeratorLogType(typeid).name
+        except ValueError:
+            return ''
+
+    return render_template('mod_board_log.html', board=board, page=page, pages=pages,
+                           logs=logs, get_log_type=get_log_type)
 
 
 @mod.route('/mod_board/<board_name>/moderator_invite', methods=['POST'])
