@@ -19,10 +19,10 @@ class Moderator(ModelBase):
     __tablename__ = 'moderator'
 
     id = Column(Integer(), primary_key=True)
-    username = Column(String(), unique=True)
-    password = deferred(Column(LargeBinary()))
+    username = Column(String(), nullable=False, unique=True)
+    password = deferred(Column(LargeBinary(), nullable=False))
 
-    roles = Column(MutableList.as_mutable(ARRAY(String)), index=True)
+    roles = Column(MutableList.as_mutable(ARRAY(String)), nullable=False, index=True)
 
     # Bans given by this moderator
     given_bans = relationship('Ban', backref='moderator')
@@ -30,3 +30,5 @@ class Moderator(ModelBase):
     posts = relationship('Post', backref='moderator')
 
     boards = association_proxy('board_moderators', 'board', creator=create_board_for_proxy)
+
+    logs = relationship('ModeratorLog', backref='moderator')
