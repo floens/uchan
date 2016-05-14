@@ -580,13 +580,15 @@
         var link = container.querySelector('a');
         var image = container.querySelector('img');
         image.addEventListener('click', function(event) {
-            event.preventDefault();
+            if (event.button == 0) {
+                event.preventDefault();
 
-            var expanded = link.dataset.expanded == 'true';
-            if (expanded) {
-                this.close(container, link, image);
-            } else {
-                this.expand(container, link, image);
+                var expanded = link.dataset.expanded == 'true';
+                if (expanded) {
+                    this.close(container, link, image);
+                } else {
+                    this.expand(container, link, image);
+                }
             }
         }.bind(this));
     };
@@ -598,11 +600,11 @@
             link.dataset.thumbnailheight = image.height;
         }
 
-        var width = link.dataset.filewidth;
-        var height = link.dataset.fileheight;
+        var width = parseInt(link.dataset.filewidth);
+        var height = parseInt(link.dataset.fileheight);
 
         var bb = container.getBoundingClientRect();
-        var availableWidth = document.documentElement.clientWidth - bb.left;
+        var availableWidth = document.documentElement.clientWidth;
         var availableHeight = document.documentElement.clientHeight;
 
         if (width > availableWidth || height > availableHeight) {
@@ -611,8 +613,14 @@
             height *= ratio;
         }
 
+        var leftMargin = 0;
+        if (width > availableWidth - bb.left) {
+            leftMargin = -bb.left;
+        }
+
         link.dataset.expanded = true;
         image.src = link.href;
+        image.style.marginLeft = (leftMargin) + 'px';
         image.width = width;
         image.height = height;
     };
@@ -621,6 +629,7 @@
         image.src = link.dataset.thumbnail;
         image.width = link.dataset.thumbnailwidth;
         image.height = link.dataset.thumbnailheight;
+        image.style.marginLeft = 0;
         link.dataset.expanded = false;
     };
 
