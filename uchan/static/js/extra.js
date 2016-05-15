@@ -2,11 +2,20 @@ var uchan;
 (function (uchan) {
     var Draggable = (function () {
         function Draggable(element, handleElement, scrollWithPage) {
+            this.touchId = -1;
             this.bind = function () {
                 this.handleElement.addEventListener('mousedown', this.mouseDownBound);
+                this.handleElement.addEventListener('touchstart', this.touchStartBound);
+                this.handleElement.addEventListener('touchend', this.touchEndBound);
+                this.handleElement.addEventListener('touchcancel', this.touchCancelBound);
+                this.handleElement.addEventListener('touchmove', this.touchMoveBound);
             };
             this.unbind = function () {
                 this.handleElement.removeEventListener('mousedown', this.mouseDownBound);
+                this.handleElement.removeEventListener('touchstart', this.touchStartBound);
+                this.handleElement.removeEventListener('touchend', this.touchEndBound);
+                this.handleElement.removeEventListener('touchcancel', this.touchCancelBound);
+                this.handleElement.removeEventListener('touchmove', this.touchMoveBound);
             };
             this.setPosition = function (x, y) {
                 var minX = this.scrollX;
@@ -18,26 +27,57 @@ var uchan;
                 this.element.style.left = (x) + 'px';
                 this.element.style.top = (y) + 'px';
             };
+            this.touchStart = function (event) {
+                this.handleTouch(event, 'start');
+            };
+            this.touchEnd = function (event) {
+                this.handleTouch(event, 'end');
+            };
+            this.touchCancel = function (event) {
+                this.handleTouch(event, 'cancel');
+            };
+            this.touchMove = function (event) {
+                this.handleTouch(event, 'move');
+            };
+            this.handleTouch = function (event, type) {
+                var touches = event.touches;
+                if (this.touchId >= 0) {
+                    var has = false;
+                    for (var i = 0; i < touches.length; i++) {
+                        if (touches[i].identifier == this.touchId) {
+                            has = true;
+                        }
+                    }
+                    if (!has) {
+                        this.touchId = -1;
+                    }
+                }
+                else if (touches.length > 0) {
+                    this.touchId = touches[0].identifier;
+                }
+                for (var i = 0; i < touches.length; i++) {
+                    var touch = touches[i];
+                    if (touch.identifier == this.touchId) {
+                        if (type == 'start') {
+                            this.handleDownEvent(touch.clientX, touch.clientY);
+                        }
+                        else if (type == 'move') {
+                            event.preventDefault();
+                            this.handleMoveEvent(touch.clientX, touch.clientY);
+                        }
+                        else if (type == 'end' || type == 'cancel') {
+                        }
+                        break;
+                    }
+                }
+            };
             this.mouseDown = function (event) {
-                var bb = this.element.getBoundingClientRect();
-                this.startDragX = event.clientX - bb.left;
-                this.startDragY = event.clientY - bb.top;
-                this.width = bb.width;
-                this.height = bb.height;
+                this.handleDownEvent(event.clientX, event.clientY);
                 document.addEventListener('mousemove', this.mouseMoveBound);
                 document.addEventListener('mouseup', this.mouseUpBound);
             };
             this.mouseMove = function (event) {
-                if (this.scrollWithPage) {
-                    this.scrollX = window.pageXOffset;
-                    this.scrollY = window.pageYOffset;
-                }
-                else {
-                    this.scrollX = this.scrollY = 0;
-                }
-                var x = event.clientX - this.startDragX + this.scrollX;
-                var y = event.clientY - this.startDragY + this.scrollY;
-                this.setPosition(x, y);
+                this.handleMoveEvent(event.clientX, event.clientY);
             };
             this.mouseUp = function (event) {
                 document.removeEventListener('mousemove', this.mouseMoveBound);
@@ -55,8 +95,31 @@ var uchan;
             this.mouseDownBound = this.mouseDown.bind(this);
             this.mouseMoveBound = this.mouseMove.bind(this);
             this.mouseUpBound = this.mouseUp.bind(this);
+            this.touchStartBound = this.touchStart.bind(this);
+            this.touchEndBound = this.touchEnd.bind(this);
+            this.touchCancelBound = this.touchCancel.bind(this);
+            this.touchMoveBound = this.touchMove.bind(this);
         }
         ;
+        Draggable.prototype.handleDownEvent = function (clientX, clientY) {
+            var bb = this.element.getBoundingClientRect();
+            this.startDragX = clientX - bb.left;
+            this.startDragY = clientY - bb.top;
+            this.width = bb.width;
+            this.height = bb.height;
+        };
+        Draggable.prototype.handleMoveEvent = function (clientX, clientY) {
+            if (this.scrollWithPage) {
+                this.scrollX = window.pageXOffset;
+                this.scrollY = window.pageYOffset;
+            }
+            else {
+                this.scrollX = this.scrollY = 0;
+            }
+            var x = clientX - this.startDragX + this.scrollX;
+            var y = clientY - this.startDragY + this.scrollY;
+            this.setPosition(x, y);
+        };
         return Draggable;
     }());
     uchan.Draggable = Draggable;
