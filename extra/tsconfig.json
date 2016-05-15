@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "sourceMap": false,
+    "outFile": "../uchan/static/js/extra.js"
+  },
+  "files": [
+    "extra.ts"
+  ]
+}

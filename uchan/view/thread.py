@@ -16,10 +16,7 @@ def view_thread(board_name, thread_id):
     thread_cached = g.posts_cache.find_thread_cached(thread_id)
 
     if thread_cached and thread_cached.board.name == board_name:
-        page_details = get_page_details('thread', board_name)
-        page_details['threadId'] = thread_cached.id
-        if board_config_cached.board_config.file_posting_enabled:
-            page_details['filePostingEnabled'] = True
+        page_details = get_page_details('thread', board_name, board_config_cached, thread_id=thread_cached.id)
         if thread_cached.locked:
             page_details['locked'] = True
         if thread_cached.sticky:
