@@ -3,15 +3,15 @@ namespace uchan {
         constructor() {
         }
 
-        bindImages = function() {
-            var images = document.querySelectorAll('.post .file');
+        bindImages() {
+            var images = <NodeListOf<HTMLElement>>document.querySelectorAll('.post .file');
             for (var i = 0; i < images.length; i++) {
                 var image = images[i];
                 this.bindImage(image);
             }
-        };
+        }
 
-        bindImage = function(container:HTMLElement) {
+        bindImage(container:HTMLElement) {
             var link = <HTMLAnchorElement>container.querySelector('a');
             var image = <HTMLImageElement>container.querySelector('img');
             image.addEventListener('click', (event) => {
@@ -26,9 +26,9 @@ namespace uchan {
                     }
                 }
             });
-        };
+        }
 
-        expand = function(container:HTMLElement, link:HTMLAnchorElement, image:HTMLImageElement) {
+        expand(container:HTMLElement, link:HTMLAnchorElement, image:HTMLImageElement) {
             if (!link.dataset['thumbnail']) {
                 link.dataset['thumbnail'] = image.src;
                 link.dataset['thumbnailwidth'] = image.width.toString();
@@ -58,14 +58,14 @@ namespace uchan {
             image.style.marginLeft = (leftMargin) + 'px';
             image.width = width;
             image.height = height;
-        };
+        }
 
-        close = function(container:HTMLElement, link:HTMLAnchorElement, image:HTMLImageElement) {
+        close(container:HTMLElement, link:HTMLAnchorElement, image:HTMLImageElement) {
             image.src = link.dataset['thumbnail'];
             image.width = parseInt(link.dataset['thumbnailwidth']);
             image.height = parseInt(link.dataset['thumbnailheight']);
             image.style.marginLeft = '0';
             link.dataset['expanded'] = 'false';
-        };
+        }
     }
 }

@@ -19,29 +19,29 @@ namespace uchan {
             this.xhr = null;
 
             this.posts = [];
-        };
+        }
 
-        addUpdateListener = function(element:Element) {
+        addUpdateListener(element:Element) {
             element.addEventListener('click', this.onUpdateElementClickEvent.bind(this));
-        };
+        }
 
-        setStatus = function(status:string) {
+        setStatus(status:string) {
             this.statusElement.textContent = status;
-        };
+        }
 
-        onUpdateElementClickEvent = function(event:Event) {
+        onUpdateElementClickEvent(event:Event) {
             event.preventDefault();
             this.update();
-        };
+        }
 
-        update = function() {
+        update() {
             if (this.xhr == null) {
                 this.setStatus('Updating...');
                 this.xhr = xhrJsonGet('/api/thread/' + this.threadId, this.xhrDone.bind(this));
             }
-        };
+        }
 
-        xhrDone = function(error:Error, data:any) {
+        xhrDone(error:Error, data:any) {
             if (error) {
                 console.error('watcher error');
             } else {
@@ -70,9 +70,9 @@ namespace uchan {
 
             this.setStatus('');
             this.xhr = null;
-        };
+        }
 
-        buildPostElement = function(postData:any) {
+        buildPostElement(postData:any) {
             var postDiv = document.createElement('div');
             postDiv.className = 'post';
             postDiv.id = 'p#' + postData.refno;
@@ -118,22 +118,22 @@ namespace uchan {
 
             this.bindRefno(postDiv.querySelector('a.refno'));
             if (file) {
-                this.imageExpansion.bindImage(postDiv.querySelector('.file'));
+                this.imageExpansion.bindImage(<HTMLElement>postDiv.querySelector('.file'));
             }
 
             return postDiv;
-        };
+        }
 
-        getPostNameHtml = function(name:string) {
+        getPostNameHtml(name:string) {
             var html = escape(name);
             var i = html.indexOf('!');
             if (i >= 0) {
                 html = html.substring(0, i) + '<span class="trip">!' + html.substring(i + 1) + '</span>';
             }
             return html;
-        };
+        }
 
-        getPostFileSizeText = function(bytes:number) {
+        getPostFileSizeText(bytes:number) {
             var prefixes = ['kB', 'MB', 'GB', 'TB'];
             if (bytes == 1) {
                 return '1 Byte'
@@ -147,18 +147,18 @@ namespace uchan {
                     }
                 }
             }
-        };
+        }
 
-        getPostDateText = function(postDate:number) {
+        getPostDateText(postDate:number) {
             var date = new Date(postDate);
 
             // %Y-%m-%d %H:%M:%S
             var output = date.getUTCFullYear() + '-' + lpad(date.getUTCMonth() + 1, 2, '0') + '-' + lpad(date.getUTCDate(), 2, '0') + ' ';
             output += lpad(date.getUTCHours(), 2, '0') + ':' + lpad(date.getUTCMinutes(), 2, '0') + ':' + lpad(date.getUTCSeconds(), 2, '0');
             return output;
-        };
+        }
 
-        bindPosts = function(posts:any[]) {
+        bindPosts(posts:NodeListOf<HTMLElement>) {
             for (var i = 0; i < posts.length; i++) {
                 var postElement = posts[i];
 
@@ -173,9 +173,10 @@ namespace uchan {
                     file: null
                 };
 
-                postObj.id = parseInt(postElement.querySelector('input[type="checkbox"]').value);
+                var checkbox = <HTMLInputElement>postElement.querySelector('input[type="checkbox"]');
+                postObj.id = parseInt(checkbox.value);
                 postObj.refno = parseInt(postElement.id.substr(1));
-                postObj.date = parseInt(postElement.dataset.date);
+                postObj.date = parseInt(postElement.dataset['date']);
 
                 var textElement = postElement.querySelector('.styled-text');
                 if (textElement) {
@@ -206,34 +207,34 @@ namespace uchan {
                     }
                 }
 
-                var fileAnchorElement = postElement.querySelector('.file');
+                var fileAnchorElement = <HTMLElement>postElement.querySelector('.file');
                 if (fileAnchorElement) {
-                    var imgElement = fileAnchorElement.querySelector('img');
+                    var imgElement = <HTMLImageElement>fileAnchorElement.querySelector('img');
                     postObj.file = {
                         'location': fileAnchorElement.getAttribute('href'),
                         'thumbnailLocation': imgElement.src,
                         'thumbnailWidth': imgElement.width,
                         'thumbnailHeight': imgElement.height,
-                        'width': fileAnchorElement.dataset.filewidth,
-                        'height': fileAnchorElement.dataset.fileheight,
-                        'size': fileAnchorElement.dataset.filesize,
-                        'name': fileAnchorElement.dataset.filename
+                        'width': fileAnchorElement.dataset['filewidth'],
+                        'height': fileAnchorElement.dataset['fileheight'],
+                        'size': fileAnchorElement.dataset['filesize'],
+                        'name': fileAnchorElement.dataset['filename']
                     }
                 }
 
                 this.posts.push(postObj);
             }
-        };
+        }
 
-        bindRefnos = function() {
+        bindRefnos() {
             var refnos = document.querySelectorAll('a.refno');
             for (var i = 0; i < refnos.length; i++) {
                 var refno = refnos[i];
                 this.bindRefno(refno);
             }
-        };
+        }
 
-        bindRefno = function(refno) {
+        bindRefno(refno) {
             refno.addEventListener('click', function(event) {
                 event.preventDefault();
                 var refnoText = this.textContent;
@@ -241,6 +242,6 @@ namespace uchan {
                 context.qr.show();
                 context.qr.addRefno(refnoNumber);
             });
-        };
+        }
     }
 }

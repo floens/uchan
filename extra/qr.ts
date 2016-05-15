@@ -12,14 +12,14 @@ namespace uchan {
 
         draggable:Draggable;
 
-        formElement:Element;
-        closeElement:Element;
-        nameElement:Element;
-        passwordElement:Element;
-        commentElement:Element;
+        formElement:HTMLFormElement;
+        closeElement:HTMLElement;
+        nameElement:HTMLInputElement;
+        passwordElement:HTMLInputElement;
+        commentElement:HTMLInputElement;
         fileElement:HTMLInputElement;
-        submitElement:Element;
-        errorMessageElement:Element;
+        submitElement:HTMLInputElement;
+        errorMessageElement:HTMLElement;
         stateListeners:any[];
         showing:boolean = false;
         submitXhr:XMLHttpRequest = null;
@@ -53,17 +53,17 @@ namespace uchan {
             this.draggable = new Draggable(this.element, this.element.querySelector('.handle'), false);
             this.draggable.bind();
 
-            this.formElement = this.element.querySelector('.qr-form');
-            this.closeElement = this.element.querySelector('.handle-close');
+            this.formElement = <HTMLFormElement>this.element.querySelector('.qr-form');
+            this.closeElement = <HTMLElement>this.element.querySelector('.handle-close');
             this.closeElement.addEventListener('click', this.onCloseClickedEvent.bind(this));
 
-            this.nameElement = this.element.querySelector('input[name="name"]');
-            this.passwordElement = this.element.querySelector('input[name="password"]');
-            this.commentElement = this.element.querySelector('textarea[name="comment"]');
+            this.nameElement = <HTMLInputElement>this.element.querySelector('input[name="name"]');
+            this.passwordElement = <HTMLInputElement>this.element.querySelector('input[name="password"]');
+            this.commentElement = <HTMLInputElement>this.element.querySelector('textarea[name="comment"]');
             this.fileElement = <HTMLInputElement>this.element.querySelector('input[name="file"]');
             this.fileElement.style.display = this.filePostingEnabled ? 'inline-block' : 'none';
-            this.submitElement = this.element.querySelector('input[type="submit"]');
-            this.errorMessageElement = this.element.querySelector('.error-message');
+            this.submitElement = <HTMLInputElement>this.element.querySelector('input[type="submit"]');
+            this.errorMessageElement = <HTMLElement>this.element.querySelector('.error-message');
 
             this.commentElement.addEventListener('keydown', this.onCommentKeyDownEvent.bind(this));
             this.submitElement.addEventListener('click', this.onSubmitEvent.bind(this));
@@ -71,53 +71,53 @@ namespace uchan {
             this.stateListeners = [];
         }
 
-        insertFormElement = function(element) {
+        insertFormElement(element) {
             this.formElement.insertBefore(element, this.commentElement.nextSibling);
-        };
+        }
 
-        addStateChangedListener = function(listener) {
+        addStateChangedListener(listener) {
             this.stateListeners.push(listener);
-        };
+        }
 
-        removeStateChangedListener = function(listener) {
+        removeStateChangedListener(listener) {
             var index = this.stateListeners.indexOf(listener);
             if (index >= 0) {
                 this.stateListeners.splice(index, 1);
             }
-        };
+        }
 
-        callStateChangedListeners = function(what) {
+        callStateChangedListeners(what) {
             for (var i = 0; i < this.stateListeners.length; i++) {
                 this.stateListeners[i](this, what);
             }
-        };
+        }
 
-        clear = function() {
+        clear() {
             this.formElement.reset();
             this.callStateChangedListeners('clear');
-        };
+        }
 
-        addShowClickListener = function(element) {
+        addShowClickListener(element) {
             element.addEventListener('click', this.onOpenEvent.bind(this));
-        };
+        }
 
-        onCommentKeyDownEvent = function(event) {
+        onCommentKeyDownEvent(event) {
             if (event.keyCode == 27) {
                 this.hide();
             }
-        };
+        }
 
-        onOpenEvent = function(event) {
+        onOpenEvent(event) {
             event.preventDefault();
             this.show();
-        };
+        }
 
-        onCloseClickedEvent = function(event) {
+        onCloseClickedEvent(event) {
             event.preventDefault();
             this.hide();
-        };
+        }
 
-        show = function() {
+        show() {
             if (!this.showing) {
                 this.showing = true;
 
@@ -131,9 +131,9 @@ namespace uchan {
 
                 this.callStateChangedListeners('show');
             }
-        };
+        }
 
-        hide = function() {
+        hide() {
             if (this.showing) {
                 this.showing = false;
 
@@ -141,9 +141,9 @@ namespace uchan {
 
                 this.callStateChangedListeners('hide');
             }
-        };
+        }
 
-        addRefno = function(refno) {
+        addRefno(refno) {
             var toInsert = '>>' + refno + '\n';
 
             var position = this.commentElement.selectionStart;
@@ -152,15 +152,15 @@ namespace uchan {
             this.commentElement.selectionStart = this.commentElement.selectionEnd = position + toInsert.length;
 
             this.commentElement.focus();
-        };
+        }
 
-        onSubmitEvent = function(event) {
+        onSubmitEvent(event) {
             event.preventDefault();
 
             this.submit();
-        };
+        }
 
-        submit = function() {
+        submit() {
             if (this.submitXhr == null) {
                 var xhr = this.submitXhr = new XMLHttpRequest();
                 xhr.open('POST', this.postEndpoint);
@@ -176,13 +176,13 @@ namespace uchan {
 
                 this.callStateChangedListeners('submitSent');
             }
-        };
+        }
 
-        submitXhrOnProgressEvent = function(event) {
+        submitXhrOnProgressEvent(event) {
             this.submitElement.value = Math.round((event.loaded / event.total) * 100) + '%';
-        };
+        }
 
-        submitXhrOnErrorEvent = function(event) {
+        submitXhrOnErrorEvent(event) {
             var responseData = null;
             try {
                 responseData = JSON.parse(this.submitXhr.responseText);
@@ -204,9 +204,9 @@ namespace uchan {
             this.callStateChangedListeners('submitError');
 
             this.resetAfterSubmit();
-        };
+        }
 
-        submitXhrOnLoadEvent = function(event) {
+        submitXhrOnLoadEvent(event) {
             if (this.submitXhr.status == 200) {
                 this.showErrorMessage(false);
 
@@ -224,19 +224,19 @@ namespace uchan {
             }
 
             this.resetAfterSubmit();
-        };
+        }
 
-        resetAfterSubmit = function() {
+        resetAfterSubmit() {
             this.submitElement.disabled = false;
             this.submitElement.value = 'Submit';
             this.submitXhr = null;
-        };
+        }
 
-        showErrorMessage = function(show, message) {
+        showErrorMessage(show, message = null) {
             this.errorMessageElement.style.display = show ? 'inline-block' : 'none';
             if (show) {
                 this.errorMessageElement.innerHTML = message;
             }
-        };
+        }
     }
 }

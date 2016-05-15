@@ -96,7 +96,7 @@ module uchan {
                 var postsElement = document.querySelector('.posts');
                 var watchStatusElement = replyButtons.querySelector('#watch-status');
                 var watcher = new Watcher(context.threadId, postsElement, watchStatusElement, imageExpansion);
-                var posts = postsElement.querySelectorAll('.post');
+                var posts = <NodeListOf<HTMLElement>>postsElement.querySelectorAll('.post');
                 watcher.bindPosts(posts);
                 watcher.update();
 
