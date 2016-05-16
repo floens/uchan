@@ -1,14 +1,27 @@
 /// <reference path="imageexpansion.ts" />
+/// <reference path="pagevisibility.ts" />
 
 namespace uchan {
     export class Watcher {
+        delays = [10, 15, 20, 30, 60, 90, 120, 180, 240, 300];
+        endPoint = '/api/thread/';
+
         threadId:number;
         postsElement:HTMLElement;
         statusElement:HTMLElement;
         imageExpansion:ImageExpansion;
 
-        xhr:XMLHttpRequest;
-        posts:any[];
+        xhr:XMLHttpRequest = null;
+        error = false;
+        posts:any[] = [];
+
+        timeoutId = -1;
+        statusTimeoutId = -1;
+        currentDelay = 0;
+        targetTime = 0;
+
+        documentTitle:string;
+        totalNewPosts = 0;
 
         constructor(threadId, postsElement, statusElement, imageExpansion) {
             this.threadId = threadId;
@@ -16,35 +29,127 @@ namespace uchan {
             this.statusElement = statusElement;
             this.imageExpansion = imageExpansion;
 
-            this.xhr = null;
+            this.documentTitle = document.title;
 
-            this.posts = [];
+            document.addEventListener('scroll', (e) => this.onScroll(e), false);
+
+            PageVisibility.addListener((visible) => this.pageVisibilityChanged(visible));
+            this.updateTimerState(this.delays[0] * 1000);
+            this.updateStatus();
         }
 
-        addUpdateListener(element:Element) {
-            element.addEventListener('click', this.onUpdateElementClickEvent.bind(this));
+        updateTimerState(delay:number) {
+            if (this.timeoutId >= 0) {
+                clearTimeout(this.timeoutId);
+            }
+
+            this.timeoutId = setTimeout(() => {
+                this.timeoutId = -1;
+                this.timerFired();
+            }, delay);
+            this.targetTime = Date.now() + delay;
         }
 
-        setStatus(status:string) {
-            this.statusElement.textContent = status;
+        timerFired() {
+            console.log('timer fired');
+            this.update();
+            this.updateStatus();
         }
 
-        onUpdateElementClickEvent(event:Event) {
-            event.preventDefault();
+        forceUpdate() {
+            this.currentDelay = 0;
             this.update();
         }
 
         update() {
             if (this.xhr == null) {
-                this.setStatus('Updating...');
-                this.xhr = xhrJsonGet('/api/thread/' + this.threadId, this.xhrDone.bind(this));
+                this.xhr = xhrJsonGet(this.endPoint + this.threadId, this.xhrDone.bind(this));
+                this.updateStatus();
+            }
+        }
+
+        resetTimer(newPosts:number) {
+            this.totalNewPosts += newPosts;
+            var delay;
+            if (newPosts == 0 && this.currentDelay < this.delays.length - 1) {
+                delay = this.delays[this.currentDelay];
+                this.currentDelay++;
+            } else {
+                delay = this.delays[0];
+                this.currentDelay = 0;
+            }
+
+            if (!PageVisibility.isVisible()) {
+                delay = Math.max(60, delay);
+            }
+            this.updateTimerState(delay * 1000);
+        }
+
+        pageVisibilityChanged(visible:boolean) {
+            if (visible) {
+                this.updateStatus();
+            }
+        }
+
+        afterPost() {
+            setTimeout(() => this.forceUpdate(), 500);
+        }
+
+        addUpdateListener(element:Element) {
+            element.addEventListener('click', (event:Event) => {
+                event.preventDefault();
+                this.forceUpdate();
+            });
+        }
+
+        onScroll(event:Event) {
+            if (window.innerHeight + window.pageYOffset + 1 > document.documentElement.scrollHeight) {
+                this.totalNewPosts = 0;
+                this.updateStatus();
+            }
+        }
+
+        updateStatus() {
+            var invalidate = false;
+
+            var status = '';
+            if (this.error) {
+                status = 'Error';
+            } else if (this.xhr != null) {
+                status = 'Updating...'
+            } else if (this.totalNewPosts > 0) {
+                status = this.totalNewPosts + ' new post' + (this.totalNewPosts != 1 ? 's' : '');
+            } else {
+                status = Math.ceil((this.targetTime - Date.now()) / 1000).toString();
+                invalidate = true;
+            }
+            this.statusElement.textContent = status;
+
+            if (this.totalNewPosts > 0) {
+                document.title = '(' + this.totalNewPosts + ') ' + this.documentTitle;
+            } else {
+                document.title = this.documentTitle;
+            }
+
+            if (PageVisibility.isVisible() && invalidate) {
+                if (this.statusTimeoutId >= 0) {
+                    clearTimeout(this.statusTimeoutId);
+                }
+
+                this.statusTimeoutId = setTimeout(() => {
+                    console.log('update status timer fired');
+                    this.updateStatus();
+                }, 1000);
             }
         }
 
         xhrDone(error:Error, data:any) {
             if (error) {
                 console.error('watcher error');
+                this.error = true;
             } else {
+                this.error = false;
+                var previousLength = this.posts.length;
                 var thread = data.thread;
                 var remotePosts = thread.posts;
                 for (var i = 0; i < remotePosts.length; i++) {
@@ -66,10 +171,12 @@ namespace uchan {
                         this.postsElement.appendChild(postElement);
                     }
                 }
+
+                this.resetTimer(this.posts.length - previousLength);
             }
 
-            this.setStatus('');
             this.xhr = null;
+            this.updateStatus();
         }
 
         buildPostElement(postData:any) {

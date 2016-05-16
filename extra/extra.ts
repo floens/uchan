@@ -86,8 +86,10 @@ module uchan {
                     '<span id="watch-status"></span>';
             }
 
-            var imageExpansion = new ImageExpansion();
-            imageExpansion.bindImages();
+            if (context.mode == 'board' || context.mode == 'thread') {
+                var imageExpansion = new ImageExpansion();
+                imageExpansion.bindImages();
+            }
 
             if (context.mode == 'thread' && !context.locked) {
                 var postForm = document.querySelector('.post-form');
@@ -98,7 +100,6 @@ module uchan {
                 var watcher = new Watcher(context.threadId, postsElement, watchStatusElement, imageExpansion);
                 var posts = <NodeListOf<HTMLElement>>postsElement.querySelectorAll('.post');
                 watcher.bindPosts(posts);
-                watcher.update();
 
                 context.qr = new QR(watcher);
                 context.qr.addShowClickListener(replyButtons.querySelector('#open-qr'));

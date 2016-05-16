@@ -30,5 +30,6 @@
     <script>
         window.pageDetails = {{ page_details|tojson|safe }};
     </script>
+    <script src="{{ url_for('static', filename='js/extra.js' if config.DEBUG else 'js/extra.10.js') }}"></script>
     {{ super() }}
 {% endblock %}

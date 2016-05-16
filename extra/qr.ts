@@ -3,7 +3,7 @@
 
 namespace uchan {
     export class QR {
-        watcher;
+        watcher: Watcher;
 
         postEndpoint:string;
         filePostingEnabled:boolean;
@@ -215,10 +215,7 @@ namespace uchan {
                 this.clear();
                 this.hide();
 
-                var self = this;
-                setTimeout(function() {
-                    self.watcher.update();
-                }, 500);
+                this.watcher.afterPost();
             } else {
                 this.submitXhrOnErrorEvent(event);
             }

@@ -278,10 +278,7 @@ var uchan;
                 this.callStateChangedListeners('submitDone');
                 this.clear();
                 this.hide();
-                var self = this;
-                setTimeout(function () {
-                    self.watcher.update();
-                }, 500);
+                this.watcher.afterPost();
             }
             else {
                 this.submitXhrOnErrorEvent(event);
@@ -370,39 +367,172 @@ var uchan;
     }());
     uchan.ImageExpansion = ImageExpansion;
 })(uchan || (uchan = {}));
+var uchan;
+(function (uchan) {
+    var PageVisibility = (function () {
+        function PageVisibility() {
+        }
+        PageVisibility.isVisible = function () {
+            return !document.hidden;
+        };
+        PageVisibility.addListener = function (listener) {
+            var _this = this;
+            if (!this.eventListenerRegistered) {
+                this.eventListenerRegistered = true;
+                document.addEventListener('visibilitychange', function (e) {
+                    var visible = _this.isVisible();
+                    for (var i = 0; i < _this.listeners.length; i++) {
+                        _this.listeners[i](visible);
+                    }
+                });
+            }
+            this.listeners.push(listener);
+        };
+        PageVisibility.removeListener = function (listener) {
+            var index = this.listeners.indexOf(listener);
+            if (index >= 0) {
+                PageVisibility.listeners.splice(index, 1);
+            }
+        };
+        PageVisibility.eventListenerRegistered = false;
+        PageVisibility.listeners = [];
+        return PageVisibility;
+    }());
+    uchan.PageVisibility = PageVisibility;
+})(uchan || (uchan = {}));
 /// <reference path="imageexpansion.ts" />
+/// <reference path="pagevisibility.ts" />
 var uchan;
 (function (uchan) {
     var Watcher = (function () {
         function Watcher(threadId, postsElement, statusElement, imageExpansion) {
+            var _this = this;
+            this.delays = [10, 15, 20, 30, 60, 90, 120, 180, 240, 300];
+            this.endPoint = '/api/thread/';
+            this.xhr = null;
+            this.error = false;
+            this.posts = [];
+            this.timeoutId = -1;
+            this.statusTimeoutId = -1;
+            this.currentDelay = 0;
+            this.targetTime = 0;
+            this.totalNewPosts = 0;
             this.threadId = threadId;
             this.postsElement = postsElement;
             this.statusElement = statusElement;
             this.imageExpansion = imageExpansion;
-            this.xhr = null;
-            this.posts = [];
+            this.documentTitle = document.title;
+            document.addEventListener('scroll', function (e) { return _this.onScroll(e); }, false);
+            uchan.PageVisibility.addListener(function (visible) { return _this.pageVisibilityChanged(visible); });
+            this.updateTimerState(this.delays[0] * 1000);
+            this.updateStatus();
         }
-        Watcher.prototype.addUpdateListener = function (element) {
-            element.addEventListener('click', this.onUpdateElementClickEvent.bind(this));
+        Watcher.prototype.updateTimerState = function (delay) {
+            var _this = this;
+            if (this.timeoutId >= 0) {
+                clearTimeout(this.timeoutId);
+            }
+            this.timeoutId = setTimeout(function () {
+                _this.timeoutId = -1;
+                _this.timerFired();
+            }, delay);
+            this.targetTime = Date.now() + delay;
         };
-        Watcher.prototype.setStatus = function (status) {
-            this.statusElement.textContent = status;
+        Watcher.prototype.timerFired = function () {
+            console.log('timer fired');
+            this.update();
+            this.updateStatus();
         };
-        Watcher.prototype.onUpdateElementClickEvent = function (event) {
-            event.preventDefault();
+        Watcher.prototype.forceUpdate = function () {
+            this.currentDelay = 0;
             this.update();
         };
         Watcher.prototype.update = function () {
             if (this.xhr == null) {
-                this.setStatus('Updating...');
-                this.xhr = uchan.xhrJsonGet('/api/thread/' + this.threadId, this.xhrDone.bind(this));
+                this.xhr = uchan.xhrJsonGet(this.endPoint + this.threadId, this.xhrDone.bind(this));
+                this.updateStatus();
+            }
+        };
+        Watcher.prototype.resetTimer = function (newPosts) {
+            this.totalNewPosts += newPosts;
+            var delay;
+            if (newPosts == 0 && this.currentDelay < this.delays.length - 1) {
+                delay = this.delays[this.currentDelay];
+                this.currentDelay++;
+            }
+            else {
+                delay = this.delays[0];
+                this.currentDelay = 0;
+            }
+            if (!uchan.PageVisibility.isVisible()) {
+                delay = Math.max(60, delay);
+            }
+            this.updateTimerState(delay * 1000);
+        };
+        Watcher.prototype.pageVisibilityChanged = function (visible) {
+            if (visible) {
+                this.updateStatus();
+            }
+        };
+        Watcher.prototype.afterPost = function () {
+            var _this = this;
+            setTimeout(function () { return _this.forceUpdate(); }, 500);
+        };
+        Watcher.prototype.addUpdateListener = function (element) {
+            var _this = this;
+            element.addEventListener('click', function (event) {
+                event.preventDefault();
+                _this.forceUpdate();
+            });
+        };
+        Watcher.prototype.onScroll = function (event) {
+            if (window.innerHeight + window.pageYOffset + 1 > document.documentElement.scrollHeight) {
+                this.totalNewPosts = 0;
+                this.updateStatus();
+            }
+        };
+        Watcher.prototype.updateStatus = function () {
+            var _this = this;
+            var invalidate = false;
+            var status = '';
+            if (this.error) {
+                status = 'Error';
+            }
+            else if (this.xhr != null) {
+                status = 'Updating...';
+            }
+            else if (this.totalNewPosts > 0) {
+                status = this.totalNewPosts + ' new post' + (this.totalNewPosts != 1 ? 's' : '');
+            }
+            else {
+                status = Math.ceil((this.targetTime - Date.now()) / 1000).toString();
+                invalidate = true;
+            }
+            this.statusElement.textContent = status;
+            if (this.totalNewPosts > 0) {
+                document.title = '(' + this.totalNewPosts + ') ' + this.documentTitle;
+            }
+            else {
+                document.title = this.documentTitle;
+            }
+            if (uchan.PageVisibility.isVisible() && invalidate) {
+                if (this.statusTimeoutId >= 0) {
+                    clearTimeout(this.statusTimeoutId);
+                }
+                this.statusTimeoutId = setTimeout(function () {
+                    console.log('update status timer fired');
+                    _this.updateStatus();
+                }, 1000);
             }
         };
         Watcher.prototype.xhrDone = function (error, data) {
             if (error) {
                 console.error('watcher error');
+                this.error = true;
             }
             else {
+                this.error = false;
+                var previousLength = this.posts.length;
                 var thread = data.thread;
                 var remotePosts = thread.posts;
                 for (var i = 0; i < remotePosts.length; i++) {
@@ -422,9 +552,10 @@ var uchan;
                         this.postsElement.appendChild(postElement);
                     }
                 }
+                this.resetTimer(this.posts.length - previousLength);
             }
-            this.setStatus('');
             this.xhr = null;
+            this.updateStatus();
         };
         Watcher.prototype.buildPostElement = function (postData) {
             var postDiv = document.createElement('div');
@@ -658,8 +789,10 @@ var uchan;
                 replyButtons.innerHTML += '[<a id="open-qr" href="#">Reply</a>] [<a id="watch-update" href="#">Update</a>] ' +
                     '<span id="watch-status"></span>';
             }
-            var imageExpansion = new uchan.ImageExpansion();
-            imageExpansion.bindImages();
+            if (uchan.context.mode == 'board' || uchan.context.mode == 'thread') {
+                var imageExpansion = new uchan.ImageExpansion();
+                imageExpansion.bindImages();
+            }
             if (uchan.context.mode == 'thread' && !uchan.context.locked) {
                 var postForm = document.querySelector('.post-form');
                 //postForm.style.display = 'none';
@@ -668,7 +801,6 @@ var uchan;
                 var watcher = new uchan.Watcher(uchan.context.threadId, postsElement, watchStatusElement, imageExpansion);
                 var posts = postsElement.querySelectorAll('.post');
                 watcher.bindPosts(posts);
-                watcher.update();
                 uchan.context.qr = new uchan.QR(watcher);
                 uchan.context.qr.addShowClickListener(replyButtons.querySelector('#open-qr'));
                 watcher.addUpdateListener(replyButtons.querySelector('#watch-update'));
