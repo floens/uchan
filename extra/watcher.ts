@@ -51,7 +51,7 @@ namespace uchan {
         }
 
         timerFired() {
-            console.log('timer fired');
+            // console.log('timer fired');
             this.update();
             this.updateStatus();
         }
@@ -137,7 +137,7 @@ namespace uchan {
                 }
 
                 this.statusTimeoutId = setTimeout(() => {
-                    console.log('update status timer fired');
+                    // console.log('update status timer fired');
                     this.updateStatus();
                 }, 1000);
             }

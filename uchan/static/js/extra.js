@@ -439,7 +439,7 @@ var uchan;
             this.targetTime = Date.now() + delay;
         };
         Watcher.prototype.timerFired = function () {
-            console.log('timer fired');
+            // console.log('timer fired');
             this.update();
             this.updateStatus();
         };
@@ -520,7 +520,7 @@ var uchan;
                     clearTimeout(this.statusTimeoutId);
                 }
                 this.statusTimeoutId = setTimeout(function () {
-                    console.log('update status timer fired');
+                    // console.log('update status timer fired');
                     _this.updateStatus();
                 }, 1000);
             }
