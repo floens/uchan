@@ -82,6 +82,8 @@ def mod_page_update(page_id):
     page.title = request.form['page_title']
     page.content = request.form['page_content']
     page.order = request.form.get('page_order', type=int)
+    if page.order is None:
+        page.order = 0
 
     try:
         g.page_service.update_page(page)
