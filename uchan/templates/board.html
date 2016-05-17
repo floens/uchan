@@ -36,8 +36,3 @@
     {{ board_pager_widget.render(board.name, board_config.pages, page_index) }}
     <hr class="content-divider">
 {% endblock %}
-
-{% block javascripts %}
-    {{ super() }}
-    <script src="{{ url_for('static', filename='js/extra.js' if config.DEBUG else 'js/extra.9.js') }}"></script>
-{% endblock %}
