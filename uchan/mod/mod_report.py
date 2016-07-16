@@ -80,7 +80,7 @@ def mod_report_manage():
         if not report:
             abort(400)
         post_id = report.post_id
-        return redirect(url_for('.mod_bans', post_id=post_id))
+        return redirect(url_for('.mod_bans', for_post=post_id))
 
     if mode_string == 'clear':
         details.mode = ManageReportDetails.CLEAR

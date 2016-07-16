@@ -11,17 +11,16 @@ from uchan.view import with_token
 
 
 @mod.route('/mod_ban')
-@mod.route('/mod_ban/<int:post_id>')
 @mod_role_restrict(roles.ROLE_ADMIN)
-def mod_bans(post_id=None):
+def mod_bans():
     bans = g.ban_service.get_all_bans()
 
     ban_ip4 = ''
+    post_id = request.args.get('for_post', None)
     if post_id:
         post = g.posts_service.find_post(post_id)
-        if not post:
-            abort(400)
-        ban_ip4 = ip4_to_str(post.ip4)
+        if post:
+            ban_ip4 = ip4_to_str(post.ip4)
 
     n = now()
     return render_template('mod_bans.html', ban_ip4=ban_ip4, bans=bans, ip4_to_str=ip4_to_str, now=n)
