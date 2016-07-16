@@ -90,7 +90,6 @@ class CustomSessionInterface(SessionInterface):
                 if session.new:
                     self.store_cookie(app, session, response)
 
-    # Should be handled natively by flask in the future with the SESSION_REFRESH_EACH_REQUEST setting
     def should_set_cookie(self, app, session):
         return session.modified
 
