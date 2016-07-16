@@ -3,6 +3,7 @@ from flask import render_template, request
 from uchan import app
 from uchan import g
 from uchan.lib.proxy_request import get_request_ip4
+from uchan.lib.utils import now
 
 
 @app.route('/banned/')
@@ -11,4 +12,4 @@ def banned():
 
     bans = g.ban_service.get_request_bans()
 
-    return render_template('banned.html', is_banned=len(bans) > 0, bans=bans)
+    return render_template('banned.html', is_banned=len(bans) > 0, bans=bans, now=now)

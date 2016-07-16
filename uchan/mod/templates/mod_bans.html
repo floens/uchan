@@ -13,15 +13,23 @@
             <label>Ban ip4
                 <small>ex. 10.0.0.1</small>
                 <br>
-                <input type="text" name="ban_ip4">
+                <input type="text" name="ban_ip4" value="{{ ban_ip4 }}">
             </label>
             <br>
             <label>Ban ip4 end
                 <small>optional</small>
                 <br>
-                <i>If specified, the ip addresses from start to finish will be banned.</i>
+                <i>If specified, the ip range from start to end will be banned.</i>
                 <br>
                 <input type="text" name="ban_ip4_end">
+            </label>
+            <br>
+            <label>Board
+                <small>optional</small>
+                <br>
+                <i>If specified, the ban will be scoped to the board.</i>
+                <br>
+                <input type="text" name="board">
             </label>
             <br>
             <label>Ban duration
@@ -50,6 +58,7 @@
                 <th>to ip</th>
                 <th>from</th>
                 <th>until</th>
+                <th>board</th>
                 <th>reason</th>
                 <th></th>
             </tr>
@@ -72,9 +81,10 @@
                             Does not expire
                         {% endif %}
                     </td>
+                    <td>{{ ban.board or '' }}</td>
                     <td>{{ ban.reason }}</td>
                     <td>
-                        <button name="ban_id" value="{{ ban.id }}">Delete</button>
+                        <button class="confirm-button" name="ban_id" value="{{ ban.id }}">Lift ban</button>
                     </td>
                 </tr>
             {% endfor %}
@@ -82,4 +92,24 @@
         </table>
     </form>
 
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        (function () {
+            var confirmButtons = document.querySelectorAll('.confirm-button');
+            for (var i = 0; i < confirmButtons.length; i++) {
+                (function () {
+                    var b = confirmButtons[i];
+                    b.onclick = function (e) {
+                        if (b.textContent != 'Confirm') {
+                            b.textContent = 'Confirm';
+                            e.preventDefault();
+                        }
+                    }
+                })();
+            }
+        })();
+    </script>
+    {{ super() }}
 {% endblock %}

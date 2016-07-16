@@ -19,7 +19,8 @@
     {{ pager_widget.render(url_for('.mod_report'), pages, page, pager_suffix) }}
 
     {% for report in reports %}
-        {{ post_report_widget.render(report, report.post_cache, report.post.thread, view_ips=view_ips, ip4_to_str=ip4_to_str) }}
+        {{ post_report_widget.render(report, report.post_cache, report.post.thread, view_ips=view_ips,
+                                     ip4_to_str=ip4_to_str, show_ban_button=show_ban_button) }}
     {% endfor %}
 
     <div class="clear"></div>

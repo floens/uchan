@@ -11,12 +11,20 @@ from uchan.view import with_token
 
 
 @mod.route('/mod_ban')
+@mod.route('/mod_ban/<int:post_id>')
 @mod_role_restrict(roles.ROLE_ADMIN)
-def mod_bans():
+def mod_bans(post_id=None):
     bans = g.ban_service.get_all_bans()
 
+    ban_ip4 = ''
+    if post_id:
+        post = g.posts_service.find_post(post_id)
+        if not post:
+            abort(400)
+        ban_ip4 = ip4_to_str(post.ip4)
+
     n = now()
-    return render_template('mod_bans.html', bans=bans, ip4_to_str=ip4_to_str, now=n)
+    return render_template('mod_bans.html', ban_ip4=ban_ip4, bans=bans, ip4_to_str=ip4_to_str, now=n)
 
 
 @mod.route('/mod_ban/add', methods=['POST'])
@@ -31,6 +39,12 @@ def mod_ban_add():
     if not ip4_end_raw:
         ip4_end_raw = None
     if ip4_end_raw is not None and (len(ip4_end_raw) == 0 or len(ip4_end_raw) > 25):
+        abort(400)
+
+    board = request.form.get('board', None)
+    if not board:
+        board = None
+    if board is not None and not g.board_service.check_board_name_validity(board):
         abort(400)
 
     ban_length_hours = request.form.get('ban_length', type=int)
@@ -53,13 +67,15 @@ def mod_ban_add():
     if ip4_end is not None:
         ban.ip4_end = ip4_end
     ban.reason = reason
+    ban.board = board
     ban.length = ban_length_hours * 60 * 60 * 1000
 
     try:
         g.ban_service.add_ban(ban)
         flash('Ban added')
-        mod_log('ban add {} from {} to {} for {} hours reason {}'.format(
-                ban.id, ip4_to_str(ip4), ip4_to_str(ip4_end) if ip4_end is not None else '-', ban_length_hours, reason))
+        mod_log('ban add {} from {} to {}{} for {} hours reason {}'.format(
+            ban.id, ip4_to_str(ip4), ip4_to_str(ip4_end) if ip4_end is not None else '-',
+            ' on {}'.format(board) if board else '', ban_length_hours, reason))
     except ArgumentError as e:
         flash(e.message)
 

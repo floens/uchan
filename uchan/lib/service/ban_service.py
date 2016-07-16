@@ -1,6 +1,7 @@
 from sqlalchemy import desc
 from sqlalchemy.orm.exc import NoResultFound
 
+from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib.database import get_db
 from uchan.lib.models import Ban, Post
@@ -19,8 +20,8 @@ class BanService:
     def __init__(self):
         pass
 
-    def is_request_banned(self, ip4, board=None):
-        bans = self.find_bans(ip4)
+    def is_request_banned(self, ip4, board):
+        bans = self.find_bans(ip4, board)
         return len(bans) > 0
 
     def is_request_suspended(self, ip4, board, thread):
@@ -49,27 +50,34 @@ class BanService:
         ip4 = get_request_ip4()
         return self.find_bans(ip4)
 
-    def find_bans(self, ip4):
+    def find_bans(self, ip4, board=None):
         db = get_db()
-        bans = db.query(Ban).filter((Ban.ip4 == ip4) | ((Ban.ip4 <= ip4) & (Ban.ip4_end >= ip4))).all()
+        bans_query = db.query(Ban).filter((Ban.ip4 == ip4) | ((Ban.ip4 <= ip4) & (Ban.ip4_end >= ip4)))
+        if board:
+            bans_query = bans_query.filter((Ban.board == None) | (Ban.board == board.name))
+        bans = bans_query.all()
         applied_bans = []
         for ban in bans:
-            if not self.ban_valid(ban):
-                self.delete_ban(ban)
-            elif self.ban_applies(ban, ip4):
+            if self.ban_applies(ban, ip4, board):
                 applied_bans.append(ban)
+            if self.ban_expired(ban):
+                # Delete the ban after the user has seen it when it expired
+                self.delete_ban(ban)
         return applied_bans
 
-    def ban_applies(self, ban, ip4):
+    def ban_applies(self, ban, ip4, board):
+        if ban.board and board and ban.board != board.name:
+            return False
+
         if ban.ip4_end is not None:
             return ban.ip4 < ip4 < ban.ip4_end
         else:
             return ban.ip4 == ip4
 
-    def ban_valid(self, ban):
+    def ban_expired(self, ban):
         if ban.length == 0:
-            return True
-        return now() <= ban.date + ban.length
+            return False
+        return now() > ban.date + ban.length
 
     def add_ban(self, ban):
         if ban.length > self.MAX_BAN_TIME:
@@ -78,6 +86,11 @@ class BanService:
         if ban.ip4_end is not None:
             if ban.ip4_end <= ban.ip4:
                 raise ArgumentError('ip4 end must be bigger than ip4')
+
+        if ban.board is not None:
+            board = g.board_service.find_board(ban.board)
+            if not board:
+                raise ArgumentError('Board not found')
 
         if ban.reason and len(ban.reason) > self.MAX_REASON_LENGTH:
             raise ArgumentError('Ban reason text too long')

@@ -54,13 +54,14 @@ def mod_report(page=0, boards=None):
         report.post_cache = PostCacheProxy(report.post, parse_text(report.post.text))
 
     view_ips = is_admin
+    show_ban_button = is_admin
 
     moderator_boards = moderator.boards if not is_admin else g.board_service.get_all_boards()
 
     pager_suffix = '/' + ','.join(boards_set) if boards_set else ''
     return render_template('mod_report.html', page=page, pages=pages, pager_suffix=pager_suffix,
                            moderator=moderator, reports=reports, moderator_boards=moderator_boards,
-                           view_ips=view_ips, ip4_to_str=ip4_to_str)
+                           view_ips=view_ips, ip4_to_str=ip4_to_str, show_ban_button=show_ban_button)
 
 
 @mod.route('/mod_report/manage', methods=['POST'])
@@ -74,6 +75,13 @@ def mod_report_manage():
 
     success_message = None
     mode_string = form['mode']
+    if mode_string == 'ban':
+        report = g.report_service.find_report_id(report_id)
+        if not report:
+            abort(400)
+        post_id = report.post_id
+        return redirect(url_for('.mod_bans', post_id=post_id))
+
     if mode_string == 'clear':
         details.mode = ManageReportDetails.CLEAR
         success_message = 'Cleared report'

@@ -33,6 +33,7 @@ class VerificationError(Exception):
 class ModeratorAction(Enum):
     BOARD_CREATE = 1
     BOARD_DELETE = 2
+    BAN = 3
 
 
 @unique
@@ -131,6 +132,12 @@ class ActionAuthorizer:
 
             if creator_roles >= g.moderator_service.BOARDS_PER_MODERATOR:
                 raise ArgumentError('Max boards limit reached ({})'.format(g.moderator_service.BOARDS_PER_MODERATOR))
+        elif action is ModeratorAction.BOARD_DELETE:
+            # must be admin
+            raise NoPermissionError()
+        elif action is ModeratorAction.BAN:
+            # must be admin
+            raise NoPermissionError()
         else:
             raise Exception('Unknown action')
 

@@ -1,6 +1,6 @@
 {% import "widget/post.html" as post_widget %}
 
-{% macro render(report, post, thread, view_ips=False, ip4_to_str=None) %}
+{% macro render(report, post, thread, view_ips=False, ip4_to_str=None, show_ban_button=False) %}
     <div class="report-post" id="p{{ post.refno }}">
         <div class="report-post-header">
             <a target="_blank" href="{{ url_for_post(thread.board.name, thread.id, post.refno) }}">
@@ -22,6 +22,9 @@
                 <button name="mode" value="delete" title="Remove the post">Delete{{ ' thread' if post.refno == 1 else '' }}</button>
                 {% if post.has_file %}
                     <button name="mode" value="delete_file" title="Remove file">Remove file</button>
+                {% endif %}
+                {% if show_ban_button %}
+                    <button name="mode" value="ban" title="Ban poster">Ban poster</button>
                 {% endif %}
             </form>
         </div>
