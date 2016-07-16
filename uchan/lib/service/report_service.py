@@ -84,8 +84,8 @@ class ReportService:
                                                  Thread.board_id == Board.id,
                                                  Board.id == BoardModerator.board_id,
                                                  BoardModerator.moderator_id == moderator.id,
-                                                 BoardModerator.roles.contains(
-                                                     cast([roles.BOARD_ROLE_JANITOR], ARRAY(String))))
+                                                 BoardModerator.roles.overlap(
+                                                     cast([roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_JANITOR], ARRAY(String))))
         else:
             reports_query = reports_query.filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
                                                  Thread.board_id == Board.id)
