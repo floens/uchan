@@ -27,8 +27,7 @@ def mod_index():
 def verify_method():
     method = g.verification_service.get_method()
     try:
-        if not method.verify_request(request):
-            raise BadRequestError()
+        method.verify_request(request)
     except ArgumentError as e:
         raise BadRequestError(e.message)
 

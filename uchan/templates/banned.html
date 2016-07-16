@@ -4,7 +4,17 @@
 
 {% block content %}
     <div class="message">
-        {% if is_banned %}
+        {% if method_html %}
+            <h2>Verify</h2>
+
+            <form action="{{ url_for('.banned') }}" method="post">
+                Please verify first before checking the ban status of this IP.<br>
+                <br>
+                {{ method_html|safe }}
+                <br>
+                <input type="submit" value="Verify">
+            </form>
+        {% elif is_banned %}
             <h2>You are banned!</h2>
 
             {% for ban in bans %}
@@ -18,7 +28,8 @@
                     {% if ban.date + ban.length < now() %}
                         <br><b>This ban has expired. Now that you've seen this message you can post again.</b>
                     {% else %}
-                        This ban will lift on {{ (ban.date + ban.length)|formatted_time }} which is <b>{{ (ban.date + ban.length)|time_remaining }} from now</b>.
+                        This ban will lift on {{ (ban.date + ban.length)|formatted_time }} which is
+                        <b>{{ (ban.date + ban.length)|time_remaining }} from now</b>.
                     {% endif %}
                 {% else %}
                     This ban will not expire.

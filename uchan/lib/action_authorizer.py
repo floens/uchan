@@ -112,14 +112,6 @@ class ActionAuthorizer:
         else:
             raise Exception('Unknown post action')
 
-    def authorize_ban_check_action(self, request, ip4):
-        if not g.verification_service.process_request(request, ip4, 'ban_check'):
-            e = VerificationError('[Verify here before checking your ban](_{})'.format('/verify/'))
-            e.for_name = 'ban_check'
-            e.request_message = 'ban checking'
-            e.single_shot = True
-            raise e
-
     def authorize_action(self, actor, action):
         if self.has_role(actor, roles.ROLE_ADMIN):
             return

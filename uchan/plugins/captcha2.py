@@ -1,8 +1,11 @@
-import config
+import dateutil.parser
 import requests
+
+import config
 from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib.service.verification_service import VerificationMethod
+from uchan.lib.utils import now
 
 """
 This plugin adds google reCaptcha v2 as a verification method.
@@ -84,15 +87,28 @@ class Recaptcha2Method(VerificationMethod):
         if not valid:
             raise ArgumentError('Captcha invalid')
 
-        return True
-
     def verify(self, response):
         res = requests.post('https://www.google.com/recaptcha/api/siteverify', data={
             'secret': self.secret,
             'response': response
         })
         res_json = res.json()
-        return 'success' in res_json and res_json['success'] is True
+
+        timestamp_iso = 'challenge_ts' in res_json and res_json['challenge_ts']
+        if not timestamp_iso:
+            return False
+
+        timestamp = dateutil.parser.parse(timestamp_iso)
+        time_ago = now() - int(timestamp.timestamp() * 1000)
+
+        if time_ago > 1000 * 30:
+            # Expired
+            return False
+
+        if 'success' in res_json and res_json['success'] is True:
+            return True
+
+        return False
 
 
 def on_enable():

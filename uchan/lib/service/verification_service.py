@@ -84,8 +84,7 @@ class VerificationService:
 
     def do_verify(self, request, ip4):
         method = self.get_method()
-        if not method.verify_request(request):
-            return None
+        method.verify_request(request)
 
         verification = self.get_verification_for_request(request, ip4, with_cache=False)
         if verification is not None:

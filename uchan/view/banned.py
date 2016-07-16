@@ -2,14 +2,24 @@ from flask import render_template, request
 
 from uchan import app
 from uchan import g
-from uchan.lib.proxy_request import get_request_ip4
+from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib.utils import now
 
 
-@app.route('/banned/')
+@app.route('/banned/', methods=['GET', 'POST'])
 def banned():
-    g.action_authorizer.authorize_ban_check_action(request, get_request_ip4())
+    if request.method == 'GET':
+        method = g.verification_service.get_method()
+        method_html = method.get_html()
 
-    bans = g.ban_service.get_request_bans()
+        return render_template('banned.html', method_html=method_html)
+    else:
+        method = g.verification_service.get_method()
+        try:
+            method.verify_request(request)
+        except ArgumentError as e:
+            raise BadRequestError(e.message)
 
-    return render_template('banned.html', is_banned=len(bans) > 0, bans=bans, now=now)
+        bans = g.ban_service.get_request_bans()
+
+        return render_template('banned.html', is_banned=len(bans) > 0, bans=bans, now=now)
