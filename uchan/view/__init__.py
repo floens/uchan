@@ -26,10 +26,10 @@ class ExtraJavascript:
 
 @app.context_processor
 def inject_variables():
-    site_config_cached = g.site_cache.find_site_config_cached()
+    site_config = g.site_cache.find_site_config()
 
     all_boards = None
-    if site_config_cached.boards_top:
+    if site_config.get('boards_top'):
         all_boards = g.board_cache.all_boards()
 
     footer_pages_cached = g.page_cache.find_pages_for_type_cached(PageService.TYPE_FOOTER_PAGE)
@@ -44,7 +44,7 @@ def inject_variables():
 
     return dict(all_boards=all_boards,
                 header_links=header_links,
-                site_config=site_config_cached,
+                site_config=site_config,
                 footer_pages=footer_pages,
                 extra_javascript=extra_javascript)
 

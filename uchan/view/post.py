@@ -22,8 +22,8 @@ def post():
     if not check_csrf_referer(request):
         raise BadRequestError('Bad referer header')
 
-    site_config = g.site_cache.find_site_config_cached()
-    if not site_config.posting_enabled:
+    site_config = g.site_cache.find_site_config()
+    if not site_config.get('posting_enabled'):
         raise BadRequestError('Posting is disabled')
 
     # Gather params
@@ -57,13 +57,13 @@ def post():
     file = request.files.get('file', None)
     has_file = file is not None and file.filename is not None and len(file.filename) > 0
 
-    if has_file and not site_config.file_posting_enabled:
+    if has_file and not site_config.get('file_posting_enabled'):
         raise BadRequestError('File posting is disabled')
 
     ip4 = get_request_ip4()
 
-    board_config_cached = g.board_cache.find_board_config_cached(board_name)
-    if not board_config_cached:
+    board_config = g.board_cache.find_board_config(board_name)
+    if not board_config:
         abort(404)
 
     post_details = PostDetails(form, board_name, thread_id, text, name, subject, password, has_file, ip4)

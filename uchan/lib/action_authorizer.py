@@ -79,8 +79,8 @@ class ActionAuthorizer:
                     e.suspend_time = suspend_time
                     raise e
 
-            board_config_cached = g.board_cache.find_board_config_cached(board.name)
-            if board_config_cached.board_config.posting_verification_required:
+            board_config = g.board_cache.find_board_config(board.name)
+            if board_config.get('posting_verification_required'):
                 if post_details.verification_data is None or \
                         not g.verification_service.data_is_verified(post_details.verification_data):
                     e = VerificationError('[Please verify here first](_{})'.format('/verify/'))

@@ -1,6 +1,6 @@
 {% extends "board_view.html" %}
 
-{% block title %}/{{ thread.board.name }}/ - {{ board_config.full_name }}{% endblock %}
+{% block title %}/{{ thread.board.name }}/ - {{ full_name }}{% endblock %}
 
 {% import "widget/post.html" as post_widget %}
 {% import "widget/post_form.html" as post_form_widget %}
@@ -43,7 +43,7 @@
 
 {% block post_form_bottom %}
     {% if not thread.locked %}
-        {{ post_form_widget.render(thread.board, thread, file_field=board_config.file_posting_enabled, moderator_fields=show_moderator_buttons) }}
+        {{ post_form_widget.render(thread.board, thread, file_field=file_posting_enabled, moderator_fields=show_moderator_buttons) }}
     {% else %}
         Thread locked, you may not reply at this time.<br>
     {% endif %}

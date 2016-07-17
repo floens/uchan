@@ -154,9 +154,9 @@ class PostsCache:
                 self.cache.delete(self.get_board_page_cache_key(board_name, i))
             return None, None
 
-        board_config = g.board_cache.find_board_config_cached(board_name)
-        pages = board_config.board_config.pages
-        threads_per_page = board_config.board_config.per_page
+        board_config = g.board_cache.find_board_config(board_name)
+        pages = board_config.get('pages')
+        threads_per_page = board_config.get('per_page')
 
         # Collect the whole board
         # The non _op entries are for the board pages

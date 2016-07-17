@@ -2,15 +2,15 @@
 
 {% block content %}
     <div class="board-header">
-        <h1>/{{ board.name }}/ - {{ board_config.full_name }}</h1>
-        <div class="description">{{ board_config.description }}</div>
+        <h1>/{{ board.name }}/ - {{ full_name }}</h1>
+        <div class="description">{{ description }}</div>
     </div>
     <br>
 
     <hr class="content-divider">
 
-    {% if site_config.motd %}
-        <div class="motd">{{ site_config.motd }}</div>
+    {% if site_config.get('motd') %}
+        <div class="motd">{{ site_config.get('motd') }}</div>
         <hr class="content-divider">
     {% endif %}
 

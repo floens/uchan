@@ -1,5 +1,6 @@
 from uchan import g
 from uchan.lib.cache import CacheDict, LocalCache
+from uchan.lib.configs import BoardConfig
 
 
 class AllBoardsCacheProxy(CacheDict):
@@ -17,12 +18,6 @@ class BoardCacheProxy(CacheDict):
         self.id = board.id
 
 
-class BoardConfigCacheProxy(CacheDict):
-    def __init__(self, board_config):
-        super().__init__()
-        self.board_config = board_config
-
-
 class BoardCache:
     """
     Cache for all things board related.
@@ -33,27 +28,28 @@ class BoardCache:
         self.cache = cache
         self.local_cache = LocalCache()
 
-    def find_board_config_cached(self, board_name):
+    def find_board_config(self, board_name):
         key = self.get_board_config_key(board_name)
 
         local_cached = self.local_cache.get(key)
         if local_cached is not None:
             return local_cached
 
-        board_config_cache = self.cache.get(key, True)
-        if board_config_cache is None:
+        config_cache = self.cache.get(key, True)
+        if config_cache is None:
             board = g.board_service.find_board(board_name)
             if not board:
                 return None
 
-            config = g.config_service.load_config_dict(board.config)
-            board_config_cache = BoardConfigCacheProxy(config).convert()
-            self.cache.set(key, board_config_cache)
+            config_cache = g.config_service.load_config_dict(board.config)
+            self.cache.set(key, config_cache)
 
-        if board_config_cache is not None:
-            self.local_cache.set(key, board_config_cache)
+        board_config = BoardConfig()
+        board_config.set_values_from_cache(config_cache)
 
-        return board_config_cache
+        self.local_cache.set(key, board_config)
+
+        return board_config
 
     def get_board_config_key(self, board_name):
         return 'board_config${}'.format(board_name)

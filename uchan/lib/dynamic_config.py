@@ -58,15 +58,14 @@ class DynamicConfig:
     def __init__(self):
         self.configs = []
 
-    def get(self, key):
-        for item in self.configs:
-            if item.name == key:
-                return item.value
-        return None
+        self._values = {}
 
-    def set(self, key, value):
-        for item in self.configs:
-            if item.nam == key:
-                item.set(value)
+    def set_values_from_cache(self, cache_dict):
+        for config in self.configs:
+            if config.name in cache_dict:
+                self._values[config.name] = cache_dict[config.name]
+            else:
+                self._values[config.name] = config.default_value
 
-        raise KeyError()
+    def get(self, name):
+        return self._values[name]

@@ -8,7 +8,7 @@ class SiteCache:
         self.cache = cache
         self.local_cache = LocalCache()
 
-    def find_site_config_cached(self):
+    def find_site_config(self):
         key = 'config_site'
 
         local_cached = self.local_cache.get(key)
@@ -22,10 +22,12 @@ class SiteCache:
 
             self.cache.set(key, site_config_cache, timeout=0)
 
-        if site_config_cache is not None:
-            self.local_cache.set(key, site_config_cache)
+        site_config = SiteConfig()
+        site_config.set_values_from_cache(site_config_cache)
 
-        return site_config_cache
+        self.local_cache.set(key, site_config)
+
+        return site_config
 
     def invalidate_site_config(self):
         self.cache.delete('config_site')

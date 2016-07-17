@@ -37,8 +37,8 @@ class PostsService:
         g.action_authorizer.authorize_post_action(moderator, PostAction.POST_CREATE, post_details=post_details,
                                                   board=board, thread=thread)
 
-        board_config_cached = g.board_cache.find_board_config_cached(board.name)
-        if post_details.has_file and not board_config_cached.board_config.file_posting_enabled:
+        board_config = g.board_cache.find_board_config(board.name)
+        if post_details.has_file and not board_config.get('file_posting_enabled'):
             raise ArgumentError('File posting is disabled')
 
         if not post_details.text or not post_details.text.strip():
@@ -73,8 +73,12 @@ class PostsService:
 
         db = get_db()
 
-        site_config_cached = g.site_cache.find_site_config_cached()
-        board_config_cached = g.board_cache.find_board_config_cached(board.name)
+        site_config = g.site_cache.find_site_config()
+        default_name = site_config.get('default_name')
+        board_config = g.board_cache.find_board_config(board.name)
+        pages = board_config.get('pages')
+        per_page = board_config.get('per_page')
+        bump_limit = board_config.get('bump_limit')
 
         # Get moderator if mod_id was set
         moderator = None
@@ -90,7 +94,7 @@ class PostsService:
             post.text = ''
 
         sage = False
-        post.name = site_config_cached.default_name
+        post.name = default_name
         if post_details.name is not None:
             stripped_name = post_details.name.strip()
             if stripped_name:
@@ -102,7 +106,7 @@ class PostsService:
                         post.name = raw_name + ' !' + generate_crypt_code(password)
                 elif stripped_name.lower() == 'sage':
                     sage = True
-                    post.name = site_config_cached.default_name
+                    post.name = default_name
                 else:
                     name = stripped_name.replace('!', '')
                     if name:
@@ -137,7 +141,7 @@ class PostsService:
             db.flush()
             thread_id = thread.id
 
-            thread_ids_to_invalidate = self.purge_threads(board, board_config_cached)
+            thread_ids_to_invalidate = self.purge_threads(board, pages, per_page)
             db.commit()
 
             insert_time = now() - start_time
@@ -172,7 +176,7 @@ class PostsService:
             post_id = post.id
 
             # Use the refno to avoid a count(*)
-            if not sage and post_refno <= board_config_cached.board_config.bump_limit:
+            if not sage and post_refno <= bump_limit:
                 to_thread.last_modified = now()
 
             db.commit()
@@ -379,9 +383,7 @@ class PostsService:
         g.posts_cache.invalidate_thread_cache(thread_id)
         g.posts_cache.invalidate_board_page_cache(board_name)
 
-    def purge_threads(self, board, board_config_cached):
-        pages = board_config_cached.board_config.pages
-        per_page = board_config_cached.board_config.per_page
+    def purge_threads(self, board, pages, per_page):
         max = (per_page * pages) - 1
 
         db = get_db()

@@ -1,6 +1,6 @@
 {% extends "board_view.html" %}
 
-{% block title %}Board /{{ board.name }}/ - {{ board_config.full_name }}{% endblock %}
+{% block title %}Board /{{ board.name }}/ - {{ full_name }}{% endblock %}
 
 {% import "widget/post.html" as post_widget %}
 {% import "widget/post_form.html" as post_form_widget %}
@@ -8,12 +8,12 @@
 {% import "widget/board_pager.html" as board_pager_widget %}
 
 {% block post_form_top %}
-    {{ post_form_widget.render(board, file_field=board_config.file_posting_enabled, moderator_fields=show_moderator_buttons) }}
+    {{ post_form_widget.render(board, file_field=file_posting_enabled, moderator_fields=show_moderator_buttons) }}
 {% endblock %}
 
 {% block board_controls_top %}
     <hr class="content-divider">
-    {{ board_pager_widget.render(board.name, board_config.pages, page_index) }}
+    {{ board_pager_widget.render(board.name, pages, page_index) }}
     <hr class="content-divider">
 {% endblock %}
 
@@ -33,6 +33,6 @@
 
 {% block board_controls_bottom %}
     <hr class="content-divider">
-    {{ board_pager_widget.render(board.name, board_config.pages, page_index) }}
+    {{ board_pager_widget.render(board.name, pages, page_index) }}
     <hr class="content-divider">
 {% endblock %}
