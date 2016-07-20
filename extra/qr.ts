@@ -45,7 +45,7 @@ namespace uchan {
                 '        <input type="file" name="file"><input type="submit" value="Submit"/><br>' +
                 '        <span class="error-message">Message</span>' +
                 '        <input type="hidden" name="board" value="' + context.boardName + '"/>' +
-                '        <input type="hidden" name="thread" value="' + context.threadId + '"/>' +
+                '        <input type="hidden" name="thread" value="' + context.threadRefno + '"/>' +
                 '    </form>';
 
             document.body.appendChild(this.element);

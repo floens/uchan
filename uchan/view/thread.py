@@ -4,6 +4,7 @@ from flask import url_for
 
 from uchan import app, g
 from uchan.lib.moderator_request import get_authed, request_moderator
+from uchan.lib.utils import valid_id_range
 
 
 def get_board_view_params(board_config, mode, board_name, additional_page_details=None):
@@ -66,10 +67,19 @@ def board(board_name, page=None):
                            page_index=page)
 
 
-@app.route('/<string(maxlength=20):board_name>/view/<int:thread_refno>')
+@app.route('/<string(maxlength=20):board_name>/view/<int:thread_id>')
+def view_thread_id(board_name, thread_id):
+    valid_id_range(thread_id)
+
+    thread = g.posts_service.find_thread(thread_id, False)
+    if thread:
+        return redirect(url_for('.view_thread', board_name=thread.board.name, thread_refno=thread.refno))
+    abort(404)
+
+
+@app.route('/<string(maxlength=20):board_name>/read/<int:thread_refno>')
 def view_thread(board_name, thread_refno):
-    if thread_refno <= 0 or thread_refno > 2 ** 32:
-        abort(400)
+    valid_id_range(thread_refno)
 
     board_config = g.board_cache.find_board_config(board_name)
     if not board_config:
@@ -81,7 +91,7 @@ def view_thread(board_name, thread_refno):
         abort(404)
 
     additional_page_details = {
-        'threadId': thread_cached.id
+        'threadRefno': thread_cached.refno
     }
     if thread_cached.locked:
         additional_page_details['locked'] = True

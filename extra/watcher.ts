@@ -6,7 +6,8 @@ namespace uchan {
         delays = [10, 15, 20, 30, 60, 90, 120, 180, 240, 300];
         endPoint = '/api/thread/';
 
-        threadId:number;
+        boardName:string;
+        threadRefno:number;
         postsElement:HTMLElement;
         statusElement:HTMLElement;
         imageExpansion:ImageExpansion;
@@ -23,8 +24,9 @@ namespace uchan {
         documentTitle:string;
         totalNewPosts = 0;
 
-        constructor(threadId, postsElement, statusElement, imageExpansion) {
-            this.threadId = threadId;
+        constructor(boardName, threadRefno, postsElement, statusElement, imageExpansion) {
+            this.boardName = boardName;
+            this.threadRefno = threadRefno;
             this.postsElement = postsElement;
             this.statusElement = statusElement;
             this.imageExpansion = imageExpansion;
@@ -63,7 +65,7 @@ namespace uchan {
 
         update() {
             if (this.xhr == null) {
-                this.xhr = xhrJsonGet(this.endPoint + this.threadId, this.xhrDone.bind(this));
+                this.xhr = xhrJsonGet(this.endPoint + this.boardName + '/' + this.threadRefno, this.xhrDone.bind(this));
                 this.updateStatus();
             }
         }

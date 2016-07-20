@@ -2,10 +2,10 @@ from uchan import celery, g
 
 
 class PostDetails:
-    def __init__(self, form, board_name, thread_id, text, name, subject, password, has_file, ip4):
+    def __init__(self, form, board_name, thread_refno, text, name, subject, password, has_file, ip4):
         self.form = form
         self.board_name = board_name
-        self.thread_id = thread_id
+        self.thread_refno = thread_refno
         self.text = text
         self.name = name
         self.subject = subject
@@ -37,8 +37,9 @@ class ManagePostDetails:
     TOGGLE_STICKY = 3
     TOGGLE_LOCKED = 4
 
-    def __init__(self, thread_id, post_id, ip4):
-        self.thread_id = thread_id
+    def __init__(self, board_name, thread_refno, post_id, ip4):
+        self.board_name = board_name
+        self.thread_refno = thread_refno
         self.post_id = post_id
         self.ip4 = ip4
         self.mod_id = None

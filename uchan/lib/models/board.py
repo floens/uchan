@@ -19,6 +19,7 @@ class Board(ModelBase):
 
     id = Column(Integer(), primary_key=True)
     name = Column(String(128), unique=True, index=True, nullable=False)
+    refno_counter = Column(Integer(), nullable=False, default=1)
     config_id = Column(Integer, ForeignKey('config.id'), nullable=False, index=True)
 
     config = relationship('Config', cascade='all')

@@ -5,13 +5,13 @@ from uchan.lib import roles, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Moderator
 from uchan.lib.moderator_request import request_moderator, unset_mod_authed
+from uchan.lib.utils import valid_id_range
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
 
 
 def get_moderator_or_abort(moderator_id):
-    if not moderator_id or moderator_id > 2 ** 32:
-        abort(400)
+    valid_id_range(moderator_id)
 
     moderator = g.moderator_service.find_moderator_id(moderator_id)
     if not moderator:

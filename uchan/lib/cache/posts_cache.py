@@ -26,6 +26,7 @@ class ThreadCacheProxy(CacheDict):
     def __init__(self, thread, board, posts):
         super().__init__()
         self.id = thread.id
+        self.refno = thread.refno
         self.last_modified = thread.last_modified
         self.locked = thread.locked
         self.sticky = thread.sticky
@@ -77,24 +78,24 @@ class PostsCache:
     def __init__(self, cache):
         self.cache = cache
 
-    def find_thread_cached(self, thread_id):
-        key = self.get_thread_cache_key(thread_id)
+    def find_thread_cached(self, board_name, thread_refno):
+        key = self.get_thread_cache_key(board_name, thread_refno)
         thread_cache = self.cache.get(key, True)
         if thread_cache is None:
-            thread_cache, thread_stub_cache = self.invalidate_thread_cache(thread_id)
+            thread_cache, thread_stub_cache = self.invalidate_thread_cache(board_name, thread_refno)
         return thread_cache
 
-    def find_thread_stub_cached(self, thread_id):
-        key = self.get_thread_stub_cache_key(thread_id)
+    def find_thread_stub_cached(self, board_name, thread_refno):
+        key = self.get_thread_stub_cache_key(board_name, thread_refno)
         thread_stub_cache = self.cache.get(key, True)
         if thread_stub_cache is None:
-            thread_cache, thread_stub_cache = self.invalidate_thread_cache(thread_id)
+            thread_cache, thread_stub_cache = self.invalidate_thread_cache(board_name, thread_refno)
         return thread_stub_cache
 
-    def invalidate_thread_cache(self, thread_id):
-        key = self.get_thread_cache_key(thread_id)
-        stub_key = self.get_thread_stub_cache_key(thread_id)
-        thread = g.posts_service.find_thread(thread_id, True)
+    def invalidate_thread_cache(self, board_name, thread_refno):
+        key = self.get_thread_cache_key(board_name, thread_refno)
+        stub_key = self.get_thread_stub_cache_key(board_name, thread_refno)
+        thread = g.posts_service.find_thread_refno(board_name, thread_refno, True)
         if not thread:
             self.cache.delete(key)
             self.cache.delete(stub_key)
@@ -122,11 +123,11 @@ class PostsCache:
 
         return thread_cache, thread_cache_stub
 
-    def get_thread_cache_key(self, thread_id):
-        return 'thread${}'.format(thread_id)
+    def get_thread_cache_key(self, board_name, thread_refno):
+        return 'thread${}${}'.format(board_name, thread_refno)
 
-    def get_thread_stub_cache_key(self, thread_id):
-        return 'thread_stub${}'.format(thread_id)
+    def get_thread_stub_cache_key(self, board_name, thread_refno):
+        return 'thread_stub${}${}'.format(board_name, thread_refno)
 
     def find_board_cached(self, board_name, page=None):
         if page is None:
@@ -166,7 +167,7 @@ class PostsCache:
         threads_op = []
         threads = []
         for thread in board.threads:
-            thread_stub_cached = self.find_thread_stub_cached(thread.id)
+            thread_stub_cached = self.find_thread_stub_cached(board.name, thread.refno)
             # The board and thread selects are done separately and there is thus the
             # possibility that the thread was removed after the board select
             if thread_stub_cached is None:

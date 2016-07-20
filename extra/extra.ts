@@ -8,7 +8,7 @@ module uchan {
         boardName: null,
         postEndpoint: null,
         filePostingEnabled: false,
-        threadId: null,
+        threadRefno: null,
         locked: false,
         sticky: false,
 
@@ -76,7 +76,7 @@ module uchan {
             context.boardName = pageDetails.boardName;
             context.postEndpoint = pageDetails.postEndpoint;
             context.filePostingEnabled = pageDetails.filePostingEnabled || false;
-            context.threadId = pageDetails.threadId || null;
+            context.threadRefno = pageDetails.threadRefno || null;
             context.locked = pageDetails.locked || false;
             context.sticky = pageDetails.sticky || false;
 
@@ -97,7 +97,7 @@ module uchan {
 
                 var postsElement = document.querySelector('.posts');
                 var watchStatusElement = replyButtons.querySelector('#watch-status');
-                var watcher = new Watcher(context.threadId, postsElement, watchStatusElement, imageExpansion);
+                var watcher = new Watcher(context.boardName, context.threadRefno, postsElement, watchStatusElement, imageExpansion);
                 var posts = <NodeListOf<HTMLElement>>postsElement.querySelectorAll('.post');
                 watcher.bindPosts(posts);
 

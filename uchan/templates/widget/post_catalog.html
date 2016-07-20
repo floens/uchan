@@ -33,6 +33,6 @@
                 {{ thread.original_length - 1 }} {{ (thread.original_length - 1)|pluralize('reply', 'replies') }}
             </div>
         {% endif %}
-        [<a href="{{ url_for('view_thread', board_name=board_name, thread_id=thread.id) }}">View thread</a>]
+        [<a href="{{ url_for('view_thread', board_name=board_name, thread_refno=thread.refno) }}">View thread</a>]
     </div>
 {% endmacro %}

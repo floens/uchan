@@ -16,7 +16,8 @@
             <button name="mode" value="toggle_sticky">Toggle sticky</button>
             <button name="mode" value="toggle_locked">Toggle locked</button>
         {% endif %}
-        <input type="hidden" name="thread_id" value="{{ thread.id }}">
+        <input type="hidden" name="board" value="{{ thread.board.name }}"/>
+        <input type="hidden" name="thread" value="{{ thread.refno }}">
     </div>
 {% endmacro %}
 

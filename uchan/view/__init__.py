@@ -116,18 +116,6 @@ def render_error(user_message, code=400, with_retry=False):
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
 app.jinja_env.globals['csrf_html'] = generate_csrf_token_html
 
-
-def get_model_id(model, id):
-    if type(id) != int or id <= 0 or id > 2 ** 32:
-        abort(400)
-
-    db = get_db()
-    try:
-        return db.query(model).filter_by(id=id).one()
-    except NoResultFound:
-        abort(404)
-
-
 import uchan.view.index
 import uchan.view.thread
 import uchan.view.post

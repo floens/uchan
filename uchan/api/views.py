@@ -2,6 +2,7 @@ from flask import abort
 
 from uchan import g
 from uchan.api import api, jsonres
+from uchan.lib.utils import valid_id_range
 
 
 @api.route('/')
@@ -28,13 +29,12 @@ def api_catalog(board_name):
     }
 
 
-@api.route('/thread/<int:thread_id>')
+@api.route('/thread/<string(maxlength=20):board_name>/<int:thread_refno>')
 @jsonres()
-def api_thread(thread_id):
-    if thread_id <= 0:
-        abort(400)
+def api_thread(board_name, thread_refno):
+    valid_id_range(thread_refno)
 
-    thread_cached = g.posts_cache.find_thread_cached(thread_id)
+    thread_cached = g.posts_cache.find_thread_cached(board_name, thread_refno)
     if not thread_cached:
         abort(404)
 
@@ -46,6 +46,7 @@ def api_thread(thread_id):
 def build_thread_object(thread):
     thread_obj = {
         'id': thread.id,
+        'refno': thread.refno,
         'lastModified': thread.last_modified
     }
 

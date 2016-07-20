@@ -20,7 +20,7 @@
                 </span>
                 <br>
             {% endif %}
-            <a href="{% if link_refno %}{{ url_for('view_thread', board_name=thread.board.name, thread_id=thread.id) }}{% endif %}#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
+            <a href="{% if link_refno %}{{ url_for('view_thread', board_name=thread.board.name, thread_refno=thread.refno) }}{% endif %}#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
             <span class="name">
                 {{ post_item.name|post_name }}
             </span>
@@ -64,7 +64,7 @@
                 {% if thread.omitted_count > 0 %}
                     {{ thread.omitted_count ~ ' ' ~ thread.omitted_count|pluralize('reply', 'replies') }} omitted
                 {% endif %}
-                [<a href="{{ url_for('view_thread', board_name=thread.board.name, thread_id=thread.id) }}">View thread</a>]
+                [<a href="{{ url_for('view_thread', board_name=thread.board.name, thread_refno=thread.refno) }}">View thread</a>]
             </div>
         {% endif %}
     </div>

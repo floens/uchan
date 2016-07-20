@@ -1,5 +1,7 @@
 import time
 
+from werkzeug.exceptions import abort
+
 
 def now():
     return int(time.time() * 1000)
@@ -12,6 +14,11 @@ def ip4_to_str(ip4):
         outputs.append(str(n))
 
     return '.'.join(outputs)
+
+
+def valid_id_range(id):
+    if type(id) != int or id <= 0 or id > 2 ** 32:
+        abort(400)
 
 
 def get_cookie_domain(app):

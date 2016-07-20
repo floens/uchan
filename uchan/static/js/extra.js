@@ -148,7 +148,7 @@ var uchan;
                 '        <input type="file" name="file"><input type="submit" value="Submit"/><br>' +
                 '        <span class="error-message">Message</span>' +
                 '        <input type="hidden" name="board" value="' + uchan.context.boardName + '"/>' +
-                '        <input type="hidden" name="thread" value="' + uchan.context.threadId + '"/>' +
+                '        <input type="hidden" name="thread" value="' + uchan.context.threadRefno + '"/>' +
                 '    </form>';
             document.body.appendChild(this.element);
             this.draggable = new uchan.Draggable(this.element, this.element.querySelector('.handle'), false);
@@ -405,7 +405,7 @@ var uchan;
 var uchan;
 (function (uchan) {
     var Watcher = (function () {
-        function Watcher(threadId, postsElement, statusElement, imageExpansion) {
+        function Watcher(boardName, threadRefno, postsElement, statusElement, imageExpansion) {
             var _this = this;
             this.delays = [10, 15, 20, 30, 60, 90, 120, 180, 240, 300];
             this.endPoint = '/api/thread/';
@@ -417,7 +417,8 @@ var uchan;
             this.currentDelay = 0;
             this.targetTime = 0;
             this.totalNewPosts = 0;
-            this.threadId = threadId;
+            this.boardName = boardName;
+            this.threadRefno = threadRefno;
             this.postsElement = postsElement;
             this.statusElement = statusElement;
             this.imageExpansion = imageExpansion;
@@ -449,7 +450,7 @@ var uchan;
         };
         Watcher.prototype.update = function () {
             if (this.xhr == null) {
-                this.xhr = uchan.xhrJsonGet(this.endPoint + this.threadId, this.xhrDone.bind(this));
+                this.xhr = uchan.xhrJsonGet(this.endPoint + this.boardName + '/' + this.threadRefno, this.xhrDone.bind(this));
                 this.updateStatus();
             }
         };
@@ -716,7 +717,7 @@ var uchan;
         boardName: null,
         postEndpoint: null,
         filePostingEnabled: false,
-        threadId: null,
+        threadRefno: null,
         locked: false,
         sticky: false,
         qr: null
@@ -781,7 +782,7 @@ var uchan;
             uchan.context.boardName = pageDetails.boardName;
             uchan.context.postEndpoint = pageDetails.postEndpoint;
             uchan.context.filePostingEnabled = pageDetails.filePostingEnabled || false;
-            uchan.context.threadId = pageDetails.threadId || null;
+            uchan.context.threadRefno = pageDetails.threadRefno || null;
             uchan.context.locked = pageDetails.locked || false;
             uchan.context.sticky = pageDetails.sticky || false;
             if (uchan.context.mode == 'thread') {
@@ -798,7 +799,7 @@ var uchan;
                 //postForm.style.display = 'none';
                 var postsElement = document.querySelector('.posts');
                 var watchStatusElement = replyButtons.querySelector('#watch-status');
-                var watcher = new uchan.Watcher(uchan.context.threadId, postsElement, watchStatusElement, imageExpansion);
+                var watcher = new uchan.Watcher(uchan.context.boardName, uchan.context.threadRefno, postsElement, watchStatusElement, imageExpansion);
                 var posts = postsElement.querySelectorAll('.post');
                 watcher.bindPosts(posts);
                 uchan.context.qr = new uchan.QR(watcher);

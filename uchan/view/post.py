@@ -9,7 +9,7 @@ from uchan.lib.moderator_request import request_moderator, get_authed
 from uchan.lib.proxy_request import get_request_ip4
 from uchan.lib.service import BoardService
 from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task, post_check_task
-from uchan.lib.utils import now
+from uchan.lib.utils import now, valid_id_range
 from uchan.view import check_csrf_referer
 
 
@@ -27,13 +27,12 @@ def post():
         raise BadRequestError('Posting is disabled')
 
     # Gather params
-    thread_id_raw = form.get('thread', None)
-    thread_id = None
-    if thread_id_raw is not None:
+    thread_refno_raw = form.get('thread', None)
+    thread_refno = None
+    if thread_refno_raw is not None:
         try:
-            thread_id = int(thread_id_raw)
-            if thread_id <= 0 or thread_id > 2 ** 32:
-                abort(400)
+            thread_refno = int(thread_refno_raw)
+            valid_id_range(thread_refno)
         except ValueError:
             abort(400)
 
@@ -66,7 +65,7 @@ def post():
     if not board_config:
         abort(404)
 
-    post_details = PostDetails(form, board_name, thread_id, text, name, subject, password, has_file, ip4)
+    post_details = PostDetails(form, board_name, thread_refno, text, name, subject, password, has_file, ip4)
     post_details.verification_data = g.verification_service.get_verification_data_for_request(request, ip4, 'post')
 
     with_mod = form.get('with_mod', type=bool)
@@ -94,7 +93,7 @@ def post():
         # Then if that's complete, send a task off to the workers to insert the details in the db
         if has_file:
             start_time = now()
-            thumbnail_size = 128 if thread_id else 256
+            thumbnail_size = 128 if thread_refno else 256
             try:
                 post_details.uploaded_file, upload_queue_files = g.file_service.handle_upload(file, thumbnail_size)
             except ArgumentError as e:
@@ -103,7 +102,8 @@ def post():
 
         # Queue the post task
         try:
-            board_name, thread_id, post_refno = post_task.delay(post_details).get()
+            board_name, thread_refno, post_refno = post_task.delay(post_details).get()
+            # board_name, thread_refno, post_refno = post_task(post_details)
         except ArgumentError as e:
             raise BadRequestError(e.message)
     finally:
@@ -114,11 +114,11 @@ def post():
     if request.is_xhr:
         return jsonify({
             'boardName': board_name,
-            'threadId': thread_id,
+            'threadRefno': thread_refno,
             'postRefno': post_refno
         })
     else:
-        return redirect(url_for_post(board_name, thread_id, post_refno))
+        return redirect(url_for_post(board_name, thread_refno, post_refno))
 
 
 @app.route('/post_manage', methods=['POST'])
@@ -128,13 +128,16 @@ def post_manage():
     if not check_csrf_referer(request):
         raise BadRequestError('Bad referer header')
 
-    post_id = form.get('post_id', type=int)
-    if post_id is not None and (post_id <= 0 or post_id > 2 ** 32):
-        abort(404)
-
-    thread_id = form.get('thread_id', type=int)
-    if thread_id is None or thread_id <= 0 or thread_id > 2 ** 32:
+    board_name = form.get('board', None)
+    if not board_name or len(board_name) > BoardService.BOARD_NAME_MAX_LENGTH:
         abort(400)
+
+    thread_refno = form.get('thread', type=int)
+    valid_id_range(thread_refno)
+
+    post_id = form.get('post_id', type=int)
+    if post_id is not None:
+        valid_id_range(post_id)
 
     password = form.get('password', None)
     if not password or len(password) > g.posts_service.MAX_PASSWORD_LENGTH:
@@ -142,7 +145,7 @@ def post_manage():
 
     ip4 = get_request_ip4()
 
-    details = ManagePostDetails(thread_id, post_id, ip4)
+    details = ManagePostDetails(board_name, thread_refno, post_id, ip4)
     mode_string = form.get('mode')
     success_message = 'Success!'
     if mode_string == 'delete':
@@ -177,18 +180,17 @@ def post_manage():
 
 @app.route('/find_post/<int:post_id>')
 def find_post(post_id):
-    if post_id <= 0 or post_id > 2 ** 32:
-        abort(400)
+    valid_id_range(post_id)
 
     post = g.posts_service.find_post(post_id)
     if post:
-        return redirect(url_for_post(post.thread.board.name, post.thread.id, post.refno))
+        return redirect(url_for_post(post.thread.board.name, post.thread.refno, post.refno))
     else:
         abort(404)
 
 
-def url_for_post(board_name, thread_id, post_id):
-    return url_for('view_thread', board_name=board_name, thread_id=thread_id) + '#p' + str(post_id)
+def url_for_post(board_name, thread_refno, post_id):
+    return url_for('view_thread', board_name=board_name, thread_refno=thread_refno) + '#p' + str(post_id)
 
 
 app.jinja_env.globals['url_for_post'] = url_for_post
