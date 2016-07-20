@@ -129,9 +129,8 @@ def get_model_id(model, id):
 
 
 import uchan.view.index
-import uchan.view.board
-import uchan.view.post
 import uchan.view.thread
+import uchan.view.post
 import uchan.view.banned
 import uchan.view.page
 import uchan.view.verify
