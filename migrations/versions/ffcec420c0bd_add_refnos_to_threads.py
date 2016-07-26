@@ -37,8 +37,6 @@ def upgrade():
         for thread in threads:
             thread.refno = refno
             refno += 1
-            if refno % 30 == 0:
-                print('{}/{}'.format(refno, len(threads)))
         board.refno_counter = refno
 
         db.commit()
