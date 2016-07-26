@@ -62,9 +62,9 @@ def board(board_name, page=None):
         abort(404)
 
     return render_template('board.html', board=board_cached.board, threads=board_cached.threads,
-                           **get_board_view_params(board_config, 'board', board_name),
                            show_moderator_buttons=show_moderator_buttons(board_cached.board.id),
-                           page_index=page)
+                           page_index=page,
+                           **get_board_view_params(board_config, 'board', board_name))
 
 
 @app.route('/<string(maxlength=20):board_name>/view/<int:thread_id>')
@@ -99,8 +99,8 @@ def view_thread(board_name, thread_refno):
         additional_page_details['sticky'] = True
 
     return render_template('thread.html', thread=thread_cached, board=thread_cached.board,
-                           **get_board_view_params(board_config, 'thread', board_name, additional_page_details),
-                           show_moderator_buttons=show_moderator_buttons(thread_cached.board.id))
+                           show_moderator_buttons=show_moderator_buttons(thread_cached.board.id),
+                           **get_board_view_params(board_config, 'thread', board_name, additional_page_details))
 
 
 @app.route('/<string(maxlength=20):board_name>/catalog')
