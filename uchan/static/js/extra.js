@@ -457,9 +457,11 @@ var uchan;
         Watcher.prototype.resetTimer = function (newPosts) {
             this.totalNewPosts += newPosts;
             var delay;
-            if (newPosts == 0 && this.currentDelay < this.delays.length - 1) {
+            if (newPosts == 0) {
                 delay = this.delays[this.currentDelay];
-                this.currentDelay++;
+                if (this.currentDelay < this.delays.length - 1) {
+                    this.currentDelay++;
+                }
             }
             else {
                 delay = this.delays[0];
@@ -528,7 +530,7 @@ var uchan;
         };
         Watcher.prototype.xhrDone = function (error, data) {
             if (error) {
-                console.error('watcher error');
+                console.error('watcher error', error);
                 this.error = true;
             }
             else {
@@ -707,9 +709,130 @@ var uchan;
     }());
     uchan.Watcher = Watcher;
 })(uchan || (uchan = {}));
+var uchan;
+(function (uchan) {
+    var WatchInterface = (function () {
+        function WatchInterface(persistence, openWatchesElement) {
+            var _this = this;
+            this.persistence = persistence;
+            this.openWatchesElement = openWatchesElement;
+            this.openWatchesElement.addEventListener('click', function (e) { return _this.openWatches(e); });
+            this.element = document.createElement('div');
+            this.element.className = 'bookmarks';
+            this.element.innerHTML = '' +
+                '<div class="bookmarks-title">Bookmarks</div>' +
+                '<ul class="bookmarks-list"></ul>';
+            this.bookmarksListElement = this.element.querySelector('.bookmarks-list');
+            var linkListRight = document.querySelector('.link-list-right');
+            linkListRight.insertBefore(this.element, linkListRight.firstChild);
+            this.persistence.addCallback('watches', function () {
+                _this.update();
+            });
+            this.update();
+        }
+        WatchInterface.prototype.openWatches = function (event) {
+            event.preventDefault();
+        };
+        WatchInterface.prototype.update = function () {
+            var self = this;
+            this.bookmarksListElement.innerHTML = '';
+            var frag = document.createDocumentFragment();
+            var watches = this.persistence.getWatches();
+            for (var i = 0; i < watches.length; i++) {
+                var watch = watches[i];
+                var liElement = document.createElement('li');
+                liElement.innerHTML = '<li><div class="bookmark-delete">&#x2716;</div> <a href="#">foo</a></li>';
+                var del = liElement.querySelector('.bookmark-delete');
+                (function () {
+                    var i = watch;
+                    del.addEventListener('click', function () {
+                        self.deleteClicked(i);
+                    });
+                })();
+                var anchor = liElement.querySelector('a');
+                anchor.innerText = watch.board + ' - ' + watch.thread;
+                frag.appendChild(liElement);
+            }
+            this.bookmarksListElement.appendChild(frag);
+        };
+        WatchInterface.prototype.deleteClicked = function (watch) {
+            this.persistence.deleteWatch(watch);
+        };
+        return WatchInterface;
+    }());
+    uchan.WatchInterface = WatchInterface;
+})(uchan || (uchan = {}));
+var uchan;
+(function (uchan) {
+    var Persistence = (function () {
+        function Persistence() {
+            var _this = this;
+            this.callbacks = {};
+            this.localStorage = window.localStorage;
+            if (this.localStorage.getItem('uchan') == null) {
+                this.localStorage.setItem('uchan', '{}');
+            }
+            this.data = JSON.parse(this.localStorage.getItem('uchan'));
+            if (!('watches' in this.data)) {
+                this.data['watches'] = [];
+            }
+            this.flush();
+            window.addEventListener("storage", function (e) { return _this.onStorageChanged(e); });
+        }
+        Persistence.prototype.addCallback = function (name, func) {
+            var list = this.callbacks[name];
+            if (!list) {
+                list = [];
+                this.callbacks[name] = list;
+            }
+            list.push(func);
+        };
+        Persistence.prototype.onStorageChanged = function (event) {
+            console.log(event);
+        };
+        Persistence.prototype.addWatch = function (board, thread) {
+            this.data['watches'].push({
+                'board': board,
+                'thread': thread
+            });
+            this.flush();
+            this.notify('watches');
+        };
+        Persistence.prototype.deleteWatch = function (item) {
+            var watches = this.data['watches'];
+            for (var i = 0; i < watches.length; i++) {
+                var watch = watches[i];
+                if (watch['board'] == item['board'] && watch['thread'] == item['thread']) {
+                    watches.splice(i, 1);
+                    break;
+                }
+            }
+            this.flush();
+            this.notify('watches');
+        };
+        Persistence.prototype.getWatches = function () {
+            return this.data['watches'];
+        };
+        Persistence.prototype.notify = function (name) {
+            if (name in this.callbacks) {
+                var list = this.callbacks[name];
+                for (var i = 0; i < list.length; i++) {
+                    list[i]();
+                }
+            }
+        };
+        Persistence.prototype.flush = function () {
+            this.localStorage.setItem('uchan', JSON.stringify(this.data));
+        };
+        return Persistence;
+    }());
+    uchan.Persistence = Persistence;
+})(uchan || (uchan = {}));
 /// <reference path="qr.ts" />
-/// <reference path="watcher.ts" />
 /// <reference path="imageexpansion.ts" />
+/// <reference path="watcher.ts" />
+/// <reference path="watchinterface.ts" />
+/// <reference path="persistence.ts" />
 var uchan;
 (function (uchan) {
     uchan.context = {
@@ -720,6 +843,7 @@ var uchan;
         threadRefno: null,
         locked: false,
         sticky: false,
+        persistence: null,
         qr: null
     };
     uchan.escape = function (text) {
@@ -785,10 +909,21 @@ var uchan;
             uchan.context.threadRefno = pageDetails.threadRefno || null;
             uchan.context.locked = pageDetails.locked || false;
             uchan.context.sticky = pageDetails.sticky || false;
+            uchan.context.persistence = new uchan.Persistence();
+            var linkListRight = document.querySelector('.top-bar-right');
+            linkListRight.innerHTML = '[<a id="open-watches" href="#">Bookmarks</a>] ' + linkListRight.innerHTML;
+            var openWatches = linkListRight.querySelector('#open-watches');
+            var watchInterface = new uchan.WatchInterface(uchan.context.persistence, openWatches);
+            var replyButtons = document.querySelector('.thread-controls');
             if (uchan.context.mode == 'thread') {
-                var replyButtons = document.querySelector('.thread-controls');
-                replyButtons.innerHTML += '[<a id="open-qr" href="#">Reply</a>] [<a id="watch-update" href="#">Update</a>] ' +
-                    '<span id="watch-status"></span>';
+                replyButtons.innerHTML += '[<a id="open-qr" href="#">Reply</a>]' +
+                    ' [<a id="watch-thread" href="#">Watch thread</a>]' +
+                    ' [<a id="watch-update" href="#">Update</a>] <span id="watch-status"></span>';
+                var watchThread = replyButtons.querySelector('#watch-thread');
+                watchThread.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    uchan.context.persistence.addWatch(uchan.context.boardName, uchan.context.threadRefno);
+                });
             }
             if (uchan.context.mode == 'board' || uchan.context.mode == 'thread') {
                 var imageExpansion = new uchan.ImageExpansion();

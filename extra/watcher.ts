@@ -73,9 +73,11 @@ namespace uchan {
         resetTimer(newPosts:number) {
             this.totalNewPosts += newPosts;
             var delay;
-            if (newPosts == 0 && this.currentDelay < this.delays.length - 1) {
+            if (newPosts == 0) {
                 delay = this.delays[this.currentDelay];
-                this.currentDelay++;
+                if (this.currentDelay < this.delays.length - 1) {
+                    this.currentDelay++;
+                }
             } else {
                 delay = this.delays[0];
                 this.currentDelay = 0;
@@ -147,7 +149,7 @@ namespace uchan {
 
         xhrDone(error:Error, data:any) {
             if (error) {
-                console.error('watcher error');
+                console.error('watcher error', error);
                 this.error = true;
             } else {
                 this.error = false;

@@ -45,8 +45,7 @@ def init_db():
     _engine = create_engine(connect_string(), pool_size=config.DATABASE_POOL_SIZE, echo=echo)
     _sessionconstruct = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=_engine))
 
-    # Import our models. If you add new models, import them here.
-    from uchan.lib.models import Post, Thread, Board, Session, Report, Moderator, Config, File, Ban, Page, Verification
+    import uchan.lib.models
 
 
 def metadata_create_all():

@@ -43,7 +43,7 @@
 .qr .error-message {
     display: none;
     width: calc(100% - 12px);
-    max-width: 500px;
+    max-width: calc(300px - 2px);
     margin: 1px;
     padding: 5px;
     background-color: #ff0000;
@@ -80,4 +80,37 @@
     width: 75px;
     float: right;
     margin: 1px 1px 2px 1px;
+}
+
+.bookmarks {
+    position: absolute;
+    width: 250px;
+    height: 300px;
+    margin-top: 20px;
+    right: 5px;
+    border: 1px solid #B1B1B1;
+    background-color: #fff4e2;
+    padding: 10px;
+}
+
+.bookmarks .bookmarks-title {
+    font-weight: bold;
+    text-align: center;
+}
+
+.bookmarks ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: scroll;
+    height: calc(100% - 15px);
+}
+
+.bookmarks li {
+    line-height: 1.5em;
+}
+
+.bookmarks .bookmark-delete {
+    cursor: pointer;
+    display: inline-block;
 }

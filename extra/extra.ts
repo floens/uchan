@@ -1,18 +1,21 @@
 /// <reference path="qr.ts" />
-/// <reference path="watcher.ts" />
 /// <reference path="imageexpansion.ts" />
+/// <reference path="watcher.ts" />
+/// <reference path="watchinterface.ts" />
+/// <reference path="persistence.ts" />
 
 module uchan {
     export var context = {
-        mode: null,
-        boardName: null,
-        postEndpoint: null,
+        mode: null as string,
+        boardName: null as string,
+        postEndpoint: null as string,
         filePostingEnabled: false,
-        threadRefno: null,
+        threadRefno: null as number,
         locked: false,
         sticky: false,
 
-        qr: null
+        persistence: null as Persistence,
+        qr: null as QR
     };
 
     export var escape = function(text) {
@@ -38,14 +41,14 @@ module uchan {
         return Math.round(num * i) / i;
     };
 
-    export var xhrJsonGet = function(endpoint:string, callback:(error:Error, data:any) => void) {
+    export var xhrJsonGet = function(endpoint: string, callback: (error: Error, data: any) => void) {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', endpoint);
         xhr.send(null);
         xhr.onload = function(event) {
             if (xhr.status == 200) {
                 var jsonData = null;
-                var e:Error = null;
+                var e: Error = null;
                 try {
                     jsonData = JSON.parse(xhr.responseText);
                 } catch (err) {
@@ -80,10 +83,25 @@ module uchan {
             context.locked = pageDetails.locked || false;
             context.sticky = pageDetails.sticky || false;
 
+            context.persistence = new Persistence();
+
+            var linkListRight = document.querySelector('.top-bar-right');
+            linkListRight.innerHTML = '[<a id="open-watches" href="#">Bookmarks</a>] ' + linkListRight.innerHTML;
+            var openWatches = linkListRight.querySelector('#open-watches');
+
+            var watchInterface = new WatchInterface(context.persistence, openWatches);
+
+            var replyButtons = document.querySelector('.thread-controls');
             if (context.mode == 'thread') {
-                var replyButtons = document.querySelector('.thread-controls');
-                replyButtons.innerHTML += '[<a id="open-qr" href="#">Reply</a>] [<a id="watch-update" href="#">Update</a>] ' +
-                    '<span id="watch-status"></span>';
+                replyButtons.innerHTML += '[<a id="open-qr" href="#">Reply</a>]' +
+                    ' [<a id="watch-thread" href="#">Watch thread</a>]' +
+                    ' [<a id="watch-update" href="#">Update</a>] <span id="watch-status"></span>';
+
+                var watchThread = replyButtons.querySelector('#watch-thread');
+                watchThread.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    context.persistence.addWatch(context.boardName, context.threadRefno);
+                });
             }
 
             if (context.mode == 'board' || context.mode == 'thread') {

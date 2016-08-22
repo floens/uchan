@@ -49,12 +49,6 @@
     {% endif %}
 {% endblock %}
 
-
-{% block styles %}
-    {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style/extra.css' if config.DEBUG else 'style/extra.6.css') }}">
-{% endblock %}
-
 {% block javascripts %}
     {{ super() }}
     <script src="{{ url_for('static', filename='js/thread.js' if config.DEBUG else 'js/thread.5.js') }}"></script>

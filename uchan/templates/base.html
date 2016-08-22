@@ -22,7 +22,7 @@
 <body>
 
 {% if all_boards %}
-    <div class="link-list">
+    <div class="top-bar link-list">
         [<a href="{{ url_for('index') }}">index</a>]
         [
         {%- for board in all_boards.boards -%}
@@ -30,7 +30,7 @@
         {%- endfor -%}
         ]
 
-        <div class="link-list-right">
+        <div class="top-bar-right link-list-right">
             {%- for header_link in header_links -%}
                 [<a href="{{ header_link[1] }}">{{ header_link[0] }}</a>]
             {%- endfor -%}

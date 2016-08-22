@@ -26,6 +26,11 @@
 
 {% endblock %}
 
+{% block styles %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='style/extra.css' if config.DEBUG else 'style/extra.6.css') }}">
+{% endblock %}
+
 {% block javascripts %}
     <script>
         window.pageDetails = {{ page_details|tojson|safe }};
