@@ -53,6 +53,11 @@ DATABASE_POOL_SIZE = 4
 # Generate with `import os` `os.urandom(32)`
 SECRET_KEY = None
 
+# What should be the base contents of manifest.json
+MANIFEST = {
+    'name': 'uchan'
+}
+
 # List of enabled plugins
 PLUGINS = []
 

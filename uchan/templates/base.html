@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}">
+    <link rel="manifest" href="{{ url_for('manifest_json') }}">
 
     {% block styles %}
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style/style.css' if config.DEBUG else 'style/style.8.css') }}">

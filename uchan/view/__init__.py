@@ -1,15 +1,14 @@
+import random
 import string
+from functools import wraps
 from urllib.parse import urlparse
 
-import config
-import random
 from flask import send_from_directory, session, request, abort, url_for, render_template, jsonify
-from functools import wraps
 from markupsafe import escape, Markup
-from sqlalchemy.orm.exc import NoResultFound
+
+import config
 from uchan import g, app
 from uchan.filter.app_filters import page_formatting
-from uchan.lib.database import get_db
 from uchan.lib.service import PageService
 
 
@@ -57,6 +56,15 @@ def favicon():
 @app.route('/robots.txt')
 def robots():
     return send_from_directory(app.static_folder, 'robots.txt')
+
+
+@app.route('/manifest.json')
+def manifest_json():
+    manifest = config.MANIFEST.copy()
+
+    g.plugin_manager.execute_hook('manifest_json', manifest)
+
+    return jsonify(manifest)
 
 
 def generate_csrf_token():
@@ -122,3 +130,4 @@ import uchan.view.post
 import uchan.view.banned
 import uchan.view.page
 import uchan.view.verify
+import uchan.view.watch
