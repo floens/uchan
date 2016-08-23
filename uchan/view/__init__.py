@@ -130,4 +130,3 @@ import uchan.view.post
 import uchan.view.banned
 import uchan.view.page
 import uchan.view.verify
-import uchan.view.watch
