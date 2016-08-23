@@ -104,13 +104,16 @@ class FileService:
         return self.cdn.resolve_to_uri(name)
 
     def handle_upload(self, file, thumbnail_size):
-        extension = self._get_extension(file.filename)
+        user_file_name = file.filename
+        if not user_file_name:
+            raise ArgumentError('Invalid file name')
+
+        extension = self._get_extension(user_file_name)
         if not extension:
             raise ArgumentError('Invalid file format')
 
-        user_file_name = file.filename
-        if not user_file_name or len(user_file_name) > self.MAX_FILE_NAME_LENGTH:
-            raise ArgumentError('Invalid file name')
+        # truncate filename if too long
+        user_file_name = user_file_name[:self.MAX_FILE_NAME_LENGTH]
 
         filename, extension = self._get_filename(extension)
 
