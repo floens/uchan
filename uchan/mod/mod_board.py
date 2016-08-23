@@ -35,9 +35,9 @@ def mod_board(board_name):
         abort(404)
 
     board_config_row = board.config
-    board_config = g.config_service.load_config(board_config_row, moderator)
-
     if request.method == 'GET':
+        board_config = g.config_service.load_config(board_config_row, moderator)
+
         # Put the request moderator on top
         board_moderators_unsorted = sorted(board.board_moderators,
                                            key=lambda board_moderator: board_moderator.moderator.id)
@@ -57,6 +57,11 @@ def mod_board(board_name):
                                board_moderators=board_moderators, can_delete=can_delete,
                                all_board_roles=all_board_roles)
     else:
+        # Don't filter on permission when loading the config here.
+        # If you would filter the configs here then configs set by mods that do have the permission get lost.
+        # Permission checking is done when saving.
+        board_config = g.config_service.load_config(board_config_row, None)
+
         form = request.form
 
         if not check_csrf_token(form.get('token')):
