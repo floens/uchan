@@ -9,7 +9,7 @@ namespace uchan {
         boardName:string;
         threadRefno:number;
         postsElement:HTMLElement;
-        statusElement:HTMLElement;
+        statusElements:HTMLElement[];
         imageExpansion:ImageExpansion;
 
         xhr:XMLHttpRequest = null;
@@ -24,11 +24,11 @@ namespace uchan {
         documentTitle:string;
         totalNewPosts = 0;
 
-        constructor(boardName, threadRefno, postsElement, statusElement, imageExpansion) {
+        constructor(boardName, threadRefno, postsElement, statusElements, imageExpansion) {
             this.boardName = boardName;
             this.threadRefno = threadRefno;
             this.postsElement = postsElement;
-            this.statusElement = statusElement;
+            this.statusElements = statusElements;
             this.imageExpansion = imageExpansion;
 
             this.documentTitle = document.title;
@@ -127,7 +127,9 @@ namespace uchan {
                 status = Math.ceil((this.targetTime - Date.now()) / 1000).toString();
                 invalidate = true;
             }
-            this.statusElement.textContent = status;
+            for (var i = 0; i < this.statusElements.length; i++) {
+                this.statusElements[i].textContent = status;
+            }
 
             if (this.totalNewPosts > 0) {
                 document.title = '(' + this.totalNewPosts + ') ' + this.documentTitle;

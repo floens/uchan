@@ -91,17 +91,32 @@ module uchan {
 
             var watchInterface = new WatchInterface(context.persistence, openWatches);
 
-            var replyButtons = document.querySelector('.thread-controls');
-            if (context.mode == 'thread') {
-                replyButtons.innerHTML += '[<a id="open-qr" href="#">Reply</a>]' +
-                    ' [<a id="watch-thread" href="#">Watch thread</a>]' +
-                    ' [<a id="watch-update" href="#">Update</a>] <span id="watch-status"></span>';
+            var threadControls = document.querySelectorAll('.thread-controls');
+            var openQrControls: HTMLElement[] = [];
+            var watchThreadControls: HTMLElement[] = [];
+            var watchUpdateControls: HTMLElement[] = [];
+            var watchStatusElements: HTMLElement[] = [];
 
-                var watchThread = replyButtons.querySelector('#watch-thread');
-                watchThread.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    context.persistence.addWatch(context.boardName, context.threadRefno);
-                });
+            if (context.mode == 'thread') {
+                for (var i = 0; i < threadControls.length; i++) {
+                    var threadControl = threadControls[i];
+                    threadControl.innerHTML += '[<a class="open-qr" href="#">Reply</a>]' +
+                        ' [<a class="watch-thread" href="#">Watch thread</a>]' +
+                        ' [<a class="watch-update" href="#">Update</a>] <span class="watch-status"></span>';
+
+                    openQrControls.push(<HTMLElement>threadControl.querySelector('.open-qr'));
+                    watchThreadControls.push(<HTMLElement>threadControl.querySelector('.watch-thread'));
+                    watchUpdateControls.push(<HTMLElement>threadControl.querySelector('.watch-update'));
+                    watchStatusElements.push(<HTMLElement>threadControl.querySelector('.watch-status'));
+                }
+
+                for (var i = 0; i < watchThreadControls.length; i++) {
+                    var watchThreadControl = watchThreadControls[i];
+                    watchThreadControl.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        context.persistence.addWatch(context.boardName, context.threadRefno);
+                    });
+                }
             }
 
             if (context.mode == 'board' || context.mode == 'thread') {
@@ -114,15 +129,17 @@ module uchan {
                 //postForm.style.display = 'none';
 
                 var postsElement = document.querySelector('.posts');
-                var watchStatusElement = replyButtons.querySelector('#watch-status');
-                var watcher = new Watcher(context.boardName, context.threadRefno, postsElement, watchStatusElement, imageExpansion);
+                var watcher = new Watcher(context.boardName, context.threadRefno, postsElement, watchStatusElements, imageExpansion);
                 var posts = <NodeListOf<HTMLElement>>postsElement.querySelectorAll('.post');
                 watcher.bindPosts(posts);
 
                 context.qr = new QR(watcher);
-                context.qr.addShowClickListener(replyButtons.querySelector('#open-qr'));
-
-                watcher.addUpdateListener(replyButtons.querySelector('#watch-update'));
+                for (var i = 0; i < openQrControls.length; i++) {
+                    context.qr.addShowClickListener(openQrControls[i]);
+                }
+                for (var i = 0; i < watchUpdateControls.length; i++) {
+                    watcher.addUpdateListener(watchUpdateControls[i]);
+                }
                 watcher.bindRefnos();
             }
         }

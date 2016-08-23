@@ -2,6 +2,7 @@ namespace uchan {
     export class WatchInterface {
         persistence: Persistence;
         openWatchesElement: HTMLElement;
+        shown = false;
 
         element: HTMLElement;
         bookmarksListElement: HTMLUListElement;
@@ -13,6 +14,7 @@ namespace uchan {
 
             this.element = document.createElement('div');
             this.element.className = 'bookmarks';
+            this.element.style.display = 'none';
             this.element.innerHTML = '' +
                 '<div class="bookmarks-title">Bookmarks</div>' +
                 '<ul class="bookmarks-list"></ul>';
@@ -29,6 +31,8 @@ namespace uchan {
 
         openWatches(event) {
             event.preventDefault();
+            this.shown = !this.shown;
+            this.element.style.display = this.shown ? 'block' : 'none';
         }
 
         private update() {
