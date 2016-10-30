@@ -2,13 +2,15 @@ from flask import redirect
 from flask import render_template, abort
 from flask import url_for
 
-from uchan import app, g
+from uchan import app
+from uchan.lib.cache import board_cache, posts_cache, site_cache
 from uchan.lib.moderator_request import get_authed, request_moderator
 from uchan.lib.utils import valid_id_range
+from uchan.lib.service import posts_service, moderator_service
 
 
 def get_board_view_params(board_config, mode, board_name, additional_page_details=None):
-    global_posting_enabled = g.site_cache.find_site_config().get('file_posting_enabled')
+    global_posting_enabled = site_cache.find_site_config().get('file_posting_enabled')
     file_posting_enabled = board_config.get('file_posting_enabled') and global_posting_enabled
 
     details = {
@@ -33,7 +35,7 @@ def get_board_view_params(board_config, mode, board_name, additional_page_detail
 def show_moderator_buttons(board_id):
     if get_authed():
         moderator = request_moderator()
-        if g.moderator_service.moderates_board_id(moderator, board_id):
+        if moderator_service.moderates_board_id(moderator, board_id):
             return True
 
     return False
@@ -42,7 +44,7 @@ def show_moderator_buttons(board_id):
 @app.route('/<string(maxlength=20):board_name>/')
 @app.route('/<string(maxlength=20):board_name>/<int:page>')
 def board(board_name, page=None):
-    board_config = g.board_cache.find_board_config(board_name)
+    board_config = board_cache.find_board_config(board_name)
     if not board_config:
         abort(404)
 
@@ -57,7 +59,7 @@ def board(board_name, page=None):
 
     page -= 1
 
-    board_cached = g.posts_cache.find_board_cached(board_name, page)
+    board_cached = posts_cache.find_board_cached(board_name, page)
     if not board_cached:
         abort(404)
 
@@ -71,7 +73,7 @@ def board(board_name, page=None):
 def view_thread_id(board_name, thread_id):
     valid_id_range(thread_id)
 
-    thread = g.posts_service.find_thread(thread_id, False)
+    thread = posts_service.find_thread(thread_id, False)
     if thread:
         return redirect(url_for('.view_thread', board_name=thread.board.name, thread_refno=thread.refno))
     abort(404)
@@ -81,11 +83,11 @@ def view_thread_id(board_name, thread_id):
 def view_thread(board_name, thread_refno):
     valid_id_range(thread_refno)
 
-    board_config = g.board_cache.find_board_config(board_name)
+    board_config = board_cache.find_board_config(board_name)
     if not board_config:
         abort(404)
 
-    thread_cached = g.posts_cache.find_thread_cached(board_name, thread_refno)
+    thread_cached = posts_cache.find_thread_cached(board_name, thread_refno)
 
     if not thread_cached or thread_cached.board.name != board_name:
         abort(404)
@@ -105,11 +107,11 @@ def view_thread(board_name, thread_refno):
 
 @app.route('/<string(maxlength=20):board_name>/catalog')
 def board_catalog(board_name):
-    board_config = g.board_cache.find_board_config(board_name)
+    board_config = board_cache.find_board_config(board_name)
     if not board_config:
         abort(404)
 
-    board_cached = g.posts_cache.find_board_cached(board_name)
+    board_cached = posts_cache.find_board_cached(board_name)
     if not board_cached:
         abort(404)
 

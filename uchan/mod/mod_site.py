@@ -1,6 +1,6 @@
 from flask import request, render_template, abort, flash, redirect, url_for, session
 
-from uchan import g, app
+from uchan import app
 from uchan.lib import roles, ArgumentError
 from uchan.lib.configs import SiteConfig
 from uchan.lib.database import get_db
@@ -8,6 +8,8 @@ from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Board, Post, Thread, Session, Ban, Report, Moderator, File, Config
 from uchan.lib.moderator_request import request_moderator
 from uchan.lib.proxy_request import get_request_ip4_str
+from uchan.lib.service import config_service
+from uchan.lib.cache import cache, site_cache
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import check_csrf_token, with_token
 
@@ -15,8 +17,8 @@ from uchan.view import check_csrf_token, with_token
 @mod.route('/mod_site', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_site():
-    site_config_row = g.config_service.get_config_by_type(SiteConfig.TYPE)
-    site_config = g.config_service.load_config(site_config_row)
+    site_config_row = config_service.get_config_by_type(SiteConfig.TYPE)
+    site_config = config_service.load_config(site_config_row)
     moderator = request_moderator()
 
     if request.method == 'GET':
@@ -33,10 +35,10 @@ def mod_site():
             abort(400)
 
         try:
-            g.config_service.save_from_form(moderator, site_config, site_config_row, form, 'mod_site_')
+            config_service.save_from_form(moderator, site_config, site_config_row, form, 'mod_site_')
             flash('Site config updated')
             mod_log('site config updated')
-            g.site_cache.invalidate_site_config()
+            site_cache.invalidate_site_config()
         except ArgumentError as e:
             flash(str(e))
 
@@ -75,7 +77,7 @@ def mod_stat():
 @mod.route('/memcache_stat')
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_memcache_stat():
-    client = g.cache._client
+    client = cache._client
 
     stats = client.get_stats()
 

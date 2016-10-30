@@ -1,6 +1,6 @@
-from uchan import g
 from uchan.filter.app_filters import page_formatting
-from uchan.lib.cache import CacheDict, LocalCache
+from uchan.lib.cache import cache, CacheDict, LocalCache
+from uchan.lib.service import page_service
 
 
 class PageCacheProxy(CacheDict):
@@ -20,65 +20,68 @@ class PagesCacheProxy(CacheDict):
         self.pages = [PageCacheProxy(i) for i in pages]
 
 
-class PageCache:
-    def __init__(self, cache):
-        self.cache = cache
-        self.local_cache = LocalCache()
+local_cache = LocalCache()
 
-    def find_page_cached(self, link_name):
-        key = self.get_page_key(link_name)
 
-        local_cached = self.local_cache.get(key)
-        if local_cached is not None:
-            return local_cached
+def find_page_cached(link_name):
+    key = get_page_key(link_name)
 
-        page_cache = self.cache.get(key, True)
-        if page_cache is None:
-            page_cache = self.invalidate_page_cache(link_name)
+    local_cached = local_cache.get(key)
+    if local_cached is not None:
+        return local_cached
 
-        if page_cache is not None:
-            self.local_cache.set(key, page_cache)
+    page_cache = cache.get(key, True)
+    if page_cache is None:
+        page_cache = invalidate_page_cache(link_name)
 
-        return page_cache
+    if page_cache is not None:
+        local_cache.set(key, page_cache)
 
-    def get_page_key(self, link_name):
-        return 'page_single${}'.format(link_name)
+    return page_cache
 
-    def invalidate_page_cache(self, link_name):
-        key = self.get_page_key(link_name)
-        page = g.page_service.get_page_for_link_name(link_name)
-        if not page:
-            self.cache.delete(key)
-            return None
-        page_cache = PageCacheProxy(page)
-        self.cache.set(key, page_cache, timeout=0)
-        return page_cache
 
-    def find_pages_for_type_cached(self, page_type):
-        key = self.get_pages_type_key(page_type)
+def get_page_key(link_name):
+    return 'page_single${}'.format(link_name)
 
-        local_cached = self.local_cache.get(key)
-        if local_cached is not None:
-            return local_cached
 
-        pages_cache = self.cache.get(key, True)
-        if not pages_cache:
-            pages_cache = self.invalidate_pages_with_type(page_type)
+def invalidate_page_cache(link_name):
+    key = get_page_key(link_name)
+    page = page_service.get_page_for_link_name(link_name)
+    if not page:
+        cache.delete(key)
+        return None
+    page_cache = PageCacheProxy(page)
+    cache.set(key, page_cache, timeout=0)
+    return page_cache
 
-        if pages_cache is not None:
-            self.local_cache.set(key, pages_cache)
 
-        return pages_cache
+def find_pages_for_type_cached(page_type):
+    key = get_pages_type_key(page_type)
 
-    def get_pages_type_key(self, page_type):
-        return 'page_type${}'.format(page_type)
+    local_cached = local_cache.get(key)
+    if local_cached is not None:
+        return local_cached
 
-    def invalidate_pages_with_type(self, page_type):
-        key = self.get_pages_type_key(page_type)
-        pages = g.page_service.get_pages_for_type(page_type)
-        if pages is None:
-            self.cache.delete(key)
-            return None
-        pages_cache = PagesCacheProxy(pages)
-        self.cache.set(key, pages_cache, timeout=0)
-        return pages_cache
+    pages_cache = cache.get(key, True)
+    if not pages_cache:
+        pages_cache = invalidate_pages_with_type(page_type)
+
+    if pages_cache is not None:
+        local_cache.set(key, pages_cache)
+
+    return pages_cache
+
+
+def get_pages_type_key(page_type):
+    return 'page_type${}'.format(page_type)
+
+
+def invalidate_pages_with_type(page_type):
+    key = get_pages_type_key(page_type)
+    pages = page_service.get_pages_for_type(page_type)
+    if pages is None:
+        cache.delete(key)
+        return None
+    pages_cache = PagesCacheProxy(pages)
+    cache.set(key, pages_cache, timeout=0)
+    return pages_cache

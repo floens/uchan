@@ -2,7 +2,7 @@ import json
 from time import time
 
 import config
-from uchan import g
+from uchan import logger
 from uchan.lib.utils import now
 from werkzeug.contrib.cache import MemcachedCache
 
@@ -32,16 +32,17 @@ class CacheWrapper(MemcachedCache):
         json_data = json.dumps(value, separators=(',', ':'))
 
         if len(json_data) > self.max_length:
-            g.logger.error('cache value exceeds max length ({} > {})'.format(len(json_data), self.max_length))
+            logger.error('cache value exceeds max length ({} > {})'.format(len(json_data), self.max_length))
             return False
 
         percentage = len(json_data) / self.max_length
         if percentage > 0.5:
-            g.logger.warning('key {0} exceeds 50% of the total storage available ({1:.2f}%)'.format(key, percentage * 100))
+            logger.warning(
+                'key {0} exceeds 50% of the total storage available ({1:.2f}%)'.format(key, percentage * 100))
 
         ret = super().set(key, json_data, **kwargs)
         if not ret:
-            g.logger.error('cache set failed {}'.format(ret))
+            logger.error('cache set failed {}'.format(ret))
         return bool(ret)
 
     def get(self, key, convert=False):
@@ -107,7 +108,9 @@ class LocalCache:
         return None
 
 
-from uchan.lib.cache.board_cache import BoardCache
-from uchan.lib.cache.posts_cache import PostsCache
-from uchan.lib.cache.site_cache import SiteCache
-from uchan.lib.cache.page_cache import PageCache
+cache = CacheWrapper(servers=config.MEMCACHED_SERVERS)
+
+import uchan.lib.cache.board_cache
+import uchan.lib.cache.posts_cache
+import uchan.lib.cache.site_cache
+import uchan.lib.cache.page_cache

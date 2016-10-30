@@ -1,4 +1,5 @@
-from uchan import celery, g
+from uchan import celery
+from uchan.lib.service import report_service
 
 
 class ManageReportDetails:
@@ -14,4 +15,4 @@ class ManageReportDetails:
 
 @celery.task
 def manage_report_task(manage_report_details):
-    g.report_service.handle_manage_report(manage_report_details)
+    report_service.handle_manage_report(manage_report_details)

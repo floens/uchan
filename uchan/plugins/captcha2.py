@@ -2,9 +2,9 @@ import dateutil.parser
 import requests
 
 import config
-from uchan import g
+from uchan import logger
 from uchan.lib import ArgumentError
-from uchan.lib.service.verification_service import VerificationMethod
+from uchan.lib.service import verification_service
 from uchan.lib.utils import now
 
 """
@@ -30,7 +30,7 @@ def describe_plugin():
     }
 
 
-class Recaptcha2Method(VerificationMethod):
+class Recaptcha2Method(verification_service.VerificationMethod):
     def __init__(self, sitekey, secret):
         super().__init__()
 
@@ -81,7 +81,7 @@ class Recaptcha2Method(VerificationMethod):
         try:
             valid = self.verify(response)
         except Exception:
-            g.logger.exception('Verify exception')
+            logger.exception('Verify exception')
             raise ArgumentError('Error contacting recaptcha service')
 
         if not valid:
@@ -122,4 +122,4 @@ def on_enable():
         raise RuntimeError('sitekey or secret empty in PLUGIN_CONFIG')
 
     method = Recaptcha2Method(sitekey, secret)
-    g.verification_service.add_method(method)
+    verification_service.add_method(method)

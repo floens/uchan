@@ -1,7 +1,7 @@
 from flask import render_template, abort, request, flash, redirect, url_for
 
-from uchan import g
 from uchan.lib import roles, ArgumentError
+from uchan.lib.service import ban_service, posts_service, board_service
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Ban
 from uchan.lib.proxy_request import parse_ip4
@@ -13,12 +13,12 @@ from uchan.view import with_token
 @mod.route('/mod_ban')
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_bans():
-    bans = g.ban_service.get_all_bans()
+    bans = ban_service.get_all_bans()
 
     ban_ip4 = ''
     post_id = request.args.get('for_post', None)
     if post_id:
-        post = g.posts_service.find_post(post_id)
+        post = posts_service.find_post(post_id)
         if post:
             ban_ip4 = ip4_to_str(post.ip4)
 
@@ -43,7 +43,7 @@ def mod_ban_add():
     board = request.form.get('board', None)
     if not board:
         board = None
-    if board is not None and not g.board_service.check_board_name_validity(board):
+    if board is not None and not board_service.check_board_name_validity(board):
         abort(400)
 
     ban_length_hours = request.form.get('ban_length', type=int)
@@ -70,7 +70,7 @@ def mod_ban_add():
     ban.length = ban_length_hours * 60 * 60 * 1000
 
     try:
-        g.ban_service.add_ban(ban)
+        ban_service.add_ban(ban)
         flash('Ban added')
         mod_log('ban add {} from {} to {}{} for {} hours reason {}'.format(
             ban.id, ip4_to_str(ip4), ip4_to_str(ip4_end) if ip4_end is not None else '-',
@@ -89,11 +89,11 @@ def mod_ban_delete():
     if not ban_id or ban_id < 0:
         abort(400)
 
-    ban = g.ban_service.find_ban_id(ban_id)
+    ban = ban_service.find_ban_id(ban_id)
     if not ban:
         abort(404)
 
-    g.ban_service.delete_ban(ban)
+    ban_service.delete_ban(ban)
     flash('Ban deleted')
     mod_log('ban delete {}'.format(ban_id))
 

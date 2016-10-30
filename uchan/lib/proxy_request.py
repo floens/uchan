@@ -1,10 +1,12 @@
 from flask import request
-from uchan import g
+
+from uchan import logger
 from uchan.lib import ArgumentError
 
 
 def get_request_ip4_str():
-    # You must set the correct config.USE_PROXY_FIXER and config.PROXY_FIXER_NUM_PROXIES settings for this to return the correct value
+    # You must set the correct config.USE_PROXY_FIXER and config.PROXY_FIXER_NUM_PROXIES settings for this to return
+    # the correct value
     return request.remote_addr
 
 
@@ -12,7 +14,7 @@ def get_request_ip4():
     try:
         ip4 = parse_ip4(get_request_ip4_str())
     except ValueError:
-        g.logger.exception('Failed to parse request ip4')
+        logger.exception('Failed to parse request ip4')
         raise ArgumentError('Invalid request')
     return ip4
 

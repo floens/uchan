@@ -1,5 +1,4 @@
-from uchan.lib import ArgumentError
-from uchan.lib import roles
+from uchan.lib import ArgumentError, roles
 
 
 class DynamicConfigItem:

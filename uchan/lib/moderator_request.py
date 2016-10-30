@@ -1,10 +1,12 @@
-# Helper methods for managing the moderator attached to the session
-
 from flask import g as flaskg
 from flask import session
 
-from uchan import g
 from uchan.lib import ArgumentError
+from uchan.lib.service import moderator_service
+
+"""
+Helper methods for managing the moderator attached to the session
+"""
 
 
 def get_authed():
@@ -16,7 +18,7 @@ def request_moderator():
     if not hasattr(flaskg, 'authed_moderator'):
         if not get_authed():
             raise ArgumentError('Not authed')
-        mod = g.moderator_service.find_moderator_id(session['mod_auth_id'])
+        mod = moderator_service.find_moderator_id(session['mod_auth_id'])
         if mod is None:
             raise ArgumentError('Mod not found')
 
@@ -27,7 +29,7 @@ def request_moderator():
 
 def request_has_role(role):
     moderator = request_moderator()
-    return moderator is not None and g.moderator_service.has_role(moderator, role)
+    return moderator is not None and moderator_service.has_role(moderator, role)
 
 
 def set_mod_authed(moderator):

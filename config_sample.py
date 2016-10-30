@@ -53,15 +53,22 @@ DATABASE_POOL_SIZE = 4
 # Generate with `import os` `os.urandom(32)`
 SECRET_KEY = None
 
+BYPASS_WORKER = False
+
 # What should be the base contents of manifest.json
 MANIFEST = {
     'name': 'uchan'
 }
 
 # List of enabled plugins
-PLUGINS = []
+PLUGINS = ['captcha2']
 
 # A place for plugins to store their params
 # See the documentation of the plugin
 PLUGIN_CONFIG = {
+    'captcha2': {
+        # Both are test keys
+        'sitekey': '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
+        'secret': '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'
+    }
 }

@@ -1,4 +1,6 @@
-from uchan import celery, g
+import config
+from uchan import celery
+from uchan.lib.service import posts_service
 
 
 class PostDetails:
@@ -23,12 +25,12 @@ class PostDetails:
 
 @celery.task
 def post_check_task(post_details):
-    return g.posts_service.handle_post_check(post_details)
+    return posts_service.handle_post_check(post_details)
 
 
 @celery.task
 def post_task(post_details):
-    return g.posts_service.handle_post(post_details)
+    return posts_service.handle_post(post_details)
 
 
 class ManagePostDetails:
@@ -50,4 +52,4 @@ class ManagePostDetails:
 
 @celery.task
 def manage_post_task(manage_post_details):
-    g.posts_service.handle_manage_post(manage_post_details)
+    posts_service.handle_manage_post(manage_post_details)

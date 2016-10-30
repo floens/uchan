@@ -7,9 +7,11 @@ from flask import send_from_directory, session, request, abort, url_for, render_
 from markupsafe import escape, Markup
 
 import config
-from uchan import g, app
+from uchan import app
 from uchan.filter.app_filters import page_formatting
-from uchan.lib.service import PageService
+from uchan.lib import plugin_manager
+from uchan.lib.cache import site_cache, board_cache, page_cache
+from uchan.lib.service import page_service
 
 
 class ExtraJavascript:
@@ -25,17 +27,17 @@ class ExtraJavascript:
 
 @app.context_processor
 def inject_variables():
-    site_config = g.site_cache.find_site_config()
+    site_config = site_cache.find_site_config()
 
     all_boards = None
     if site_config.get('boards_top'):
-        all_boards = g.board_cache.all_boards()
+        all_boards = board_cache.all_boards()
 
-    footer_pages_cached = g.page_cache.find_pages_for_type_cached(PageService.TYPE_FOOTER_PAGE)
+    footer_pages_cached = page_cache.find_pages_for_type_cached(page_service.TYPE_FOOTER_PAGE)
     footer_pages = footer_pages_cached.pages if footer_pages_cached else []
 
     extra_javascript = ExtraJavascript()
-    g.plugin_manager.execute_hook('extra_javascript', extra_javascript)
+    plugin_manager.execute_hook('extra_javascript', extra_javascript)
 
     header_links = [
         ('mod', url_for('mod.mod_auth')),
@@ -62,7 +64,7 @@ def robots():
 def manifest_json():
     manifest = config.MANIFEST.copy()
 
-    g.plugin_manager.execute_hook('manifest_json', manifest)
+    plugin_manager.execute_hook('manifest_json', manifest)
 
     return jsonify(manifest)
 

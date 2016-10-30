@@ -15,7 +15,7 @@ class CustomFlaskApp(Flask):
                 self.session_interface.delete_session(session_item.session_id)
 
 
-def create_web_app(g, config, app):
+def create_web_app(config, app):
     if config.USE_PROXY_FIXER:
         app.wsgi_app = ProxyFix(app.wsgi_app, config.PROXY_FIXER_NUM_PROXIES)
 
@@ -24,17 +24,18 @@ def create_web_app(g, config, app):
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
 
+    from uchan import logger
     from uchan.lib import BadRequestError
 
     # Setup error handlers
     @app.errorhandler(500)
     def server_error_handler(error):
-        g.logger.exception(error)
+        logger.exception(error)
         return app.send_static_file('500.html'), 500
 
     @app.errorhandler(404)
     def server_error_handler(error):
-        g.logger.exception(error)
+        logger.exception(error)
         return app.send_static_file('404.html'), 404
 
     from uchan.view import render_error
@@ -60,14 +61,16 @@ def create_web_app(g, config, app):
 
     from uchan.lib.proxy_request import get_request_ip4
 
+    from uchan.lib.service import verification_service
+
     @app.errorhandler(VerificationError)
     def not_verified_handler(error):
-        g.verification_service.handle_not_verified(error, request, get_request_ip4())
+        verification_service.handle_not_verified(error, request, get_request_ip4())
         return render_error(str(error), with_retry=True)
 
     @app.after_request
     def after_request_handler(response):
-        g.verification_service.after_request(response)
+        verification_service.after_request(response)
         return response
 
     return app

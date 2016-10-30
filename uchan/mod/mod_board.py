@@ -1,20 +1,21 @@
 from flask import request, redirect, url_for, render_template, abort, flash
-from uchan import g
 from uchan.lib import ArgumentError
 from uchan.lib import roles
+from uchan.lib.cache import board_cache
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Board
 from uchan.lib.models.moderator_log import ModeratorLogType
 from uchan.lib.moderator_request import request_moderator
 from uchan.mod import mod
 from uchan.view import check_csrf_token, with_token
+from uchan.lib.service import board_service, moderator_service, config_service
 
 
 def get_board_or_abort(board_name):
-    if not board_name or not g.board_service.check_board_name_validity(board_name):
+    if not board_name or not board_service.check_board_name_validity(board_name):
         abort(400)
 
-    board = g.board_service.find_board(board_name)
+    board = board_service.find_board(board_name)
     if not board:
         abort(404)
     return board
@@ -31,12 +32,12 @@ def mod_board(board_name):
     board = get_board_or_abort(board_name)
 
     moderator = request_moderator()
-    if not g.moderator_service.moderates_board(moderator, board):
+    if not moderator_service.moderates_board(moderator, board):
         abort(404)
 
     board_config_row = board.config
     if request.method == 'GET':
-        board_config = g.config_service.load_config(board_config_row, moderator)
+        board_config = config_service.load_config(board_config_row, moderator)
 
         # Put the request moderator on top
         board_moderators_unsorted = sorted(board.board_moderators,
@@ -52,7 +53,7 @@ def mod_board(board_name):
 
         all_board_roles = roles.ALL_BOARD_ROLES
 
-        can_delete = g.moderator_service.has_role(moderator, roles.ROLE_ADMIN)
+        can_delete = moderator_service.has_role(moderator, roles.ROLE_ADMIN)
         return render_template('mod_board.html', board=board, board_config=board_config,
                                board_moderators=board_moderators, can_delete=can_delete,
                                all_board_roles=all_board_roles)
@@ -60,7 +61,7 @@ def mod_board(board_name):
         # Don't filter on permission when loading the config here.
         # If you would filter the configs here then configs set by mods that do have the permission get lost.
         # Permission checking is done when saving.
-        board_config = g.config_service.load_config(board_config_row, None)
+        board_config = config_service.load_config(board_config_row, None)
 
         form = request.form
 
@@ -68,10 +69,10 @@ def mod_board(board_name):
             abort(400)
 
         try:
-            g.moderator_service.user_update_board_config(moderator, board, board_config, board_config_row, form)
+            moderator_service.user_update_board_config(moderator, board, board_config, board_config_row, form)
             flash('Board config updated')
             mod_log('board /{}/ config updated'.format(board_name))
-            g.board_cache.invalidate_board_config(board_name)
+            board_cache.invalidate_board_config(board_name)
         except ArgumentError as e:
             flash(str(e))
 
@@ -88,7 +89,7 @@ def mod_board_log(board_name, page=0):
 
     moderator = request_moderator()
 
-    logs = g.moderator_service.user_get_logs(moderator, board, page, per_page)
+    logs = moderator_service.user_get_logs(moderator, board, page, per_page)
 
     def get_log_type(typeid):
         try:
@@ -110,7 +111,7 @@ def mod_board_moderator_invite(board_name):
     moderator_username = form['username']
 
     try:
-        g.moderator_service.user_invite_moderator(request_moderator(), board, moderator_username)
+        moderator_service.user_invite_moderator(request_moderator(), board, moderator_username)
         flash('Moderator invited')
     except ArgumentError as e:
         flash(str(e))
@@ -127,7 +128,7 @@ def mod_board_moderator_remove(board_name):
 
     removed_self = False
     try:
-        removed_self = g.moderator_service.user_remove_moderator(request_moderator(), board, moderator_username)
+        removed_self = moderator_service.user_remove_moderator(request_moderator(), board, moderator_username)
         flash('Moderator removed')
     except ArgumentError as e:
         flash(str(e))
@@ -151,7 +152,7 @@ def mod_board_roles_update(board_name):
             checked_roles.append(board_role)
 
     try:
-        g.moderator_service.user_update_roles(request_moderator(), board, moderator_username, checked_roles)
+        moderator_service.user_update_roles(request_moderator(), board, moderator_username, checked_roles)
         flash('Roles updated')
     except ArgumentError as e:
         flash(str(e))
@@ -168,7 +169,7 @@ def mod_board_add():
     board.name = board_name
 
     try:
-        g.moderator_service.user_create_board(request_moderator(), board)
+        moderator_service.user_create_board(request_moderator(), board)
         flash('Board added')
         mod_log('add board /{}/'.format(board_name))
     except ArgumentError as e:
@@ -184,7 +185,7 @@ def mod_board_delete():
     board = get_board_or_abort(request.form['board_name'])
 
     try:
-        g.moderator_service.user_delete_board(request_moderator(), board)
+        moderator_service.user_delete_board(request_moderator(), board)
         flash('Board deleted')
         mod_log('delete board /{}/'.format(board.name))
     except ArgumentError as e:

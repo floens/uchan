@@ -1,11 +1,8 @@
 from flask.globals import _request_ctx_stack
 
-from uchan import g
-from uchan.lib.database import get_db
-from uchan.lib.models import ModeratorLog
+from uchan import mod_logger
 from uchan.lib.moderator_request import request_moderator, get_authed
 from uchan.lib.proxy_request import get_request_ip4_str
-from uchan.lib.utils import now
 
 
 def mod_log(what, moderator_name=None, ip4_str=None):
@@ -29,4 +26,4 @@ def mod_log(what, moderator_name=None, ip4_str=None):
         output += '[' + moderator_name + '] '
     output += what
 
-    g.mod_logger.info(output)
+    mod_logger.info(output)

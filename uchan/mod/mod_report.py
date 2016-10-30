@@ -1,5 +1,4 @@
 from flask import render_template, request, abort, flash, redirect, url_for
-from uchan import g
 from uchan.filter.text_parser import parse_text
 from uchan.lib import roles, ArgumentError, BadRequestError
 from uchan.lib.cache.posts_cache import PostCacheProxy
@@ -8,6 +7,7 @@ from uchan.lib.models import Board
 from uchan.lib.moderator_request import request_moderator
 from uchan.lib.tasks.report_task import ManageReportDetails, manage_report_task
 from uchan.lib.utils import ip4_to_str
+from uchan.lib.service import board_service, moderator_service, report_service
 from uchan.mod import mod
 from uchan.view import with_token
 
@@ -20,7 +20,7 @@ def mod_report(page=0, boards=None):
     pages = 15
 
     moderator = request_moderator()
-    is_admin = g.moderator_service.has_role(moderator, roles.ROLE_ADMIN)
+    is_admin = moderator_service.has_role(moderator, roles.ROLE_ADMIN)
 
     boards_set = None
     board_ids = []
@@ -28,7 +28,7 @@ def mod_report(page=0, boards=None):
         query_set = set()
 
         for i in boards.split(','):
-            if not g.board_service.check_board_name_validity(i):
+            if not board_service.check_board_name_validity(i):
                 raise BadRequestError('Invalid boards')
             query_set.add(i)
 
@@ -46,7 +46,7 @@ def mod_report(page=0, boards=None):
             raise BadRequestError('Invalid boards')
 
     try:
-        reports = g.report_service.get_reports(moderator, page, per_page, board_ids)
+        reports = report_service.get_reports(moderator, page, per_page, board_ids)
     except ArgumentError as e:
         raise BadRequestError(e)
 
@@ -56,7 +56,7 @@ def mod_report(page=0, boards=None):
     view_ips = is_admin
     show_ban_button = is_admin
 
-    moderator_boards = moderator.boards if not is_admin else g.board_service.get_all_boards()
+    moderator_boards = moderator.boards if not is_admin else board_service.get_all_boards()
 
     pager_suffix = '/' + ','.join(boards_set) if boards_set else ''
     return render_template('mod_report.html', page=page, pages=pages, pager_suffix=pager_suffix,
@@ -76,7 +76,7 @@ def mod_report_manage():
     success_message = None
     mode_string = form['mode']
     if mode_string == 'ban':
-        report = g.report_service.find_report_id(report_id)
+        report = report_service.find_report_id(report_id)
         if not report:
             abort(400)
         post_id = report.post_id

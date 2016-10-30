@@ -1,9 +1,9 @@
 from flask import request, redirect, url_for, render_template, abort, flash
 
-from uchan import g
 from uchan.lib import roles, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Page
+from uchan.lib.service import page_service
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
 
@@ -12,7 +12,7 @@ def get_page_or_abort(page_id):
     if not page_id:
         abort(400)
 
-    page = g.page_service.find_page_id(page_id)
+    page = page_service.find_page_id(page_id)
     if not page:
         abort(404)
     return page
@@ -21,8 +21,8 @@ def get_page_or_abort(page_id):
 @mod.route('/mod_page')
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_pages():
-    pages = g.page_service.get_all_pages()
-    page_types = g.page_service.get_page_types()
+    pages = page_service.get_all_pages()
+    page_types = page_service.get_page_types()
 
     return render_template('mod_pages.html', pages=pages, page_types=page_types)
 
@@ -43,7 +43,7 @@ def mod_page_add():
     page.content = ''
 
     try:
-        g.page_service.create_page(page)
+        page_service.create_page(page)
         flash('Page added')
         mod_log('page {} added'.format(page_link_name))
     except ArgumentError as e:
@@ -58,7 +58,7 @@ def mod_page_add():
 def mod_page_delete():
     page = get_page_or_abort(request.form.get('page_id', type=int))
 
-    g.page_service.delete_page(page)
+    page_service.delete_page(page)
     flash('Page deleted')
     mod_log('page {} deleted'.format(page.link_name))
 
@@ -86,7 +86,7 @@ def mod_page_update(page_id):
         page.order = 0
 
     try:
-        g.page_service.update_page(page)
+        page_service.update_page(page)
         flash('Page updated')
         mod_log('page {} updated'.format(page.link_name))
     except ArgumentError as e:

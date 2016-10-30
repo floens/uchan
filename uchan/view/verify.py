@@ -1,16 +1,17 @@
 from flask import render_template, request, url_for, redirect
 
-from uchan import app, g
+from uchan import app
 from uchan.lib import ArgumentError
 from uchan.lib import BadRequestError
 from uchan.lib.proxy_request import get_request_ip4
+from uchan.lib.service import verification_service
 from uchan.view import check_csrf_referer
 
 
 @app.route('/verify/')
 def verify():
     ip4 = get_request_ip4()
-    verification = g.verification_service.get_verification_for_request(request, ip4)
+    verification = verification_service.get_verification_for_request(request, ip4)
 
     method_html = ''
 
@@ -38,7 +39,7 @@ def verify():
     verified_message = ', '.join(verified_messages) if verified_messages else None
 
     if any_not_verified:
-        method = g.verification_service.get_method()
+        method = verification_service.get_method()
         method_html = method.get_html()
 
     return render_template('verify.html', verifications=verifications, method_html=method_html,
@@ -53,7 +54,7 @@ def verify_do():
     ip4 = get_request_ip4()
 
     try:
-        g.verification_service.do_verify(request, ip4)
+        verification_service.do_verify(request, ip4)
     except ArgumentError as e:
         raise BadRequestError(e.message)
 

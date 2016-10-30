@@ -1,13 +1,15 @@
 from flask import request, abort, redirect, url_for, render_template, jsonify
 
-from uchan import app, g
+import config
+from uchan import app
 from uchan.filter.app_filters import time_remaining
 from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib.action_authorizer import RequestBannedException
 from uchan.lib.action_authorizer import RequestSuspendedException
+from uchan.lib.cache import board_cache, site_cache
 from uchan.lib.moderator_request import request_moderator, get_authed
 from uchan.lib.proxy_request import get_request_ip4
-from uchan.lib.service import BoardService
+from uchan.lib.service import board_service, file_service, posts_service, verification_service
 from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task, post_check_task
 from uchan.lib.utils import now, valid_id_range
 from uchan.view import check_csrf_referer
@@ -22,7 +24,7 @@ def post():
     if not check_csrf_referer(request):
         raise BadRequestError('Bad referer header')
 
-    site_config = g.site_cache.find_site_config()
+    site_config = site_cache.find_site_config()
     if not site_config.get('posting_enabled'):
         raise BadRequestError('Posting is disabled')
 
@@ -37,7 +39,7 @@ def post():
             abort(400)
 
     board_name = form.get('board', None)
-    if not board_name or len(board_name) > BoardService.BOARD_NAME_MAX_LENGTH:
+    if not board_name or len(board_name) > board_service.BOARD_NAME_MAX_LENGTH:
         abort(400)
 
     text = form.get('comment', None)
@@ -61,12 +63,12 @@ def post():
 
     ip4 = get_request_ip4()
 
-    board_config = g.board_cache.find_board_config(board_name)
+    board_config = board_cache.find_board_config(board_name)
     if not board_config:
         abort(404)
 
     post_details = PostDetails(form, board_name, thread_refno, text, name, subject, password, has_file, ip4)
-    post_details.verification_data = g.verification_service.get_verification_data_for_request(request, ip4, 'post')
+    post_details.verification_data = verification_service.get_verification_data_for_request(request, ip4, 'post')
 
     with_mod = form.get('with_mod', type=bool)
     if with_mod is True:
@@ -76,7 +78,10 @@ def post():
 
     # Queue the post check task
     try:
-        post_check_task.delay(post_details).get()
+        if config.BYPASS_WORKER:
+            post_check_task(post_details)
+        else:
+            post_check_task.delay(post_details).get()
     except RequestBannedException:
         raise BadRequestError('You are banned')
     except RequestSuspendedException as e:
@@ -95,21 +100,24 @@ def post():
             start_time = now()
             thumbnail_size = 128 if thread_refno else 256
             try:
-                post_details.uploaded_file, upload_queue_files = g.file_service.handle_upload(file, thumbnail_size)
+                post_details.uploaded_file, upload_queue_files = file_service.handle_upload(file, thumbnail_size)
             except ArgumentError as e:
                 raise BadRequestError(e.message)
             post_details.file_time = now() - start_time
 
         # Queue the post task
         try:
-            board_name, thread_refno, post_refno = post_task.delay(post_details).get()
+            if config.BYPASS_WORKER:
+                board_name, thread_refno, post_refno = post_task(post_details)
+            else:
+                board_name, thread_refno, post_refno = post_task.delay(post_details).get()
             # board_name, thread_refno, post_refno = post_task(post_details)
         except ArgumentError as e:
             raise BadRequestError(e.message)
     finally:
         if upload_queue_files is not None:
             # Clean up the files in the upload queue
-            g.file_service.clean_up_queue(upload_queue_files)
+            file_service.clean_up_queue(upload_queue_files)
 
     if request.is_xhr:
         return jsonify({
@@ -129,7 +137,7 @@ def post_manage():
         raise BadRequestError('Bad referer header')
 
     board_name = form.get('board', None)
-    if not board_name or len(board_name) > BoardService.BOARD_NAME_MAX_LENGTH:
+    if not board_name or len(board_name) > board_service.BOARD_NAME_MAX_LENGTH:
         abort(400)
 
     thread_refno = form.get('thread', type=int)
@@ -140,7 +148,7 @@ def post_manage():
         valid_id_range(post_id)
 
     password = form.get('password', None)
-    if not password or len(password) > g.posts_service.MAX_PASSWORD_LENGTH:
+    if not password or len(password) > posts_service.MAX_PASSWORD_LENGTH:
         password = None
 
     ip4 = get_request_ip4()
@@ -155,7 +163,7 @@ def post_manage():
     elif mode_string == 'report':
         details.mode = ManagePostDetails.REPORT
         success_message = 'Post reported'
-        data = g.verification_service.get_verification_data_for_request(request, ip4, 'report')
+        data = verification_service.get_verification_data_for_request(request, ip4, 'report')
         details.report_verification_data = data
     elif mode_string == 'toggle_sticky':
         details.mode = ManagePostDetails.TOGGLE_STICKY
@@ -182,7 +190,7 @@ def post_manage():
 def find_post(post_id):
     valid_id_range(post_id)
 
-    post = g.posts_service.find_post(post_id)
+    post = posts_service.find_post(post_id)
     if post:
         return redirect(url_for_post(post.thread.board.name, post.thread.refno, post.refno))
     else:

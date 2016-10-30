@@ -1,30 +1,31 @@
 import importlib
 
+modules = []
 
-class PluginManager:
-    def __init__(self):
-        self.modules = []
 
-    def load_plugins(self, plugins):
-        for plugin in plugins:
-            loaded_module = importlib.import_module('uchan.plugins.{}'.format(plugin))
-            self.add_module(loaded_module)
+def load_plugins(plugins):
+    for plugin in plugins:
+        loaded_module = importlib.import_module('uchan.plugins.{}'.format(plugin))
+        add_module(loaded_module)
 
-    def add_module(self, module):
-        info = self.execute_module_method(module, 'describe_plugin', False)
-        self.execute_module_method(module, 'on_enable', False)
-        # print('Loaded plugin {}: {}'.format(info['name'], info['description']))
 
-        self.modules.append(module)
+def add_module(module):
+    info = execute_module_method(module, 'describe_plugin', False)
+    execute_module_method(module, 'on_enable', False)
+    # print('Loaded plugin {}: {}'.format(info['name'], info['description']))
 
-    def execute_hook(self, hook, *args, **kwargs):
-        for module in self.modules:
-            self.execute_module_method(module, hook, True, *args, **kwargs)
+    modules.append(module)
 
-    def execute_module_method(self, module, method_name, silent, *args, **kwargs):
-        try:
-            attr = getattr(module, method_name)
-            return attr(*args, **kwargs)
-        except AttributeError:
-            if not silent:
-                raise RuntimeError('The plugin {} must have the method {}'.format(module, method_name))
+
+def execute_hook(hook, *args, **kwargs):
+    for module in modules:
+        execute_module_method(module, hook, True, *args, **kwargs)
+
+
+def execute_module_method(module, method_name, silent, *args, **kwargs):
+    try:
+        attr = getattr(module, method_name)
+        return attr(*args, **kwargs)
+    except AttributeError:
+        if not silent:
+            raise RuntimeError('The plugin {} must have the method {}'.format(module, method_name))
