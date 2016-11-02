@@ -3,7 +3,7 @@
 
 namespace uchan {
     export class Watcher {
-        delays = [10, 15, 20, 30, 60, 90, 120, 180, 240, 300];
+        delays = [10, 15, 20, 30, 60, 90, 120, 180, 240, 300, 600];
         endPoint = '/api/thread/';
 
         boardName:string;
