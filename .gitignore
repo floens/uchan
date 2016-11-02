@@ -1,5 +1,4 @@
-/config.py
-/config_celery.py
+config.ini
 /media/
 /upload_queue/
 /uchan/static/robots.txt

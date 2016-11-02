@@ -1,7 +1,6 @@
 from flask import request, abort, redirect, url_for, render_template, jsonify
 
-import config
-from uchan import app
+from uchan import app, configuration
 from uchan.filter.app_filters import time_remaining
 from uchan.lib import BadRequestError, ArgumentError
 from uchan.lib.action_authorizer import RequestBannedException
@@ -78,7 +77,7 @@ def post():
 
     # Queue the post check task
     try:
-        if config.BYPASS_WORKER:
+        if configuration.app.bypass_worker:
             post_check_task(post_details)
         else:
             post_check_task.delay(post_details).get()
@@ -107,7 +106,7 @@ def post():
 
         # Queue the post task
         try:
-            if config.BYPASS_WORKER:
+            if configuration.app.bypass_worker:
                 board_name, thread_refno, post_refno = post_task(post_details)
             else:
                 board_name, thread_refno, post_refno = post_task.delay(post_details).get()

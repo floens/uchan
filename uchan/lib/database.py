@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-import config
+from uchan import configuration
 
 ModelBase = declarative_base()
 
@@ -19,7 +19,7 @@ def get_db() -> Session:
 
 
 def connect_string():
-    return config.DATABASE_CONNECT_STRING
+    return configuration.database.connect_string
 
 
 def clean_up():
@@ -42,8 +42,8 @@ def init_db():
     global _engine
     global ModelBase
 
-    echo = hasattr(config, 'DATABASE_ECHO') and config.DATABASE_ECHO
-    _engine = create_engine(connect_string(), pool_size=config.DATABASE_POOL_SIZE, echo=echo)
+    _engine = create_engine(connect_string(), pool_size=configuration.database.pool_size,
+                            echo=configuration.database.echo)
     _sessionconstruct = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=_engine))
 
     import uchan.lib.models

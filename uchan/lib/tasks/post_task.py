@@ -1,4 +1,3 @@
-import config
 from uchan import celery
 from uchan.lib.service import posts_service
 

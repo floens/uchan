@@ -1,6 +1,6 @@
 from enum import Enum, unique
 
-import config
+from uchan import configuration
 from uchan.lib import roles, ArgumentError
 from uchan.lib.cache import board_cache
 from uchan.lib.service import ban_service, moderator_service, verification_service
@@ -72,7 +72,7 @@ def authorize_post_action(actor, action, post=None, post_details=None, board=Non
         if ban_service.is_request_banned(post_details.ip4, board):
             raise RequestBannedException()
 
-        if config.ENABLE_COOLDOWN_CHECKING:
+        if configuration.app.enable_cooldown_checking:
             suspended, suspend_time = ban_service.is_request_suspended(post_details.ip4, board, thread)
             if suspended:
                 e = RequestSuspendedException()

@@ -1,6 +1,8 @@
 from flask import Flask, request
 from werkzeug.contrib.fixers import ProxyFix
 
+from uchan import UchanConfiguration
+
 
 class CustomFlaskApp(Flask):
     def __init__(self, *args, **kwargs):
@@ -15,11 +17,13 @@ class CustomFlaskApp(Flask):
                 self.session_interface.delete_session(session_item.session_id)
 
 
-def create_web_app(config, app):
-    if config.USE_PROXY_FIXER:
-        app.wsgi_app = ProxyFix(app.wsgi_app, config.PROXY_FIXER_NUM_PROXIES)
+def create_web_app(configuration: UchanConfiguration, app):
+    if configuration.http.use_proxy_fixer:
+        app.wsgi_app = ProxyFix(app.wsgi_app, configuration.http.proxy_fixer_num_proxies)
 
-    app.config.from_object('config')
+    app.config['DEBUG'] = configuration.app.debug
+    app.config['APP_NAME'] = configuration.app.name
+    app.config['MAX_CONTENT_LENGTH'] = configuration.http.max_content_length
 
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
@@ -38,14 +42,14 @@ def create_web_app(config, app):
         logger.exception(error)
         return app.send_static_file('404.html'), 404
 
-    from uchan.view import render_error
-
     def bad_request_message(e):
         if isinstance(e, BadRequestError):
             while isinstance(e, Exception) and len(e.args) > 0:
                 e = e.args[0]
 
         return e if type(e) is str else ''
+
+    from uchan.view import render_error
 
     @app.errorhandler(BadRequestError)
     def bad_request_handler(error):

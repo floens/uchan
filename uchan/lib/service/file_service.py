@@ -98,7 +98,7 @@ cdn = None
 upload_queue_path = None
 
 
-def __init__(_upload_queue_path, _cdn):
+def init(_upload_queue_path, _cdn):
     global upload_queue_path, cdn
     upload_queue_path = _upload_queue_path
     cdn = _cdn

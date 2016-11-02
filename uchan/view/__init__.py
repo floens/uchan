@@ -3,11 +3,11 @@ import string
 from functools import wraps
 from urllib.parse import urlparse
 
+from flask import json
 from flask import send_from_directory, session, request, abort, url_for, render_template, jsonify
 from markupsafe import escape, Markup
 
-import config
-from uchan import app
+from uchan import app, configuration
 from uchan.filter.app_filters import page_formatting
 from uchan.lib import plugin_manager
 from uchan.lib.cache import site_cache, board_cache, page_cache
@@ -62,7 +62,7 @@ def robots():
 
 @app.route('/manifest.json')
 def manifest_json():
-    manifest = config.MANIFEST.copy()
+    manifest = configuration.app.manifest
 
     plugin_manager.execute_hook('manifest_json', manifest)
 
@@ -106,7 +106,7 @@ def check_csrf_referer(request):
 
     parsed_url = urlparse(referer)
 
-    return '{}://{}'.format(parsed_url.scheme, parsed_url.hostname) == config.SITE_URL
+    return '{}://{}'.format(parsed_url.scheme, parsed_url.hostname) == configuration.app.site_url
 
 
 def render_error(user_message, code=400, with_retry=False):

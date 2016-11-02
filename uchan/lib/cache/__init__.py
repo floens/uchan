@@ -1,8 +1,7 @@
 import json
 from time import time
 
-import config
-from uchan import logger
+from uchan import configuration, logger
 from uchan.lib.utils import now
 from werkzeug.contrib.cache import MemcachedCache
 
@@ -19,12 +18,10 @@ def make_attr_dict(value):
 
 
 class CacheWrapper(MemcachedCache):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, server, max_item_size):
+        super().__init__([server])
         self.client = self._client
-
-        self.max_length = config.MEMCACHE_MAX_ITEM_SIZE
-        self.client.server_max_value_length = self.max_length
+        self.client.server_max_value_length = self.max_length = max_item_size
 
     def set(self, key, value, **kwargs):
         # g.logger.debug('set {} {}'.format(key, value))
@@ -108,7 +105,7 @@ class LocalCache:
         return None
 
 
-cache = CacheWrapper(servers=config.MEMCACHED_SERVERS)
+cache = CacheWrapper(configuration.memcache.server, configuration.memcache.max_item_size)
 
 import uchan.lib.cache.board_cache
 import uchan.lib.cache.posts_cache

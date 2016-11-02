@@ -1,7 +1,6 @@
 import dateutil.parser
 import requests
 
-import config
 from uchan import logger
 from uchan.lib import ArgumentError
 from uchan.lib.service import verification_service
@@ -111,15 +110,14 @@ class Recaptcha2Method(verification_service.VerificationMethod):
         return False
 
 
-def on_enable():
-    if 'captcha2' not in config.PLUGIN_CONFIG:
-        raise RuntimeError('sitekey or secret not set in PLUGIN_CONFIG')
+def on_enable(configuration):
+    if not configuration:
+        raise RuntimeError('sitekey and secret must be set in the [captcha2] section of config.ini')
 
-    plugin_captcha = config.PLUGIN_CONFIG['captcha2']
-    sitekey = plugin_captcha['sitekey']
-    secret = plugin_captcha['secret']
+    sitekey = configuration.get('sitekey')
+    secret = configuration.get('secret')
     if not sitekey or not secret:
-        raise RuntimeError('sitekey or secret empty in PLUGIN_CONFIG')
+        raise RuntimeError('"sitekey" or "secret" empty in the [captcha2] section of config.ini')
 
     method = Recaptcha2Method(sitekey, secret)
     verification_service.add_method(method)

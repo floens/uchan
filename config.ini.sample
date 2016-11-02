@@ -1,0 +1,71 @@
+[app]
+# App name, for logs and the like
+name = uchan
+
+# Url the site is reachable at
+# This needs to match the referer when posting
+site_url = http://127.0.0.1
+
+# Content of the manifest.json file
+manifest = {
+           "name": "uchan"
+           }
+
+[plugins]
+# Comma seperated list of enabled plugins
+plugins = captcha2
+
+[captcha2]
+# These values bypass checking. Get recaptcha keys for your site here https://www.google.com/recaptcha/intro/index.html
+sitekey = 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+secret = 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
+
+[http]
+# Enable this when serving behind a proxy (almost always)
+# Do not use this middleware in non-proxy setups for security reasons.
+use_proxy_fixer = true
+# The number of proxies this instance is behind
+# This needs to be set to prevent ip spoofing by malicious clients appending their own forwarded-for header
+# See `werkzeug.contrib.fixers.ProxyFix` for more info.
+# Two for a nginx > varnish > uwsgi setup
+proxy_fixer_num_proxies = 2
+
+# Max POST size to accept.
+# Keep this the same as your nginx client_max_body_size config.
+# 5242880 = 5 * 1024 * 1024
+max_content_length = 5242880
+
+[file]
+# Which cdn type to use, see file_service for more details
+# Types available: "local"
+file_cdn_type = local
+
+# The temporary dir in which files are placed that are received from the client.
+# The temporary files will be deleted after a post unless the python process crashes.
+upload_queue_path = /var/tmp/uchan_upload_queue
+
+# Settings for the local cdn type
+# Absolute path of where to place the the files.
+local_cdn_path = /var/www/uchan_media/
+
+# Absolute base url of where the client should request the file.
+local_cdn_web_path = http://uchan.localhost/media/
+
+[celery]
+# Celery broker url
+broker_url = amqp://uchan:yourpassword@yourhostname/uchanvhost
+
+[memcache]
+# Memcache server address
+server = 127.0.0.1:11211
+
+# The -I flag of memcache, the max size of items
+# note: "-I 2M" means "2 * 1024 * 1024" here
+# Memcache defaults to 1M
+# 1048576 = 1 * 1024 * 1024
+max_item_size = 1048576
+
+[database]
+connect_string = postgresql+psycopg2://uchan:uchan@/uchan
+# Check this with your uwsgi total thread count + worker count and the postgres max_connections
+pool_size = 4
