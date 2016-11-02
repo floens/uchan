@@ -82,7 +82,7 @@ def post():
         else:
             post_check_task.delay(post_details).get()
     except RequestBannedException:
-        raise BadRequestError('You are banned')
+        raise BadRequestError('You are [banned](/banned/)')
     except RequestSuspendedException as e:
         raise BadRequestError(
             'You must wait {} before posting again'.format(time_remaining(now() + 1000 * e.suspend_time)))
@@ -180,7 +180,7 @@ def post_manage():
     try:
         manage_post_task.delay(details).get()
     except RequestBannedException:
-        raise BadRequestError('You are banned')
+        raise BadRequestError('You are [banned](/banned/)')
 
     return render_template('message.html', message=success_message)
 
