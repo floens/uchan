@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}{% if is_banned %}You are banned!{% else %}Not banned{% endif %}{% endblock %}
+{% block title %}
+    {%- if method_html -%}
+        Banned
+    {%- elif not bans -%}
+        Not banned
+    {%- else -%}
+        You are banned!
+    {%- endif -%}
+{% endblock %}
 
 {% block content %}
     <div class="message">
