@@ -9,7 +9,7 @@ VERIFICATION_COOKIE_NAME = 'verification'
 COOKIE_DURATION = 1000 * 60 * 60 * 24
 
 from uchan import app
-from uchan.lib.cache import CacheDict
+from uchan.lib.cache import cache, CacheDict
 from uchan.lib.database import get_db
 from uchan.lib.models import Verification
 from uchan.lib.utils import now, get_cookie_domain
@@ -31,7 +31,6 @@ class VerificationDataCache(CacheDict):
         self.data = data
 
 
-cache = None
 methods = []
 
 """
