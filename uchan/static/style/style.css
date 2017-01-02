@@ -12,6 +12,26 @@ body, textarea {
     font-size: 13px;
 }
 
+fieldset {
+    border: 1px solid #B1B1B1;
+    margin: 0 0 1em 0;
+}
+
+.generic-form input:not(:last-child) {
+    margin-bottom: .8em;
+}
+
+.generic-form .form-errors {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: #ff0000;
+}
+
+.generic-form .form-errors li {
+
+}
+
 .clear {
     clear: both;
 }

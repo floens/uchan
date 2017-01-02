@@ -1,15 +1,11 @@
 {% extends "mod_base.html" %}
 
-{% import "widget/form.html" as form_widget %}
-
 {% block title %}Mod bans{% endblock %}
 
 {% block content %}
     <h2>Bans</h2>
 
-    {{ form_widget.render(ban_form) }}
-
-    {#<form action="{{ url_for('.mod_ban_add') }}" method="POST">
+    <form action="{{ url_for('.mod_ban_add') }}" method="POST">
         <fieldset>
             <legend>Add ban</legend>
             {{ csrf_html() }}
@@ -51,7 +47,7 @@
             <input type="submit" value="Add">
         </fieldset>
     </form>
-    <br>#}
+    <br>
 
     <form action="{{ url_for('.mod_ban_delete') }}" method="POST">
         {{ csrf_html() }}

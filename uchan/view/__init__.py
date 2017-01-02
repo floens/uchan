@@ -3,7 +3,6 @@ import string
 from functools import wraps
 from urllib.parse import urlparse
 
-from flask import json
 from flask import send_from_directory, session, request, abort, url_for, render_template, jsonify
 from markupsafe import escape, Markup
 

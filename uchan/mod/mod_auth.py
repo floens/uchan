@@ -77,7 +77,7 @@ def mod_auth():
         authed = get_authed()
         moderator = request_moderator() if authed else None
 
-        method_html = None
+        method_html = ''
         if not authed and not configuration.app.debug:
             method = verification_service.get_method()
             method_html = method.get_html()

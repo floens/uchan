@@ -1,0 +1,47 @@
+{% macro render(form) %}
+    <form action="{{ url_for(form.action) }}" method="POST">
+        <fieldset class="generic-form">
+            <legend>{{ form.name }}</legend>
+            {% for field in form %}
+                {% if field.widget.input_type != 'submit' %}
+                    {# Label #}
+                    <b>{{ field.label }}</b>
+                    {# Show some validators on top #}
+                    {% if field.validators %}
+                        {% for validator in field.validators %}
+                            {% if validator.__class__.__name__ == 'NumberRange' %}
+                                {% if validator.max is none %}
+                                    <small>At least {{ validator.min }}.</small>
+                                {% elif validator.min is none %}
+                                    <small>At most {{ validator.max }}.</small>
+                                {% else %}
+                                    <small>Between {{ validator.min }} and {{ validator.max }}.</small>
+                                {% endif %}
+                            {% elif validator.__class__.__name__ == 'DataRequired' %}
+                                <small>Required.</small>
+                            {% elif validator.__class__.__name__ == 'Optional' %}
+                                <small>Optional.</small>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    <br>
+                    {# Field description if specified #}
+                    {% if field.description %}
+                        {{ field.description }}
+                        <br>
+                    {% endif %}
+                {% endif %}
+                {# Show validation errors #}
+                {% if field.errors %}
+                    <ul class="form-errors">
+                    {% for error in field.errors %}
+                        <li>{{ error|e }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ field }}
+                {% if not loop.last %}<br>{% endif %}
+            {% endfor %}
+        </fieldset>
+    </form>
+{% endmacro %}

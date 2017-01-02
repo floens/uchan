@@ -8,13 +8,10 @@ from uchan.lib.utils import now
 
 @app.route('/banned/', methods=['GET', 'POST'])
 def banned():
+    method = verification_service.get_method()
     if request.method == 'GET':
-        method = verification_service.get_method()
-        method_html = method.get_html()
-
-        return render_template('banned.html', method_html=method_html)
+        return render_template('banned.html', method_html=method.get_html())
     else:
-        method = verification_service.get_method()
         try:
             method.verify_request(request)
         except ArgumentError as e:
