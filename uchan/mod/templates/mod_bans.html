@@ -9,50 +9,6 @@
 
     {{ form_widget.render(ban_form) }}
 
-    {#<form action="{{ url_for('.mod_ban_add') }}" method="POST">
-        <fieldset>
-            <legend>Add ban</legend>
-            {{ csrf_html() }}
-
-            <label>Ban ip4
-                <small>ex. 10.0.0.1</small>
-                <br>
-                <input type="text" name="ban_ip4" value="{{ ban_ip4 }}">
-            </label>
-            <br>
-            <label>Ban ip4 end
-                <small>optional</small>
-                <br>
-                <i>If specified, the ip range from start to end will be banned.</i>
-                <br>
-                <input type="text" name="ban_ip4_end">
-            </label>
-            <br>
-            <label>Board
-                <small>optional</small>
-                <br>
-                <i>If specified, the ban will be scoped to the board.</i>
-                <br>
-                <input type="text" name="board">
-            </label>
-            <br>
-            <label>Ban duration
-                <small>in hours. use 0 for a permanent ban.</small>
-                <br>
-                <input type="text" name="ban_length" value="24">
-            </label>
-            <br>
-            <label>Ban reason
-                <small>optional</small>
-                <br>
-                <textarea name="ban_reason" cols="60" rows="4"></textarea>
-            </label>
-            <br>
-            <input type="submit" value="Add">
-        </fieldset>
-    </form>
-    <br>#}
-
     <form action="{{ url_for('.mod_ban_delete') }}" method="POST">
         {{ csrf_html() }}
         <table class="datatable">
@@ -76,7 +32,7 @@
                     <td>
                         {% if ban.length > 0 %}
                             {{ (ban.date + ban.length)|formatted_time }} -
-                            {% if (ban.date + ban.length) - now < 0 %}
+                            {% if (ban.date + ban.length) - now() < 0 %}
                                 <b>Expired, not viewed</b>
                             {% else %}
                                 <b>{{ (ban.date + ban.length)|time_remaining }} remaining</b>

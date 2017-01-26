@@ -53,6 +53,8 @@ class AppConfiguration(Configuration):
         self.enable_cooldown_checking = self.get('enable_cooldown_checking', func=section.getboolean, default=True)
         self.bypass_worker = self.get('bypass_worker', func=section.getboolean, default=False)
         self.manifest = json.loads(self.get('manifest', default='{}'))
+        self.thumbnail_op = self.get('thumbnail_op', 256)
+        self.thumbnail_reply = self.get('thumbnail_reply', 128)
 
 
 class HttpConfiguration(Configuration):

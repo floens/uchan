@@ -77,10 +77,7 @@ def post():
 
     # Queue the post check task
     try:
-        if configuration.app.bypass_worker:
-            post_check_task(post_details)
-        else:
-            post_check_task.delay(post_details).get()
+        post_check_task.delay(post_details).get()
     except RequestBannedException:
         raise BadRequestError('You are [banned](/banned/)')
     except RequestSuspendedException as e:
@@ -97,7 +94,7 @@ def post():
         # Then if that's complete, send a task off to the workers to insert the details in the db
         if has_file:
             start_time = now()
-            thumbnail_size = 128 if thread_refno else 256
+            thumbnail_size = configuration.app.thumbnail_reply if thread_refno else configuration.app.thumbnail_op
             try:
                 post_details.uploaded_file, upload_queue_files = file_service.handle_upload(file, thumbnail_size)
             except ArgumentError as e:
@@ -106,10 +103,7 @@ def post():
 
         # Queue the post task
         try:
-            if configuration.app.bypass_worker:
-                board_name, thread_refno, post_refno = post_task(post_details)
-            else:
-                board_name, thread_refno, post_refno = post_task.delay(post_details).get()
+            board_name, thread_refno, post_refno = post_task.delay(post_details).get()
             # board_name, thread_refno, post_refno = post_task(post_details)
         except ArgumentError as e:
             raise BadRequestError(e.message)

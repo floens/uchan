@@ -1,5 +1,6 @@
 {% macro render(form) %}
     <form action="{{ url_for(form.action) }}" method="POST">
+        {{ csrf_html() }}
         <fieldset class="generic-form">
             <legend>{{ form.name }}</legend>
             {% for field in form %}

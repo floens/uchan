@@ -11,6 +11,7 @@ from uchan.filter.app_filters import page_formatting
 from uchan.lib import plugin_manager
 from uchan.lib.cache import site_cache, board_cache, page_cache
 from uchan.lib.service import page_service
+from uchan.lib.utils import ip4_to_str, now
 
 
 class ExtraJavascript:
@@ -105,7 +106,8 @@ def check_csrf_referer(request):
 
     parsed_url = urlparse(referer)
 
-    return '{}://{}'.format(parsed_url.scheme, parsed_url.hostname) == configuration.app.site_url
+    final_url = '{}://{}'.format(parsed_url.scheme, parsed_url.hostname)
+    return final_url == configuration.app.site_url
 
 
 def render_error(user_message, code=400, with_retry=False):
@@ -124,6 +126,8 @@ def render_error(user_message, code=400, with_retry=False):
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token
 app.jinja_env.globals['csrf_html'] = generate_csrf_token_html
+app.jinja_env.globals['ip4_to_str'] = ip4_to_str
+app.jinja_env.globals['now'] = now
 
 import uchan.view.index
 import uchan.view.thread
