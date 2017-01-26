@@ -1,33 +1,15 @@
 {% extends "mod_base.html" %}
 
-{% block title %}Modify account{% endblock %}
-
+{% import "widget/form.html" as form_widget %}
 {% import "widget/link_list.html" as link_list_widget %}
+
+{% block title %}Modify account{% endblock %}
 
 {% block content %}
     <h2>Modify account</h2>
 
     Boards you're assigned to: {{ link_list_widget.render(board_links) }}<br>
-
     <br>
-    <form action="{{ url_for('.mod_self_password') }}" method="POST">
-        <fieldset>
-            <legend>Change password</legend>
-            {{ csrf_html() }}
-
-            <label>Old password<br>
-                <input type="password" name="old_password">
-            </label>
-            <br>
-            <label>New password<br>
-                <input type="password" name="new_password">
-            </label>
-            <br>
-            <input type="submit" value="Change">
-        </fieldset>
-    </form>
-
-    <br>
-    <br>
+    {{ form_widget.render(change_password_form) }}
 
 {% endblock %}

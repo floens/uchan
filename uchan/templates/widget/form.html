@@ -1,10 +1,9 @@
 {% macro render(form) %}
     <form action="{{ url_for(form.action) }}" method="POST">
-        {{ csrf_html() }}
         <fieldset class="generic-form">
             <legend>{{ form.name }}</legend>
             {% for field in form %}
-                {% if field.widget.input_type != 'submit' %}
+                {% if field.widget.input_type != 'submit' and field.widget.input_type != 'hidden' %}
                     {# Label #}
                     <b>{{ field.label }}</b>
                     {# Show some validators on top #}
@@ -17,6 +16,14 @@
                                     <small>At most {{ validator.max }}.</small>
                                 {% else %}
                                     <small>Between {{ validator.min }} and {{ validator.max }}.</small>
+                                {% endif %}
+                            {% elif validator.__class__.__name__ == 'Length' %}
+                                {% if validator.max == -1 %}
+                                    <small>At least {{ validator.min }} characters.</small>
+                                {% elif validator.min == -1 %}
+                                    <small>At most {{ validator.max }} characters.</small>
+                                {% else %}
+                                    <small>Between {{ validator.min }} and {{ validator.max }} characters.</small>
                                 {% endif %}
                             {% elif validator.__class__.__name__ == 'DataRequired' %}
                                 <small>Required.</small>
@@ -35,9 +42,9 @@
                 {# Show validation errors #}
                 {% if field.errors %}
                     <ul class="form-errors">
-                    {% for error in field.errors %}
-                        <li>{{ error|e }}</li>
-                    {% endfor %}
+                        {% for error in field.errors %}
+                            <li>{{ error|e }}</li>
+                        {% endfor %}
                     </ul>
                 {% endif %}
                 {{ field }}

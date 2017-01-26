@@ -9,7 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 USERNAME_MAX_LENGTH = 50
 USERNAME_ALLOWED_CHARS = string.ascii_letters + string.digits + '_'
 PASSWORD_MIN_LENGTH = 6
-PASSWORD_MAX_LENGTH = 50
+PASSWORD_MAX_LENGTH = 255
 PASSWORD_ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation + '_'
 
 BOARDS_PER_MODERATOR = 2
@@ -369,7 +369,7 @@ def change_password_admin(moderator, new_password):
     _update_password(moderator, new_password)
 
 
-def check_password(moderator, password):
+def check_password(moderator: Moderator, password: str):
     moderator_hashed_password = moderator.password
 
     if bcrypt.hashpw(password.encode(), moderator_hashed_password) != moderator_hashed_password:

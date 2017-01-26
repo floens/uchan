@@ -9,7 +9,8 @@ from uchan.lib.proxy_request import parse_ip4
 from uchan.lib.service import ban_service, board_service, posts_service
 from uchan.lib.utils import ip4_to_str
 from uchan.mod import mod, mod_role_restrict
-from uchan.view import with_token
+from uchan.view import with_token, check_csrf_token
+from uchan.view.form import CSRFForm
 
 
 def board_input(form, field):
@@ -17,7 +18,7 @@ def board_input(form, field):
         raise ValidationError('Board name not valid.')
 
 
-class BanForm(Form):
+class BanForm(CSRFForm):
     name = 'Add ban'
     action = '.mod_bans'
 

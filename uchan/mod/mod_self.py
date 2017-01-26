@@ -1,41 +1,45 @@
-from flask import render_template, request, flash, redirect, url_for
+from flask import render_template, request, flash, url_for
+from wtforms import PasswordField, SubmitField
+from wtforms import ValidationError
+from wtforms.validators import Length
 
 from uchan.lib import ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.moderator_request import request_moderator
 from uchan.lib.service import moderator_service
 from uchan.mod import mod
-from uchan.view import with_token
+from uchan.view.form import CSRFForm
 
 
-@mod.route('/mod_self')
+def password_input(form, field):
+    if not moderator_service.check_password_validity(field.data):
+        raise ValidationError('Password not valid.')
+
+
+class ChangePasswordForm(CSRFForm):
+    name = 'Change password'
+    action = '.mod_self'
+
+    old_password = PasswordField('Old password', [Length(min=moderator_service.PASSWORD_MIN_LENGTH), password_input])
+    new_password = PasswordField('New password', [Length(min=moderator_service.PASSWORD_MIN_LENGTH), password_input])
+    submit = SubmitField('Update password')
+
+
+@mod.route('/mod_self', methods=['GET', 'POST'])
 def mod_self():
     moderator = request_moderator()
 
-    board_links = []
-    for board in moderator.boards:
-        board_links.append((board.name, url_for('board', board_name=board.name)))
+    change_password_form = ChangePasswordForm(request.form)
+    if request.method == 'POST' and change_password_form.validate():
+        try:
+            moderator_service.change_password(
+                moderator, change_password_form.old_password.data, change_password_form.new_password.data)
+            flash('Changed password')
+            mod_log('password changed')
+        except ArgumentError as e:
+            flash(e.message)
 
-    return render_template('mod_self.html', moderator=moderator, board_links=board_links)
+    board_links = map(lambda b: (b.name, url_for('board', board_name=b.name)), moderator.boards)
 
-
-@mod.route('/mod_self/change_password', methods=['POST'])
-@with_token()
-def mod_self_password():
-    moderator = request_moderator()
-
-    old_password = request.form['old_password']
-    new_password = request.form['new_password']
-
-    if not moderator_service.check_password_validity(new_password):
-        flash('Invalid password')
-        return redirect(url_for('.mod_self'))
-
-    try:
-        moderator_service.change_password(moderator, old_password, new_password)
-        flash('Changed password')
-        mod_log('password changed')
-    except ArgumentError as e:
-        flash(e.message)
-
-    return redirect(url_for('.mod_self'))
+    return render_template('mod_self.html', change_password_form=change_password_form, moderator=moderator,
+                           board_links=board_links)
