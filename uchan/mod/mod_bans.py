@@ -34,7 +34,7 @@ class BanForm(Form):
     duration = IntegerField('Ban duration', [DataRequired(), NumberRange(min=0, max=None)], default=24,
                             description='Ban duration in hours. Use 0 for a permanent ban.',
                             render_kw={'placeholder': '24'})
-    reason = TextAreaField('Ban reason', [Length(max=2000)],
+    reason = TextAreaField('Ban reason', [Length(max=ban_service.MAX_REASON_LENGTH)],
                            description='This will be shown to the user on the banned page.',
                            render_kw={'cols': 60, 'rows': 6, 'placeholder': 'Banned!'})
     submit = SubmitField('Ban')

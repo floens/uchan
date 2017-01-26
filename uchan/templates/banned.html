@@ -29,7 +29,7 @@
                 You have been banned from
                 <b>{% if ban.board is not none %}/{{ ban.board }}/{% else %}all boards{% endif %}</b>:<br>
                 <br>
-                <b>{% if ban.reason %}{{ ban.reason }}{% else %}No reason available.{% endif %}</b><br>
+                {% if ban.reason %}<blockquote><b>{{ ban.reason }}</b></blockquote>{% else %}<b>No reason available.</b><br>{% endif %}
                 <br>
                 You were banned on {{ ban.date|formatted_time }}<br>
                 {% if ban.length > 0 %}

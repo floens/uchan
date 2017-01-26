@@ -6,7 +6,7 @@ from sqlalchemy.orm.exc import NoResultFound
 NEW_THREAD_COOLDOWN = 600 * 1000
 NEW_POST_COOLDOWN = 60 * 1000
 MAX_BAN_TIME = 24 * 31 * 60 * 60 * 1000
-MAX_REASON_LENGTH = 250
+MAX_REASON_LENGTH = 2000
 
 from uchan.lib import ArgumentError
 from uchan.lib.database import get_db

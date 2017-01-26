@@ -17,6 +17,12 @@ fieldset {
     margin: 0 0 1em 0;
 }
 
+blockquote {
+    margin: 0;
+    padding: 0.2em 0 0.2em 1em;
+    border-left: 1px solid #B1B1B1;
+}
+
 .generic-form input:not(:last-child) {
     margin-bottom: .8em;
 }
