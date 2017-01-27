@@ -1,7 +1,7 @@
 from flask import Flask, request
 from werkzeug.contrib.fixers import ProxyFix
 
-from uchan import UchanConfiguration
+from uchan.config import UchanConfiguration
 
 
 class CustomFlaskApp(Flask):

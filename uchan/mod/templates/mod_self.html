@@ -4,10 +4,8 @@
 {% import "widget/link_list.html" as link_list_widget %}
 
 {% block title %}Modify account{% endblock %}
-
-{% block content %}
-    <h2>Modify account</h2>
-
+{% block mod_title %}Modify account{% endblock %}
+{% block mod_content %}
     Boards you're assigned to: {{ link_list_widget.render(board_links) }}<br>
     <br>
     {{ form_widget.render(change_password_form) }}

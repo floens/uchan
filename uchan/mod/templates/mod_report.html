@@ -1,14 +1,12 @@
 {% extends "mod_base.html" %}
 
-{% block title %}Reports{% endblock %}
-
 {% import "widget/post_report.html" as post_report_widget %}
 {% import "widget/link_list.html" as link_list_widget %}
 {% import "widget/pager.html" as pager_widget %}
 
-{% block content %}
-    <h2>Reports</h2>
-
+{% block title %}Reports{% endblock %}
+{% block mod_title %}Reports{% endblock %}
+{% block mod_content %}
     <ul class="report-boards">
         <li><a href="{{ url_for('.mod_report') }}">all</a></li>
         {%- for board in moderator_boards -%}

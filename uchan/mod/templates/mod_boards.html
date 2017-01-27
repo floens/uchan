@@ -1,25 +1,11 @@
 {% extends "mod_base.html" %}
 
+{% import "widget/form.html" as form_widget %}
+
 {% block title %}Mod boards{% endblock %}
-
-{% block content %}
-    <h2>Boards</h2>
-
-    <form action="{{ url_for('.mod_board_add') }}" method="POST">
-        <fieldset>
-            <legend>Create new board</legend>
-            {{ csrf_html() }}
-
-            <label>Board name
-                <small>a-z0-9_ max 20 chars</small>
-                <br>
-                <input type="text" name="board_name">
-            </label>
-            <br>
-            <input type="submit" value="Create">
-        </fieldset>
-    </form>
-
+{% block mod_title %}Boards{% endblock %}
+{% block mod_content %}
+    {{ form_widget.render(add_board_form) }}
     <br>
 
     Boards you're a moderator of:<br>
@@ -36,7 +22,7 @@
             <tr>
                 <td>{{ board_moderator.board.name }}</td>
                 <td><b>{{ board_moderator.roles|join(', ') }}</b></td>
-                <td>[<a href="{{ url_for('.mod_board', board_name=board_moderator.board.name) }}">Modify</a>]</td>
+                <td>[<a href="{{ url_for('.mod_board', board_name=board_moderator.board.name) }}">Edit</a>]</td>
             </tr>
         {% endfor %}
         </tbody>

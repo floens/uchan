@@ -3,10 +3,8 @@
 {% import "widget/form.html" as form_widget %}
 
 {% block title %}Mod bans{% endblock %}
-
-{% block content %}
-    <h2>Bans</h2>
-
+{% block mod_title %}Bans{% endblock %}
+{% block mod_content %}
     {{ form_widget.render(ban_form) }}
 
     <form action="{{ url_for('.mod_ban_delete') }}" method="POST">

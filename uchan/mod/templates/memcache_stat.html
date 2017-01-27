@@ -1,10 +1,8 @@
 {% extends "mod_base.html" %}
 
 {% block title %}Memcached stats{% endblock %}
-
-{% block content %}
-    <h2>Memcache statistics</h2>
-
+{% block mod_title %}Memcache statistics{% endblock %}
+{% block mod_content %}
     {% for server in stats %}
         <h3>{{ server[0] }}</h3>
 

@@ -1,12 +1,10 @@
 {% extends "mod_base.html" %}
 
-{% block title %}Moderator log{% endblock %}
-
 {% import "widget/pager.html" as pager_widget %}
 
-{% block content %}
-    <h2>/{{ board.name }}/ moderator log</h2>
-
+{% block title %}Moderator log{% endblock %}
+{% block mod_title %}/{{ board.name }}/ moderator log{% endblock %}
+{% block mod_content %}
     [<a href="{{ url_for('.mod_board', board_name=board.name) }}">Back</a>]<br>
     <br>
 

@@ -1,14 +1,19 @@
 from flask import request, redirect, url_for, render_template, abort, flash
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+
+from uchan import configuration
 from uchan.lib import ArgumentError
 from uchan.lib import roles
 from uchan.lib.cache import board_cache
 from uchan.lib.mod_log import mod_log
-from uchan.lib.models import Board
 from uchan.lib.models.moderator_log import ModeratorLogType
 from uchan.lib.moderator_request import request_moderator
+from uchan.lib.service import board_service, moderator_service, config_service
 from uchan.mod import mod
 from uchan.view import check_csrf_token, with_token
-from uchan.lib.service import board_service, moderator_service, config_service
+from uchan.view.form import CSRFForm
+from uchan.view.form.validators import BoardValidator
 
 
 def get_board_or_abort(board_name):
@@ -21,10 +26,33 @@ def get_board_or_abort(board_name):
     return board
 
 
-@mod.route('/mod_board')
+class AddBoardForm(CSRFForm):
+    name = 'Create new board'
+    action = '.mod_boards'
+
+    board_name = StringField('Board name', [DataRequired(), BoardValidator()],
+                             description='Name of the board. This name is used in the url and cannot be changed, '
+                                         'so choose carefully. You can have a maximum of (' +
+                                         str(configuration.app.max_boards_per_moderator) + ') boards.')
+    submit = SubmitField('Create board')
+
+
+@mod.route('/mod_board', methods=['GET', 'POST'])
 def mod_boards():
     moderator = request_moderator()
-    return render_template('mod_boards.html', moderator=moderator)
+
+    add_board_form = AddBoardForm(request.form)
+    if request.method == 'POST' and add_board_form.validate():
+        try:
+            board_name = add_board_form.board_name.data
+            moderator_service.user_create_board(moderator, board_name)
+            flash('Board created')
+            return redirect(url_for('.mod_board', board_name=board_name))
+        except ArgumentError as e:
+            flash(e.message)
+            return redirect(url_for('.mod_boards'))
+
+    return render_template('mod_boards.html', add_board_form=add_board_form, moderator=moderator)
 
 
 @mod.route('/mod_board/<board_name>', methods=['GET', 'POST'])
@@ -156,25 +184,6 @@ def mod_board_roles_update(board_name):
         flash('Roles updated')
     except ArgumentError as e:
         flash(str(e))
-
-    return redirect(url_for('.mod_board', board_name=board.name))
-
-
-@mod.route('/mod_board/add', methods=['POST'])
-@with_token()
-def mod_board_add():
-    board_name = request.form['board_name']
-
-    board = Board()
-    board.name = board_name
-
-    try:
-        moderator_service.user_create_board(request_moderator(), board)
-        flash('Board added')
-        mod_log('add board /{}/'.format(board_name))
-    except ArgumentError as e:
-        flash(e.message)
-        return redirect(url_for('.mod_boards'))
 
     return redirect(url_for('.mod_board', board_name=board.name))
 

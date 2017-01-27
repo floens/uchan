@@ -6,13 +6,13 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import NoResultFound
 
+from uchan.lib.models import Board
+
 USERNAME_MAX_LENGTH = 50
 USERNAME_ALLOWED_CHARS = string.ascii_letters + string.digits + '_'
 PASSWORD_MIN_LENGTH = 6
 PASSWORD_MAX_LENGTH = 255
 PASSWORD_ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation + '_'
-
-BOARDS_PER_MODERATOR = 2
 
 from uchan.lib import ArgumentError, action_authorizer, roles
 from uchan.lib.database import get_db
@@ -23,9 +23,10 @@ from uchan.lib.service import board_service, config_service
 from uchan.lib.utils import now
 
 
-def user_create_board(moderator, board):
+def user_create_board(moderator, board_name):
     action_authorizer.authorize_action(moderator, action_authorizer.ModeratorAction.BOARD_CREATE)
-
+    board = Board()
+    board.name = board_name
     board_service.add_board(board)
     board_service.board_add_moderator(board, moderator)
     add_board_role(moderator, board, roles.BOARD_ROLE_CREATOR)

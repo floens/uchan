@@ -123,8 +123,9 @@ def authorize_action(actor, action):
             if roles.BOARD_ROLE_CREATOR in board_moderator.roles:
                 creator_roles += 1
 
-        if creator_roles >= moderator_service.BOARDS_PER_MODERATOR:
-            raise ArgumentError('Max boards limit reached ({})'.format(moderator_service.BOARDS_PER_MODERATOR))
+        max = configuration.app.max_boards_per_moderator
+        if creator_roles >= max:
+            raise ArgumentError('Max boards limit reached ({})'.format(max))
     elif action is ModeratorAction.BOARD_DELETE:
         # must be admin
         raise NoPermissionError()

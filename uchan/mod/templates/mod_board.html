@@ -1,17 +1,12 @@
 {% extends "mod_base.html" %}
 
-{% block title %}Modify board{% endblock %}
-
 {% import "widget/dynamic_config.html" as dynamic_config_widget %}
 
-{% block content %}
-    <h2>Modify board</h2>
-
+{% block title %}Modify board{% endblock %}
+{% block mod_title %}Edit /{{ board.name }}/{% endblock %}
+{% block mod_content %}
     [<a href="{{ url_for('.mod_boards') }}">Back</a>]
     [<a href="{{ url_for('.mod_board_log', board_name=board.name) }}">View log</a>]<br>
-    <br>
-
-    Changing board <b>{{ board.name }}</b><br>
     <br>
 
     {{ dynamic_config_widget.render(board_config, url_for('.mod_board', board_name=board.name)) }}

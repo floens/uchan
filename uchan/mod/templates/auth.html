@@ -1,8 +1,8 @@
 {% extends "mod_base.html" %}
 
 {% block title %}Mod auth{% endblock %}
-
-{% block content %}
+{% block mod_title %}Auth{% endblock %}
+{% block mod_content %}
     {% if authed %}
         Logged in as <b>{{ moderator.username }}</b><br>
         <br>

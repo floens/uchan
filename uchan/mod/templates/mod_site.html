@@ -1,12 +1,10 @@
 {% extends "mod_base.html" %}
 
-{% block title %}Modify site{% endblock %}
-
 {% import "widget/dynamic_config.html" as dynamic_config_widget %}
 
-{% block content %}
-    <h2>Modify site</h2>
-
+{% block title %}Modify site{% endblock %}
+{% block mod_title %}Modify site{% endblock %}
+{% block mod_content %}
     Detected ip: <b>{{ current_ip4_str }}</b><br>
     <br>
 

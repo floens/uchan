@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block content %}
+    <h2 class="mod-title">{% block mod_title %}{% endblock %}</h2>
+    <hr class="content-divider">
+    {% block mod_content %}{% endblock %}
+    <hr class="content-divider">
+{% endblock %}
+
 {% block styles %}
     {{ super() }}
     {% if not request.endpoint == 'mod.mod_auth' %}

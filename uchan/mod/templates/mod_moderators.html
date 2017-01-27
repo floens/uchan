@@ -1,10 +1,8 @@
 {% extends "mod_base.html" %}
 
 {% block title %}Mod moderators{% endblock %}
-
-{% block content %}
-    <h2>Moderators</h2>
-
+{% block mod_title %}Moderators{% endblock %}
+{% block mod_content %}
     <form action="{{ url_for('.mod_moderator_add') }}" method="POST">
         <fieldset>
             <legend>Add moderator</legend>
@@ -44,7 +42,7 @@
                         /{{ board.name }}/&nbsp;
                     {% endfor %}
                 </td>
-                <td>[<a href="{{ url_for('.mod_moderator', moderator_id=moderator.id) }}">Modify</a>]</td>
+                <td>[<a href="{{ url_for('.mod_moderator', moderator_id=moderator.id) }}">Edit</a>]</td>
             </tr>
         {% endfor %}
         </tbody>
