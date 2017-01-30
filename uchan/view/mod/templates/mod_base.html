@@ -1,5 +1,17 @@
 {% extends "base.html" %}
 
+{% block top_content %}
+{% if mod_links %}
+    <div class="link-list">
+        [
+        {%- for mod_link in mod_links -%}
+            <a href="{{ mod_link[1] }}">{{ mod_link[0] }}</a>{% if not loop.last %} / {% endif %}
+        {%- endfor -%}
+        ]
+    </div>
+{% endif %}
+{% endblock %}
+
 {% block content %}
     <h2 class="mod-title">{% block mod_title %}{% endblock %}</h2>
     <hr class="content-divider">

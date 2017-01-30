@@ -45,12 +45,12 @@ def find_post_by_ip4(ip4, from_time, for_thread=None):
     return posts
 
 
-def get_request_bans():
+def get_request_bans(clear_if_expired=False):
     ip4 = get_request_ip4()
-    return find_bans(ip4)
+    return find_bans(ip4, clear_if_expired=clear_if_expired)
 
 
-def find_bans(ip4, board=None):
+def find_bans(ip4, board=None, clear_if_expired=False):
     db = get_db()
     bans_query = db.query(Ban).filter((Ban.ip4 == ip4) | ((Ban.ip4 <= ip4) & (Ban.ip4_end >= ip4)))
     if board:
@@ -60,7 +60,7 @@ def find_bans(ip4, board=None):
     for ban in bans:
         if ban_applies(ban, ip4, board):
             applied_bans.append(ban)
-        if ban_expired(ban):
+        if clear_if_expired and ban_expired(ban):
             # Delete the ban after the user has seen it when it expired
             delete_ban(ban)
     return applied_bans

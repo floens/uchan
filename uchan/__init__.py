@@ -42,8 +42,8 @@ def init():
     })
 
     # Import it here so that the templates resolve correctly
-    from uchan.web import create_web_app, CustomFlaskApp
-    app = CustomFlaskApp(__name__)
+    from uchan.flask import create_web_app, CustomFlaskApp
+    app = CustomFlaskApp(__name__, template_folder='view/templates')
     setup_logging()
     create_web_app(configuration, app)
 
@@ -52,7 +52,7 @@ def init():
     from uchan.lib.cache import cache
 
     # Setup session handling
-    from uchan.web.custom_session import CustomSessionInterface
+    from uchan.flask.custom_session import CustomSessionInterface
     app.session_interface = CustomSessionInterface(cache)
 
     # Import views
@@ -62,10 +62,10 @@ def init():
     import uchan.filter.app_filters
 
     # Import blueprints
-    from uchan.mod import mod
+    from uchan.view.mod import mod
     app.register_blueprint(mod)
 
-    from uchan.api import api
+    from uchan.view.api import api
     app.register_blueprint(api)
 
     from uchan.lib.service.file_service import LocalCdn

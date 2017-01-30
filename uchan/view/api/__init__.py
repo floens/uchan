@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify
 from functools import wraps
+
+from flask import Blueprint, jsonify
 
 api = Blueprint('api', __name__, url_prefix='/api')
 
@@ -16,4 +17,4 @@ def jsonres():
     return decorator
 
 
-import uchan.api.views
+import uchan.view.api.views

@@ -1,15 +1,16 @@
 from flask import render_template, request, abort, flash, redirect, url_for
+
 from uchan.filter.text_parser import parse_text
 from uchan.lib import roles, ArgumentError, BadRequestError
 from uchan.lib.cache.posts_cache import PostCacheProxy
 from uchan.lib.database import get_db
 from uchan.lib.models import Board
 from uchan.lib.moderator_request import request_moderator
+from uchan.lib.service import board_service, moderator_service, report_service
 from uchan.lib.tasks.report_task import ManageReportDetails, manage_report_task
 from uchan.lib.utils import ip4_to_str
-from uchan.lib.service import board_service, moderator_service, report_service
-from uchan.mod import mod
 from uchan.view import with_token
+from uchan.view.mod import mod
 
 
 @mod.route('/mod_report')

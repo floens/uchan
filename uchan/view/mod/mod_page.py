@@ -4,8 +4,8 @@ from uchan.lib import roles, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Page
 from uchan.lib.service import page_service
-from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
+from uchan.view.mod import mod, mod_role_restrict
 
 
 def get_page_or_abort(page_id):

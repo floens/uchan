@@ -1,8 +1,8 @@
 from flask import abort
 
-from uchan.api import api, jsonres
 from uchan.lib.cache import posts_cache
 from uchan.lib.utils import valid_id_range
+from uchan.view.api import api, jsonres
 
 
 @api.route('/')

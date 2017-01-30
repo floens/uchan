@@ -1,5 +1,7 @@
-from flask import Blueprint, url_for
 from functools import wraps
+
+from flask import Blueprint, url_for
+
 from uchan.lib import roles
 from uchan.lib.action_authorizer import NoPermissionError
 from uchan.lib.moderator_request import request_has_role, get_authed
@@ -46,11 +48,11 @@ def inject_variables():
         return {}
 
 
-import uchan.mod.mod_auth
-import uchan.mod.mod_report
-import uchan.mod.mod_self
-import uchan.mod.mod_board
-import uchan.mod.mod_moderator
-import uchan.mod.mod_site
-import uchan.mod.mod_bans
-import uchan.mod.mod_page
+import uchan.view.mod.mod_auth
+import uchan.view.mod.mod_report
+import uchan.view.mod.mod_self
+import uchan.view.mod.mod_board
+import uchan.view.mod.mod_moderator
+import uchan.view.mod.mod_site
+import uchan.view.mod.mod_bans
+import uchan.view.mod.mod_page

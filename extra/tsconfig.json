@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "sourceMap": false,
-    "outFile": "../uchan/static/js/extra.js"
+    "outFile": "../uchan/view/static/js/extra.js"
   },
   "files": [
     "extra.ts"

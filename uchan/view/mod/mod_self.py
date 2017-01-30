@@ -7,8 +7,8 @@ from uchan.lib import ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.moderator_request import request_moderator
 from uchan.lib.service import moderator_service
-from uchan.mod import mod
 from uchan.view.form import CSRFForm
+from uchan.view.mod import mod
 
 
 def password_input(form, field):

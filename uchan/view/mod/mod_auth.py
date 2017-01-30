@@ -5,8 +5,8 @@ from uchan.lib import ArgumentError, BadRequestError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, request_moderator
 from uchan.lib.service import moderator_service, verification_service
-from uchan.mod import mod
 from uchan.view import check_csrf_token, check_csrf_referer
+from uchan.view.mod import mod
 
 
 @mod.before_request

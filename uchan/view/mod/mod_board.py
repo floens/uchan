@@ -10,10 +10,10 @@ from uchan.lib.mod_log import mod_log
 from uchan.lib.models.moderator_log import ModeratorLogType
 from uchan.lib.moderator_request import request_moderator
 from uchan.lib.service import board_service, moderator_service, config_service
-from uchan.mod import mod
 from uchan.view import check_csrf_token, with_token
 from uchan.view.form import CSRFForm
 from uchan.view.form.validators import BoardNameValidator
+from uchan.view.mod import mod
 
 
 def get_board_or_abort(board_name):

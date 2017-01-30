@@ -8,10 +8,10 @@ from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Moderator
 from uchan.lib.moderator_request import request_moderator, unset_mod_authed
 from uchan.lib.service import board_service, moderator_service
-from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
 from uchan.view.form import CSRFForm
 from uchan.view.form.validators import ModeratorUsernameValidator, ModeratorPasswordValidator, BoardValidator
+from uchan.view.mod import mod, mod_role_restrict
 
 
 class AddModeratorForm(CSRFForm):

@@ -40,7 +40,7 @@ Install the required python packages:
 Copy the configs:
 cp config_sample.py config.py
 cp config_celery_sample.py config_celery.py
-cp uchan/static/robots.txt.sample uchan/static/robots.txt
+cp uchan/view/static/robots.txt.sample uchan/view/static/robots.txt
 Edit the configs to your liking.
 
 Make the uchanmedia and uchanuploadqueue folders readable for nginx (www-data)
@@ -175,21 +175,21 @@ server {
   }
 
   location /favicon.ico {
-    alias /home/uchan/uchan/uchan/static/favicon.ico;
+    alias /home/uchan/uchan/uchan/view/static/favicon.ico;
     expires 1y;
   }
 
   location /robots.txt {
-    alias /home/uchan/uchan/uchan/static/robots.txt;
+    alias /home/uchan/uchan/uchan/view/static/robots.txt;
   }
 
   location /static/ {
-    alias /home/uchan/uchan/uchan/static/;
+    alias /home/uchan/uchan/uchan/view/static/;
     expires 1y;
   }
 
   location ~ ^/static/(.*)(\.[\d]+)\.(css|js)$ {
-    alias /home/uchan/uchan/uchan/static/$1.$3;
+    alias /home/uchan/uchan/uchan/view/static/$1.$3;
     expires 1y;
   }
 

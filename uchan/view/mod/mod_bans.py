@@ -1,5 +1,5 @@
 from flask import render_template, abort, request, flash, redirect, url_for
-from wtforms import Form, StringField, IntegerField, SubmitField, TextAreaField
+from wtforms import StringField, IntegerField, SubmitField, TextAreaField
 from wtforms.validators import NumberRange, DataRequired, IPAddress, ValidationError, Optional, Length
 
 from uchan.lib import roles, ArgumentError
@@ -8,9 +8,9 @@ from uchan.lib.models import Ban
 from uchan.lib.proxy_request import parse_ip4
 from uchan.lib.service import ban_service, board_service, posts_service
 from uchan.lib.utils import ip4_to_str
-from uchan.mod import mod, mod_role_restrict
-from uchan.view import with_token, check_csrf_token
+from uchan.view import with_token
 from uchan.view.form import CSRFForm
+from uchan.view.mod import mod, mod_role_restrict
 
 
 def board_input(form, field):

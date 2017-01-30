@@ -17,6 +17,6 @@ def banned():
         except ArgumentError as e:
             raise BadRequestError(e.message)
 
-        bans = ban_service.get_request_bans()
+        bans = ban_service.get_request_bans(True)
 
         return render_template('banned.html', is_banned=len(bans) > 0, bans=bans, now=now)
