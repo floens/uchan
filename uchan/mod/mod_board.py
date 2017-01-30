@@ -13,7 +13,7 @@ from uchan.lib.service import board_service, moderator_service, config_service
 from uchan.mod import mod
 from uchan.view import check_csrf_token, with_token
 from uchan.view.form import CSRFForm
-from uchan.view.form.validators import BoardValidator
+from uchan.view.form.validators import BoardNameValidator
 
 
 def get_board_or_abort(board_name):
@@ -30,7 +30,7 @@ class AddBoardForm(CSRFForm):
     name = 'Create new board'
     action = '.mod_boards'
 
-    board_name = StringField('Board name', [DataRequired(), BoardValidator()],
+    board_name = StringField('Name', [DataRequired(), BoardNameValidator()],
                              description='Name of the board. This name is used in the url and cannot be changed, '
                                          'so choose carefully. You can have a maximum of (' +
                                          str(configuration.app.max_boards_per_moderator) + ') boards.')

@@ -1,5 +1,5 @@
 {% macro render(form) %}
-    <form action="{{ url_for(form.action) }}" method="POST">
+    <form action="{{ form.action_url or url_for(form.action) }}" method="POST">
         <fieldset class="generic-form">
             <legend>{{ form.name }}</legend>
             {% for field in form %}
@@ -29,8 +29,10 @@
                                 <small>Required.</small>
                             {% elif validator.__class__.__name__ == 'Optional' %}
                                 <small>Optional.</small>
-                            {% elif validator.__class__.__name__ == 'BoardValidator' %}
+                            {% elif validator.__class__.__name__ == 'BoardNameValidator' %}
                                 <small>[a-z0-9_], at most 20 characters.</small>
+                            {% elif validator.__class__.__name__ == 'ModeratorUsernameValidator' %}
+                                <small>[a-z0-9_], at most 50 characters.</small>
                             {% endif %}
                         {% endfor %}
                     {% endif %}
@@ -50,7 +52,7 @@
                     </ul>
                 {% endif %}
                 {{ field }}
-                {% if not loop.last %}<br>{% endif %}
+                {% if not loop.last and field.widget.input_type != 'hidden' %}<br>{% endif %}
             {% endfor %}
         </fieldset>
     </form>

@@ -28,6 +28,9 @@ def create_web_app(configuration: UchanConfiguration, app):
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
 
+    import uchan.view.routing.converters
+    uchan.view.routing.converters.init_converters(app)
+
     from uchan import logger
     from uchan.lib import BadRequestError
 

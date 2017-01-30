@@ -1,65 +1,66 @@
-from flask import request, redirect, url_for, render_template, abort, flash
+from flask import abort
+from flask import request, redirect, url_for, render_template, flash
+from wtforms import StringField, SubmitField, PasswordField, HiddenField
+from wtforms.validators import DataRequired
 
 from uchan.lib import roles, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Moderator
 from uchan.lib.moderator_request import request_moderator, unset_mod_authed
-from uchan.lib.utils import valid_id_range
+from uchan.lib.service import board_service, moderator_service
 from uchan.mod import mod, mod_role_restrict
 from uchan.view import with_token
-from uchan.lib.service import board_service, moderator_service
+from uchan.view.form import CSRFForm
+from uchan.view.form.validators import ModeratorUsernameValidator, ModeratorPasswordValidator, BoardValidator
 
 
-def get_moderator_or_abort(moderator_id):
-    valid_id_range(moderator_id)
+class AddModeratorForm(CSRFForm):
+    name = 'Create new moderator'
+    action = '.mod_moderators'
 
-    moderator = moderator_service.find_moderator_id(moderator_id)
-    if not moderator:
-        abort(404)
-    return moderator
+    username = StringField('Username', [DataRequired(), ModeratorUsernameValidator()],
+                           description='Username of the moderator')
+    password = PasswordField('Password', [DataRequired(), ModeratorPasswordValidator()])
+    submit = SubmitField('Create moderator')
 
 
-@mod.route('/mod_moderator')
+class AddModeratorBoardForm(CSRFForm):
+    name = 'Assign board to moderator'
+    action = '.mod_moderator'
+    board_add = HiddenField()  # Used to differentiate between the different forms on the page
+
+    board = StringField('Board name', [DataRequired(), BoardValidator()],
+                        description='Name of the board')
+    submit = SubmitField('Assign')
+
+
+@mod.route('/mod_moderator', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_moderators():
+    add_moderator_form = AddModeratorForm(request.form)
+    if request.method == 'POST' and add_moderator_form.validate():
+        moderator = Moderator()
+        moderator.roles = []
+        moderator.username = add_moderator_form.username.data
+        try:
+            moderator_service.create_moderator(moderator, add_moderator_form.password.data)
+            flash('Moderator created')
+            mod_log('moderator add {} username {}'.format(moderator.id, moderator.username))
+        except ArgumentError as e:
+            flash(e.message)
+
     moderators = moderator_service.get_all_moderators()
 
-    return render_template('mod_moderators.html', moderators=moderators)
-
-
-@mod.route('/mod_moderator/add', methods=['POST'])
-@mod_role_restrict(roles.ROLE_ADMIN)
-@with_token()
-def mod_moderator_add():
-    moderator_name = request.form['moderator_name']
-    if not moderator_service.check_username_validity(moderator_name):
-        flash('Invalid moderator name')
-        return redirect(url_for('.mod_moderators'))
-
-    moderator_password = request.form['moderator_password']
-    if not moderator_service.check_password_validity(moderator_password):
-        flash('Invalid moderator password')
-        return redirect(url_for('.mod_moderators'))
-
-    moderator = Moderator()
-    moderator.roles = []
-    moderator.username = moderator_name
-
-    try:
-        moderator_service.create_moderator(moderator, moderator_password)
-        flash('Moderator added')
-        mod_log('moderator add {} username {}'.format(moderator.id, moderator.username))
-    except ArgumentError as e:
-        flash(e.message)
-
-    return redirect(url_for('.mod_moderators'))
+    return render_template('mod_moderators.html',
+                           add_moderator_form=add_moderator_form,
+                           moderators=moderators)
 
 
 @mod.route('/mod_moderator/delete', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
 def mod_moderator_delete():
-    moderator = get_moderator_or_abort(request.form.get('moderator_id', type=int))
+    moderator = moderator_service.find_moderator_id(request.form.get('moderator_id', type=int))
     username = moderator.username
 
     authed_moderator = request_moderator()
@@ -77,76 +78,61 @@ def mod_moderator_delete():
         return redirect(url_for('.mod_moderators'))
 
 
-@mod.route('/mod_moderator/<int:moderator_id>')
+@mod.route('/mod_moderator/<moderator:moderator>', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
-def mod_moderator(moderator_id):
-    moderator = get_moderator_or_abort(moderator_id)
-
+def mod_moderator(moderator):
     all_roles = ', '.join(roles.ALL_ROLES)
     all_board_roles = ', '.join(roles.ALL_BOARD_ROLES)
 
-    return render_template('mod_moderator.html', moderator=moderator, all_roles=all_roles,
-                           all_board_roles=all_board_roles)
-
-
-@mod.route('/mod_moderator/<int:moderator_id>/board_add', methods=['POST'])
-@mod_role_restrict(roles.ROLE_ADMIN)
-@with_token()
-def mod_moderator_board_add(moderator_id):
-    moderator = get_moderator_or_abort(moderator_id)
-
-    board_name = request.form['board_name']
-    board_role = request.form['board_role']
-    board = board_service.find_board(board_name)
-    if board is None:
-        flash('That board does not exist')
-    else:
-        if not moderator_service.board_role_exists(board_role):
-            flash('That board role does not exist')
-        else:
-            try:
-                board_service.board_add_moderator(board, moderator)
-                moderator_service.add_board_role(moderator, board, board_role)
-                flash('Board added to moderator')
-                mod_log('add board to {} /{}/ with role {}'.format(moderator.username, board_name, board_role))
-            except ArgumentError as e:
-                flash(e.message)
-
-    return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
-
-
-@mod.route('/mod_moderator/<int:moderator_id>/board_remove', methods=['POST'])
-@mod_role_restrict(roles.ROLE_ADMIN)
-@with_token()
-def mod_moderator_board_remove(moderator_id):
-    moderator = get_moderator_or_abort(moderator_id)
-
-    board_name = request.form['board_name']
-    board = board_service.find_board(board_name)
-    if board is None:
-        flash('That board does not exist')
-    else:
+    add_moderator_board_form = AddModeratorBoardForm(request.form)
+    add_moderator_board_form.action_url = url_for('.mod_moderator', moderator=moderator)
+    if request.method == 'POST' and request.form.get('board_add') is not None and add_moderator_board_form.validate():
         try:
-            board_service.board_remove_moderator(board, moderator)
-            flash('Board removed from moderator')
-            mod_log('remove board from {} /{}/'.format(moderator.username, board_name))
+            board = board_service.find_board(add_moderator_board_form.board.data)
+            board_service.board_add_moderator(board, moderator)
+            flash('Assigned ' + board.name)
+            mod_log('add board to {} /{}/'.format(moderator.username, board.name))
         except ArgumentError as e:
             flash(e.message)
 
-    return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
+    if request.method == 'POST' and request.form.get('board_remove'):
+        # HTML checkboxes are fun!
+        board_names_to_remove = request.form.getlist('board_remove')
+        boards_to_remove = []
+        for board_name in board_names_to_remove:
+            board = board_service.find_board(board_name)
+            if not board:
+                # we coded the name in the html, can't be an user error
+                abort(400)
+            boards_to_remove.append(board)
+
+        for board in boards_to_remove:
+            try:
+                board_service.board_remove_moderator(board, moderator)
+                flash('Revoked ' + board.name)
+                mod_log('remove board from {} /{}/'.format(moderator.username, board.name))
+            except ArgumentError as e:
+                flash(e.message)
+
+    if request.method == 'POST' and request.form.get('role_remove'):
+        pass
+
+    return render_template('mod_moderator.html',
+                           moderator=moderator,
+                           all_roles=all_roles,
+                           all_board_roles=all_board_roles,
+                           add_moderator_board_form=add_moderator_board_form)
 
 
-@mod.route('/mod_moderator/<int:moderator_id>/change_password', methods=['POST'])
+@mod.route('/mod_moderator/<moderator:moderator>/change_password', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
-def mod_moderator_password(moderator_id):
-    moderator = get_moderator_or_abort(moderator_id)
-
+def mod_moderator_password(moderator):
     new_password = request.form['new_password']
 
     if not moderator_service.check_password_validity(new_password):
         flash('Invalid password')
-        return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
+        return redirect(url_for('.mod_moderator', moderator_id=moderator.id))
 
     try:
         moderator_service.change_password_admin(moderator, new_password)
@@ -155,15 +141,13 @@ def mod_moderator_password(moderator_id):
     except ArgumentError as e:
         flash(e.message)
 
-    return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
+    return redirect(url_for('.mod_moderator', moderator=moderator))
 
 
-@mod.route('/mod_moderator/<int:moderator_id>/role_add', methods=['POST'])
+@mod.route('/mod_moderator/<moderator:moderator>/role_add', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
-def mod_moderator_role_add(moderator_id):
-    moderator = get_moderator_or_abort(moderator_id)
-
+def mod_moderator_role_add(moderator):
     role = request.form['role']
 
     if not moderator_service.role_exists(role):
@@ -176,15 +160,13 @@ def mod_moderator_role_add(moderator_id):
         except ArgumentError as e:
             flash(e.message)
 
-    return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
+    return redirect(url_for('.mod_moderator', moderator=moderator))
 
 
-@mod.route('/mod_moderator/<int:moderator_id>/role_remove', methods=['POST'])
+@mod.route('/mod_moderator/<moderator:moderator>/role_remove', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
-def mod_moderator_role_remove(moderator_id):
-    moderator = get_moderator_or_abort(moderator_id)
-
+def mod_moderator_role_remove(moderator):
     role = request.form['role']
 
     if not moderator_service.role_exists(role):
@@ -197,4 +179,4 @@ def mod_moderator_role_remove(moderator_id):
         except ArgumentError as e:
             flash(e.message)
 
-    return redirect(url_for('.mod_moderator', moderator_id=moderator_id))
+    return redirect(url_for('.mod_moderator', moderator=moderator))

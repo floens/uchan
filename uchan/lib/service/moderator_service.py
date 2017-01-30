@@ -324,7 +324,7 @@ def create_moderator(moderator, password):
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise ArgumentError('Duplicate username')
+        raise ArgumentError('This username is already in use')
 
 
 def delete_moderator(moderator):

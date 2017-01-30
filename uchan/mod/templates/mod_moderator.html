@@ -1,62 +1,42 @@
 {% extends "mod_base.html" %}
 
+{% import "widget/form.html" as form_widget %}
+
 {% block title %}Modify moderator{% endblock %}
-{% block mod_title %}Modify moderator{% endblock %}
+{% block mod_title %}Edit "{{ moderator.username }}"{% endblock %}
 {% block mod_content %}
     [<a href="{{ url_for('.mod_moderators') }}">Back</a>]<br>
     <br>
 
-    Changing moderator <b>{{ moderator.username }}</b><br>
-    <br>
+    {{ form_widget.render(add_moderator_board_form) }}
 
     Assigned to these boards:<br>
-    <form action="{{ url_for('.mod_moderator_board_remove', moderator_id=moderator.id) }}" method="POST">
-        {{ csrf_html() }}
-
-        <ul>
+    <form action="{{ url_for('.mod_moderator', moderator=moderator) }}" method="POST">
+        <input type="submit" value="Revoke">
+        <table class="datatable">
+            <thead>
+            <tr>
+                <th></th>
+                <th>Board</th>
+            </tr>
+            </thead>
+            <tbody>
             {% for board in moderator.boards %}
-                <li>
-                    <a href="{{ url_for('board', board_name=board.name) }}">/{{ board.name }}/</a>
-                    <button name="board_name" value="{{ board.name }}">Remove</button>
-                </li>
+                <tr>
+                    <td>
+                        <input type="checkbox" name="board_remove" value="{{ board.name }}" title="Remove">
+                    </td>
+                    <td>{{ board.name }}</td>
+                </tr>
             {% endfor %}
-        </ul>
-    </form>
-
-    <form action="{{ url_for('.mod_moderator_board_add', moderator_id=moderator.id) }}" method="POST">
-        <fieldset>
-            <legend>Add board to moderator</legend>
-            {{ csrf_html() }}
-
-            <label>Board name<br>
-                <input type="text" name="board_name" style="width: 100px;">
-            </label>
-            <br>
-            <label>Board role<br>
-                Available roles: {{ all_board_roles }}<br>
-                <input type="text" name="board_role" style="width: 100px;">
-            </label><br>
-            <input type="submit" value="Submit">
-        </fieldset>
+            </tbody>
+        </table>
+        {{ csrf_html() }}
     </form>
 
     <hr class="content-divider">
 
-    Roles:<br>
-    <form action="{{ url_for('.mod_moderator_role_remove', moderator_id=moderator.id) }}" method="POST">
-        {{ csrf_html() }}
-
-        <ul>
-            {% for role in moderator.roles %}
-                <li>
-                    {{ role }}
-                    <button name="role" value="{{ role }}">Remove role</button>
-                </li>
-            {% endfor %}
-        </ul>
-    </form>
-
-    <form action="{{ url_for('.mod_moderator_role_add', moderator_id=moderator.id) }}" method="POST">
+    <form action="{{ url_for('.mod_moderator_role_add', moderator=moderator) }}" method="POST">
         <fieldset>
             <legend>Add role to moderator</legend>
             {{ csrf_html() }}
@@ -69,9 +49,33 @@
         </fieldset>
     </form>
 
+    Roles:<br>
+    <form action="{{ url_for('.mod_moderator', moderator=moderator) }}" method="POST">
+        <input type="submit" value="Remove">
+        <table class="datatable">
+            <thead>
+            <tr>
+                <th></th>
+                <th>Role</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for role in moderator.roles %}
+                <tr>
+                    <td>
+                        <input type="checkbox" name="role_remove" value="{{ role }}" title="Remove">
+                    </td>
+                    <td>{{ role }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {{ csrf_html() }}
+    </form>
+
     <hr class="content-divider">
 
-    <form action="{{ url_for('.mod_moderator_password', moderator_id=moderator.id) }}" method="POST">
+    <form action="{{ url_for('.mod_moderator_password', moderator=moderator) }}" method="POST">
         <fieldset>
             <legend>Change password</legend>
             {{ csrf_html() }}

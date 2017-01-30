@@ -1,28 +1,11 @@
 {% extends "mod_base.html" %}
 
+{% import "widget/form.html" as form_widget %}
+
 {% block title %}Mod moderators{% endblock %}
 {% block mod_title %}Moderators{% endblock %}
 {% block mod_content %}
-    <form action="{{ url_for('.mod_moderator_add') }}" method="POST">
-        <fieldset>
-            <legend>Add moderator</legend>
-            {{ csrf_html() }}
-
-            <label>Name
-                <small>a-zA-Z0-9_ max 50 chars</small>
-                <br>
-                <input type="text" name="moderator_name">
-            </label>
-            <br>
-
-            <label>Password<br>
-                <input type="password" name="moderator_password">
-            </label>
-            <br>
-            <input type="submit" value="Add">
-        </fieldset>
-    </form>
-
+    {{ form_widget.render(add_moderator_form) }}
     <br>
 
     <table class="datatable">
@@ -42,7 +25,7 @@
                         /{{ board.name }}/&nbsp;
                     {% endfor %}
                 </td>
-                <td>[<a href="{{ url_for('.mod_moderator', moderator_id=moderator.id) }}">Edit</a>]</td>
+                <td>[<a href="{{ url_for('.mod_moderator', moderator=moderator) }}">Edit</a>]</td>
             </tr>
         {% endfor %}
         </tbody>
