@@ -1,5 +1,6 @@
 from uchan import celery
 from uchan.lib.service import posts_service
+from uchan.lib.service.file_service import UploadedFile
 
 
 class PostDetails:
@@ -16,15 +17,9 @@ class PostDetails:
         self.mod_id = None
         self.verification_data = None
 
-        self.uploaded_file = None
+        self.uploaded_file = None  # type: UploadedFile
 
-        self.check_time = 0
         self.file_time = 0
-
-
-@celery.task
-def post_check_task(post_details):
-    return posts_service.handle_post_check(post_details)
 
 
 @celery.task

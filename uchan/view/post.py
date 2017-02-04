@@ -9,15 +9,14 @@ from uchan.lib.cache import board_cache, site_cache
 from uchan.lib.moderator_request import request_moderator, get_authed
 from uchan.lib.proxy_request import get_request_ip4
 from uchan.lib.service import board_service, file_service, posts_service, verification_service
-from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task, post_check_task
+from uchan.lib.service.file_service import UploadQueueFiles
+from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task
 from uchan.lib.utils import now, valid_id_range
 from uchan.view import check_csrf_referer
 
 
 @app.route('/post', methods=['POST'])
 def post():
-    start_time = now()
-
     form = request.form
 
     if not check_csrf_referer(request):
@@ -69,47 +68,42 @@ def post():
     post_details = PostDetails(form, board_name, thread_refno, text, name, subject, password, has_file, ip4)
     post_details.verification_data = verification_service.get_verification_data_for_request(request, ip4, 'post')
 
-    with_mod = form.get('with_mod', type=bool)
-    if with_mod is True:
+    with_mod = form.get('with_mod', default=False, type=bool)
+    if with_mod:
         moderator = request_moderator() if get_authed() else None
         if moderator is not None:
             post_details.mod_id = moderator.id
 
-    # Queue the post check task
-    try:
-        post_check_task.delay(post_details).get()
-    except RequestBannedException:
-        raise BadRequestError('You are [banned](/banned/)')
-    except RequestSuspendedException as e:
-        raise BadRequestError(
-            'You must wait {} before posting again'.format(time_remaining(now() + 1000 * e.suspend_time)))
-    except ArgumentError as e:
-        raise BadRequestError(e.message)
-
-    post_details.check_time = now() - start_time
-
     upload_queue_files = None
     try:
-        # If a image was uploaded validate it and upload it to the cdn
-        # Then if that's complete, send a task off to the workers to insert the details in the db
+        # If a image was uploaded validate it and save it to the upload queue
         if has_file:
             start_time = now()
             thumbnail_size = configuration.app.thumbnail_reply if thread_refno else configuration.app.thumbnail_op
             try:
-                post_details.uploaded_file, upload_queue_files = file_service.handle_upload(file, thumbnail_size)
+                post_details.uploaded_file, upload_queue_files = file_service.prepare_upload(file, thumbnail_size)
             except ArgumentError as e:
                 raise BadRequestError(e.message)
             post_details.file_time = now() - start_time
 
-        # Queue the post task
+        # Queue the post task that inserts the details in the database
         try:
             board_name, thread_refno, post_refno = post_task.delay(post_details).get()
             # board_name, thread_refno, post_refno = post_task(post_details)
+        except RequestBannedException:
+            raise BadRequestError('You are [banned](/banned/)')
+        except RequestSuspendedException as e:
+            raise BadRequestError(
+                'You must wait {} before posting again'.format(time_remaining(now() + 1000 * e.suspend_time)))
         except ArgumentError as e:
             raise BadRequestError(e.message)
+
+        if has_file:
+            # If that was successful, upload the file to the cdn from the upload queue
+            file_service.do_upload(upload_queue_files)
     finally:
-        if upload_queue_files is not None:
-            # Clean up the files in the upload queue
+        if upload_queue_files:
+            # Clean up the files in the upload queue, if there was an error too
             file_service.clean_up_queue(upload_queue_files)
 
     if request.is_xhr:

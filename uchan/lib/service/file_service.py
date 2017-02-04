@@ -89,12 +89,14 @@ class UploadedFile:
 
 
 class UploadQueueFiles:
-    def __init__(self, image_output, thumbnail_output):
+    def __init__(self, image_output, image_name, thumbnail_output, thumbnail_name):
         self.image_output = image_output
+        self.image_name = image_name
         self.thumbnail_output = thumbnail_output
+        self.thumbnail_name = thumbnail_name
 
 
-cdn = None
+cdn = None  # type: FileCdn
 upload_queue_path = None
 
 
@@ -111,7 +113,7 @@ def resolve_to_uri(name):
     return cdn.resolve_to_uri(name)
 
 
-def handle_upload(file, thumbnail_size):
+def prepare_upload(file, thumbnail_size):
     user_file_name = file.filename
     if not user_file_name:
         raise ArgumentError('Invalid file name')
@@ -138,15 +140,17 @@ def handle_upload(file, thumbnail_size):
     width, height, size, thumbnail_width, thumbnail_height = \
         process_and_generate_thumbnail(image_output, thumbnail_output, thumbnail_size)
 
-    # Upload the image and the thumbnail to the cdn
-    cdn.upload(image_output, image_name)
-    cdn.upload(thumbnail_output, thumbnail_name)
-
     # Ready to be send to the worker to be inserted into the db
     uploaded_file = UploadedFile(image_name, thumbnail_name, user_file_name, width, height, size, thumbnail_width,
                                  thumbnail_height)
-    upload_queue_files = UploadQueueFiles(image_output, thumbnail_output)
+    upload_queue_files = UploadQueueFiles(image_output, image_name, thumbnail_output, thumbnail_name)
     return uploaded_file, upload_queue_files
+
+
+def do_upload(uploaded_file: UploadQueueFiles):
+    # Upload the image and the thumbnail to the cdn
+    cdn.upload(uploaded_file.image_output, uploaded_file.image_name)
+    cdn.upload(uploaded_file.thumbnail_output, uploaded_file.thumbnail_name)
 
 
 def clean_up_queue(upload_queue_files):

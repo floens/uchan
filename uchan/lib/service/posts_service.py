@@ -69,6 +69,8 @@ def handle_post_check(post_details):
 def handle_post(post_details):
     start_time = now()
 
+    handle_post_check(post_details)
+
     board, to_thread = _get_board_thread(post_details)
 
     plugin_manager.execute_hook('on_handle_post', post_details)
@@ -227,14 +229,14 @@ def _handle_name(post, post_details, default_name):
 
 
 def _gather_statistics(insert_time, cache_time, post_details):
-    total = insert_time + cache_time + post_details.check_time
+    total = insert_time + cache_time
     file_time = ''
     if post_details.has_file:
         total += post_details.file_time
         file_time = 'file: {}ms, '.format(post_details.file_time)
 
-    s = 'check: {}ms, {}db: {}ms, caches: {}ms, total: {}ms'
-    return s.format(post_details.check_time, file_time, insert_time, cache_time, total)
+    s = '{}db: {}ms, caches: {}ms, total: {}ms'
+    return s.format(file_time, insert_time, cache_time, total)
 
 
 def _get_board_thread(post_details):
