@@ -34,11 +34,11 @@ def init():
 
     celery = Celery('uchan', loader=CustomCeleryLoader)
     celery.config_from_object({
-        'CELERY_RESULT_BACKEND': 'rpc://',
-        'CELERY_TASK_SERIALIZER': 'pickle',
-        'CELERY_ACCEPT_CONTENT': ['pickle'],
-        'CELERY_RESULT_SERIALIZER': 'pickle',
-        'BROKER_URL': configuration.celery.broker_url
+        'result_backend': 'rpc://',
+        'task_serializer': 'pickle',
+        'accept_content': ['pickle'],
+        'result_serializer': 'pickle',
+        'broker_url': configuration.celery.broker_url
     })
 
     # Import it here so that the templates resolve correctly
