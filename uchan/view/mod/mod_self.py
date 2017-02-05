@@ -3,7 +3,7 @@ from wtforms import PasswordField, SubmitField
 from wtforms import ValidationError
 from wtforms.validators import Length
 
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.moderator_request import request_moderator
 from uchan.lib.service import moderator_service

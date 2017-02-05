@@ -5,7 +5,8 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import cast
 from sqlalchemy.sql.sqltypes import String
 
-from uchan.lib import roles, ArgumentError, action_authorizer
+from uchan.lib import roles, action_authorizer
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.action_authorizer import ReportAction, PostAction
 from uchan.lib.database import get_db
 from uchan.lib.models import Report, BoardModerator, Thread, Board, Post

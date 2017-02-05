@@ -22,7 +22,7 @@ MAX_IMAGE_HEIGHT = 10000
 THUMBNAIL_POSTFIX = '_t'
 
 from uchan import logger
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.models import File
 
 

@@ -8,7 +8,7 @@ NEW_POST_COOLDOWN = 60 * 1000
 MAX_BAN_TIME = 24 * 31 * 60 * 60 * 1000
 MAX_REASON_LENGTH = 2000
 
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.database import get_db
 from uchan.lib.models import Ban, Post
 from uchan.lib.proxy_request import get_request_ip4

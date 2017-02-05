@@ -2,7 +2,7 @@ from flask import render_template, request
 
 from uchan import app
 from uchan.lib.service import ban_service, verification_service
-from uchan.lib import BadRequestError, ArgumentError
+from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.utils import now
 
 

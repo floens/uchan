@@ -8,7 +8,8 @@ MAX_PASSWORD_LENGTH = 25
 MAX_TEXT_LENGTH = 2000
 MAX_TEXT_LINES = 25
 
-from uchan.lib import BadRequestError, ArgumentError, action_authorizer, plugin_manager
+from uchan.lib import action_authorizer, plugin_manager
+from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.action_authorizer import PostAction, NoPermissionError, RequestBannedException
 from uchan.lib.cache import board_cache, posts_cache, site_cache
 from uchan.lib.crypt_code_compat import generate_crypt_code

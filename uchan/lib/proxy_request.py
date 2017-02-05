@@ -1,7 +1,7 @@
 from flask import request
 
 from uchan import logger
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 
 
 def get_request_ip4_str():

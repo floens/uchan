@@ -1,7 +1,8 @@
 from flask import request, render_template, abort, flash, redirect, url_for, session
 
 from uchan import app
-from uchan.lib import roles, ArgumentError
+from uchan.lib import roles
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.cache import cache, site_cache
 from uchan.lib.configs import SiteConfig
 from uchan.lib.database import get_db

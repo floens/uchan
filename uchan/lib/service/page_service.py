@@ -13,7 +13,7 @@ CONTENT_MAX_LENGTH = 10000
 LINK_NAME_MAX_LENGTH = 20
 LINK_NAME_ALLOWED_CHARS = string.ascii_letters + string.digits + '_'
 
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.cache import page_cache
 from uchan.lib.database import get_db
 from uchan.lib.models import Page

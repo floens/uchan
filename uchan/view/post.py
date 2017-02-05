@@ -2,7 +2,7 @@ from flask import request, abort, redirect, url_for, render_template, jsonify
 
 from uchan import app, configuration
 from uchan.filter.app_filters import time_remaining
-from uchan.lib import BadRequestError, ArgumentError
+from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.action_authorizer import RequestBannedException
 from uchan.lib.action_authorizer import RequestSuspendedException
 from uchan.lib.cache import board_cache, site_cache

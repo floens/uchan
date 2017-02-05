@@ -32,7 +32,7 @@ def create_web_app(configuration: UchanConfiguration, app):
     uchan.view.routing.converters.init_converters(app)
 
     from uchan import logger
-    from uchan.lib import BadRequestError
+    from uchan.lib.exceptions import BadRequestError
 
     # Setup error handlers
     @app.errorhandler(500)

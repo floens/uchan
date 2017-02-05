@@ -1,7 +1,8 @@
 from flask import render_template, request, abort, flash, redirect, url_for
 
 from uchan.filter.text_parser import parse_text
-from uchan.lib import roles, ArgumentError, BadRequestError
+from uchan.lib import roles
+from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.cache.posts_cache import PostCacheProxy
 from uchan.lib.database import get_db
 from uchan.lib.models import Board

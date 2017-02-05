@@ -1,7 +1,7 @@
 from flask import g as flaskg
 from flask import session
 
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.service import moderator_service
 
 """

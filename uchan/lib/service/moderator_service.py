@@ -14,7 +14,8 @@ PASSWORD_MIN_LENGTH = 6
 PASSWORD_MAX_LENGTH = 255
 PASSWORD_ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation + '_'
 
-from uchan.lib import ArgumentError, action_authorizer, roles
+from uchan.lib import action_authorizer, roles
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import BoardModerator, ModeratorLog, Moderator

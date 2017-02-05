@@ -1,7 +1,7 @@
 from flask import request, redirect, url_for, render_template, abort, flash, session
 
 from uchan import configuration
-from uchan.lib import ArgumentError, BadRequestError
+from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, request_moderator
 from uchan.lib.service import moderator_service, verification_service

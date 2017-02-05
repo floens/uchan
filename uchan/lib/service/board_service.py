@@ -15,7 +15,7 @@ DISALLOWED_BOARD_NAMES = [
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import lazyload
 from sqlalchemy.orm.exc import NoResultFound
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.cache import board_cache, posts_cache
 from uchan.lib.configs import BoardConfig
 from uchan.lib.database import get_db

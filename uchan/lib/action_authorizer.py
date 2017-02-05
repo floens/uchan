@@ -1,7 +1,8 @@
 from enum import Enum, unique
 
 from uchan import configuration
-from uchan.lib import roles, ArgumentError
+from uchan.lib import roles
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.cache import board_cache
 from uchan.lib.service import ban_service, moderator_service, verification_service
 

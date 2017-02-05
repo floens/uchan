@@ -2,7 +2,7 @@ import dateutil.parser
 import requests
 
 from uchan import logger
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.service import verification_service
 from uchan.lib.utils import now
 

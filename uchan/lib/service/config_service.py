@@ -1,6 +1,6 @@
 from sqlalchemy.orm.exc import NoResultFound
 
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib.configs import BoardConfig, SiteConfig
 from uchan.lib.database import get_db
 from uchan.lib.models.config import Config

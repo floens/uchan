@@ -1,8 +1,7 @@
 from flask import render_template, request, url_for, redirect
 
 from uchan import app
-from uchan.lib import ArgumentError
-from uchan.lib import BadRequestError
+from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.proxy_request import get_request_ip4
 from uchan.lib.service import verification_service
 from uchan.view import check_csrf_referer

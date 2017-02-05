@@ -3,7 +3,7 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 
 from uchan import configuration
-from uchan.lib import ArgumentError
+from uchan.lib.exceptions import ArgumentError
 from uchan.lib import roles
 from uchan.lib.cache import board_cache
 from uchan.lib.mod_log import mod_log
