@@ -1,17 +1,21 @@
 from flask import render_template, abort, request, flash, redirect, url_for
+from markupsafe import Markup
 from wtforms import StringField, IntegerField, SubmitField, TextAreaField
 from wtforms.validators import NumberRange, DataRequired, IPAddress, ValidationError, Optional, Length
 
+from uchan.filter.app_filters import formatted_time, time_remaining
 from uchan.lib import roles
+from uchan.lib.database import get_db
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.models import Ban
 from uchan.lib.proxy_request import parse_ip4
 from uchan.lib.service import ban_service, board_service, posts_service
-from uchan.lib.utils import ip4_to_str
+from uchan.lib.utils import ip4_to_str, now
 from uchan.view import with_token
 from uchan.view.form import CSRFForm
 from uchan.view.mod import mod, mod_role_restrict
+from uchan.view.mod.paged_model import PagedModel
 
 
 def board_input(form, field):
@@ -40,6 +44,40 @@ class BanForm(CSRFForm):
                            description='This will be shown to the user on the banned page.',
                            render_kw={'cols': 60, 'rows': 6, 'placeholder': 'Banned!'})
     submit = SubmitField('Ban')
+
+
+class PagedBans(PagedModel):
+    def query(self):
+        return get_db().query(Ban)
+
+    def limit(self):
+        return 50
+
+    def header(self):
+        return 'ip', 'to ip', 'from', 'until', 'board', 'reason', ''
+
+    def row(self, ban: Ban):
+        if ban.length > 0:
+            expire_time = ban.date + ban.length
+            until = formatted_time(expire_time) + ' - '
+            if expire_time - now() < 0:
+                until += 'Expired, not viewed'
+            else:
+                until += time_remaining(expire_time) + ' remaining'
+        else:
+            until = 'Does not expire'
+
+        delete_button = '<button class="confirm-button" name="ban_id" value="' + str(ban.id) + '">Lift ban</button>'
+
+        return (
+            ip4_to_str(ban.ip4),
+            ip4_to_str(ban.ip4_end) if ban.ip4_end is not None else '',
+            formatted_time(ban.date),
+            until,
+            ban.board or '',
+            ban.reason,
+            Markup(delete_button)
+        )
 
 
 @mod.route('/mod_ban', methods=['GET', 'POST'])
@@ -81,7 +119,7 @@ def mod_bans():
 
     bans = ban_service.get_all_bans()
 
-    return render_template('mod_bans.html', ban_form=ban_form, bans=bans)
+    return render_template('mod_bans.html', ban_form=ban_form, bans=bans, paged_bans=PagedBans())
 
 
 @mod.route('/mod_ban/delete', methods=['POST'])

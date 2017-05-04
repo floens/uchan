@@ -1,0 +1,42 @@
+{% macro render_pager(name, paged_model, base_url) %}
+    {% if paged_model.has_previous(name) %}
+        [<a href="{{ paged_model.previous_link(name, base_url) }}">Previous</a>]
+    {% endif %}
+
+    {% for page in paged_model.pages(name) %}
+        {% if page['is_current'] %}
+            [{{ page['text'] }}]
+        {% else %}
+            [<a href="{{ paged_model.offset_link(name, base_url, page['offset']) }}">{{ page['text'] }}<a>]
+        {% endif %}
+    {% endfor %}
+
+    {% if paged_model.has_next(name) %}
+        [<a href="{{ paged_model.next_link(name, base_url) }}">Next</a>]
+    {% endif %}
+{% endmacro %}
+
+{% macro render(name, paged_model, base_url) %}
+    {{ render_pager(name, paged_model, base_url) }}
+
+    <table class="datatable">
+    <thead>
+    <tr>
+        {% for header in paged_model.header() %}
+        <th>{{ header }}</th>
+        {% endfor %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for model in paged_model.data(name) %}
+        <tr>
+        {% for row in paged_model.row(model) %}
+            <td>{{ row }}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+
+    {{ render_pager(name, paged_model, base_url) }}
+{% endmacro %}

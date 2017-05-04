@@ -1,6 +1,7 @@
 {% extends "mod_base.html" %}
 
 {% import "widget/form.html" as form_widget %}
+{% import "widget/paged_model.html" as paged_model %}
 
 {% block title %}Mod bans{% endblock %}
 {% block mod_title %}Bans{% endblock %}
@@ -9,45 +10,7 @@
 
     <form action="{{ url_for('.mod_ban_delete') }}" method="POST">
         {{ csrf_html() }}
-        <table class="datatable">
-            <thead>
-            <tr>
-                <th>ip</th>
-                <th>to ip</th>
-                <th>from</th>
-                <th>until</th>
-                <th>board</th>
-                <th>reason</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for ban in bans %}
-                <tr>
-                    <td>{{ ip4_to_str(ban.ip4) }}</td>
-                    <td>{{ ip4_to_str(ban.ip4_end) if ban.ip4_end is not none else '' }}</td>
-                    <td>{{ ban.date|formatted_time }}</td>
-                    <td>
-                        {% if ban.length > 0 %}
-                            {{ (ban.date + ban.length)|formatted_time }} -
-                            {% if (ban.date + ban.length) - now() < 0 %}
-                                <b>Expired, not viewed</b>
-                            {% else %}
-                                <b>{{ (ban.date + ban.length)|time_remaining }} remaining</b>
-                            {% endif %}
-                        {% else %}
-                            Does not expire
-                        {% endif %}
-                    </td>
-                    <td>{{ ban.board or '' }}</td>
-                    <td>{{ ban.reason }}</td>
-                    <td>
-                        <button class="confirm-button" name="ban_id" value="{{ ban.id }}">Lift ban</button>
-                    </td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        {{ paged_model.render('bans', paged_bans, '.mod_bans') }}
     </form>
 
 {% endblock %}
