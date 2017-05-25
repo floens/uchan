@@ -1,30 +1,37 @@
+from typing import Type
+
 from sqlalchemy.orm.exc import NoResultFound
 
+from uchan.lib.dynamic_config import DynamicConfig
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.configs import BoardConfig, SiteConfig
 from uchan.lib.database import get_db
-from uchan.lib.models.config import Config
+from uchan.lib.model import ConfigModel
+from uchan.lib.ormmodel import ConfigOrmModel
+from uchan.lib.repository import configs
 
 
-def get_config_by_type(type):
-    db = get_db()
-    try:
-        return db.query(Config).filter(Config.type == type).one()
-    except NoResultFound:
-        return None
+def load_config_by_type(config_type: str) -> DynamicConfig:
+    res = configs.get_config_by_type(config_type)
+    if res:
+        return load_config(res)
 
 
-def load_config(config_row, moderator=None):
-    config = _get_config_cls(config_row.type)()
+def get_config_by_type(config_type):
+    return configs.get_config_by_type(config_type)
 
-    deserialized = config_row.config
+
+def load_config(config_model: ConfigModel, moderator=None) -> DynamicConfig:
+    config: DynamicConfig = _get_config_cls(config_model.type)()
+
+    deserialized = config_model.config
 
     items = []
     for config_item in config.configs:
         if moderator and not _has_permission(moderator, config_item):
             continue
 
-        set_value = _search_value(config_row, deserialized, config_item.name)
+        set_value = _search_value(config_model, deserialized, config_item.name)
         if set_value is None:
             set_value = config_item.default_value
 
@@ -56,7 +63,7 @@ def save_config(config, config_row):
 
     add = False
     if config_row is None:
-        config_row = Config()
+        config_row = ConfigOrmModel()
         add = True
     config_row.type = config.TYPE
     config_row.config = output
@@ -95,10 +102,10 @@ def _has_permission(moderator, config_item):
         return True
 
 
-def _get_config_cls(type):
-    if type == BoardConfig.TYPE:
+def _get_config_cls(config_type) -> 'Type[DynamicConfig]':
+    if config_type == BoardConfig.TYPE:
         return BoardConfig
-    elif type == SiteConfig.TYPE:
+    elif config_type == SiteConfig.TYPE:
         return SiteConfig
     else:
         raise Exception('Unknown config type')

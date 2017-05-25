@@ -16,7 +16,7 @@
 {% endblock %}
 
 {% block board_view_content %}
-    {% for thread in threads %}
+    {% for thread in catalog.threads %}
         {{ post_catalog_widget.render(board.name, thread, thread.posts[0], is_sticky=thread.sticky, is_locked=thread.locked) }}
     {% endfor %}
 {% endblock %}

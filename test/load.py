@@ -28,13 +28,13 @@ def load():
 
         post_details = PostDetails({}, BOARD, None, TEXT, NAME, SUBJECT, PASSWORD, False, 1)
 
-        board_name, thread_id, post_refno = posts_service.handle_post(post_details)
+        board_name, thread_id, post_refno = posts_service.create_post(post_details)
         print('posted! ' + str(i))
         i += 1
 
         for j in range(REPLIES):
             reply_details = PostDetails({}, BOARD, thread_id, TEXT, NAME, SUBJECT, PASSWORD, False, 1)
-            posts_service.handle_post(reply_details)
+            posts_service.create_post(reply_details)
             print('replied! ' + str(j))
 
 
@@ -46,7 +46,7 @@ def test_size():
     a_board = posts_cache.find_board_cached('test')
 
     post_details = PostDetails({}, BOARD, None, TEXT, NAME, SUBJECT, PASSWORD, False, 1)
-    board_name, thread_id, post_refno = posts_service.handle_post(post_details)
+    board_name, thread_id, post_refno = posts_service.create_post(post_details)
 
     a_thread = posts_cache.find_thread_cached(thread_id)
     a_post = a_thread.posts[0]

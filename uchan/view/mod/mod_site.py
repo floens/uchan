@@ -2,12 +2,13 @@ from flask import request, render_template, abort, flash, redirect, url_for, ses
 
 from uchan import app
 from uchan.lib import roles
+from uchan.lib.dynamic_config import DynamicConfig
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.cache import cache, site_cache
 from uchan.lib.configs import SiteConfig
 from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
-from uchan.lib.models import Board, Post, Thread, Session, Ban, Report, Moderator, File, Config
+from uchan.lib.ormmodel import BoardOrmModel, PostOrmModel, ThreadOrmModel, SessionOrmModel, BanOrmModel, ReportOrmModel, ModeratorOrmModel, FileOrmModel, ConfigOrmModel
 from uchan.lib.moderator_request import request_moderator
 from uchan.lib.proxy_request import get_request_ip4_str
 from uchan.lib.service import config_service
@@ -18,12 +19,12 @@ from uchan.view.mod import mod, mod_role_restrict
 @mod.route('/mod_site', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_site():
-    site_config_row = config_service.get_config_by_type(SiteConfig.TYPE)
-    site_config = config_service.load_config(site_config_row)
+    site_config: DynamicConfig = config_service.get_config_by_type(SiteConfig.TYPE)
+
     moderator = request_moderator()
 
     if request.method == 'GET':
-        session_count = get_db().query(Session).count()
+        session_count = get_db().query(SessionOrmModel).count()
 
         current_ip4_str = get_request_ip4_str()
 
@@ -61,15 +62,15 @@ def mod_stat():
     db = get_db()
 
     stats = {
-        'board count': db.query(Board).count(),
-        'thread count': db.query(Thread).count(),
-        'post count': db.query(Post).count(),
-        'ban count': db.query(Ban).count(),
-        'report count': db.query(Report).count(),
-        'session count': db.query(Session).count(),
-        'moderator count': db.query(Moderator).count(),
-        'file count': db.query(File).count(),
-        'config count': db.query(Config).count()
+        'board count': db.query(BoardOrmModel).count(),
+        'thread count': db.query(ThreadOrmModel).count(),
+        'post count': db.query(PostOrmModel).count(),
+        'ban count': db.query(BanOrmModel).count(),
+        'report count': db.query(ReportOrmModel).count(),
+        'session count': db.query(SessionOrmModel).count(),
+        'moderator count': db.query(ModeratorOrmModel).count(),
+        'file count': db.query(FileOrmModel).count(),
+        'config count': db.query(ConfigOrmModel).count()
     }
 
     return render_template('stat.html', stats=stats)

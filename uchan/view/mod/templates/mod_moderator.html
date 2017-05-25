@@ -21,7 +21,7 @@
             </tr>
             </thead>
             <tbody>
-            {% for board in moderator.boards %}
+            {% for board in moderating_boards %}
                 <tr>
                     <td>
                         <input type="checkbox" name="board_remove" value="{{ board.name }}" title="Remove">

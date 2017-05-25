@@ -11,7 +11,7 @@ COOKIE_DURATION = 1000 * 60 * 60 * 24
 from uchan import app
 from uchan.lib.cache import cache, CacheDict
 from uchan.lib.database import get_db
-from uchan.lib.models import Verification
+from uchan.lib.ormmodel import VerificationOrmModel
 from uchan.lib.utils import now, get_cookie_domain
 
 
@@ -110,7 +110,7 @@ def set_verification(request, ip4, name, verified, request_message=None, single_
     db = get_db()
 
     if verification is None:
-        verification = Verification()
+        verification = VerificationOrmModel()
         verification.verification_id = generate_verification_id()
         db.add(verification)
 
@@ -197,7 +197,7 @@ def get_verification_id_from_request(request):
 def find_verification_id(verification_id):
     db = get_db()
     try:
-        return db.query(Verification).filter_by(verification_id=verification_id).one()
+        return db.query(VerificationOrmModel).filter_by(verification_id=verification_id).one()
     except NoResultFound:
         return None
 

@@ -1,6 +1,7 @@
 from flask import abort
 
-from uchan.lib.cache import posts_cache
+from uchan.lib.model import BoardModel, ThreadModel, PostModel, CatalogModel
+from uchan.lib.service import board_service, posts_service, file_service
 from uchan.lib.utils import valid_id_range
 from uchan.view.api import api, jsonres
 
@@ -16,16 +17,14 @@ def api_index():
 @api.route('/catalog/<board_name>')
 @jsonres()
 def api_catalog(board_name):
-    board_cached = posts_cache.find_board_cached(board_name)
-    if not board_cached:
+    board: BoardModel = board_service.find_board(board_name, include_config=True)
+    if not board:
         abort(404)
 
-    threads = []
-    for thread in board_cached.threads:
-        threads.append(build_thread_object(thread))
+    catalog: CatalogModel = posts_service.get_catalog(board)
 
     return {
-        'threads': threads
+        'threads': list(map(lambda i: build_thread_object(i), catalog.threads))
     }
 
 
@@ -34,18 +33,22 @@ def api_catalog(board_name):
 def api_thread(board_name, thread_refno):
     valid_id_range(thread_refno)
 
-    thread_cached = posts_cache.find_thread_cached(board_name, thread_refno)
-    if not thread_cached:
+    board: BoardModel = board_service.find_board(board_name, include_config=True)
+    if not board:
+        abort(404)
+
+    thread = posts_service.find_thread_by_board_thread_refno_with_posts(board, thread_refno)
+    if not thread:
         abort(404)
 
     return {
-        'thread': build_thread_object(thread_cached)
+        'thread': build_thread_object(thread)
     }
 
 
-def build_thread_object(thread):
+def build_thread_object(thread: ThreadModel):
     thread_obj = {
-        'id': thread.id,
+        # 'id': thread.id,
         'refno': thread.refno,
         'lastModified': thread.last_modified
     }
@@ -66,15 +69,15 @@ def build_thread_object(thread):
     return thread_obj
 
 
-def build_post_object(post):
+def build_post_object(post: PostModel):
     post_obj = {
         'id': post.id,
         'refno': post.refno,
         'date': post.date
     }
 
-    if post.html:
-        post_obj['html'] = post.html
+    if post.html_text:
+        post_obj['html'] = post.html_text
 
     if post.name:
         post_obj['name'] = post.name
@@ -85,16 +88,16 @@ def build_post_object(post):
     if post.mod_code:
         post_obj['modCode'] = post.mod_code
 
-    if post.has_file:
+    if post.file:
         file_obj = {
-            'location': post.file_location,
-            'thumbnailLocation': post.file_thumbnail_location,
-            'name': post.file_name,
-            'width': post.file_width,
-            'height': post.file_height,
-            'size': post.file_size,
-            'thumbnailWidth': post.file_thumbnail_width,
-            'thumbnailHeight': post.file_thumbnail_height
+            'location': file_service.resolve_to_uri(post.file.location),
+            'thumbnailLocation': file_service.resolve_to_uri(post.file.thumbnail_location),
+            'name': post.file.original_name,
+            'width': post.file.width,
+            'height': post.file.height,
+            'size': post.file.size,
+            'thumbnailWidth': post.file.thumbnail_width,
+            'thumbnailHeight': post.file.thumbnail_height
         }
 
         post_obj['file'] = file_obj

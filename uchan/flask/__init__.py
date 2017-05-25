@@ -9,9 +9,9 @@ class CustomFlaskApp(Flask):
         super().__init__(*args, **kwargs)
 
     def reset_sessions(self, db, session_ids_to_skip):
-        from uchan.lib.models import Session
+        from uchan.lib.ormmodel import SessionOrmModel
 
-        all_sessions = db.query(Session).all()
+        all_sessions = db.query(SessionOrmModel).all()
         for session_item in all_sessions:
             if session_item.session_id not in session_ids_to_skip:
                 self.session_interface.delete_session(session_item.session_id)

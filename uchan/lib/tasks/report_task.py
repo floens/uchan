@@ -1,5 +1,4 @@
 from uchan import celery
-from uchan.lib.service import report_service
 
 
 class ManageReportDetails:
@@ -11,6 +10,9 @@ class ManageReportDetails:
         self.report_id = report_id
         self.mod_id = mod_id
         self.mode = None
+
+
+from uchan.lib.service import report_service
 
 
 @celery.task

@@ -1,5 +1,5 @@
 {% macro render(config, update_url, prefix='config_') %}
-    <form action="{{ update_url }}" method="post">
+    <form action="{{ update_url }}" method="post" id="config">
         <fieldset>
             <legend>Configuration</legend>
             {{ csrf_html() }}

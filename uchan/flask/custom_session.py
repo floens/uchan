@@ -5,7 +5,7 @@ from flask.sessions import SessionInterface, SessionMixin
 from sqlalchemy.orm.exc import NoResultFound
 from uchan.lib.cache import CacheDict
 from uchan.lib.database import get_db
-from uchan.lib.models import Session
+from uchan.lib.ormmodel import SessionOrmModel
 from uchan.lib.utils import now
 from werkzeug.datastructures import CallbackDict
 
@@ -31,7 +31,7 @@ class CustomSessionCacheDict(CacheDict):
 
 
 class CustomSessionInterface(SessionInterface):
-    EXPIRES_MINUTES = 2 * 60
+    EXPIRES_MINUTES = 48 * 60
 
     session_class = CustomSession
 
@@ -102,7 +102,7 @@ class CustomSessionInterface(SessionInterface):
             return CustomSession(initial=cache_data.data, session_id=session_id, expires=cache_data.expires)
         else:
             try:
-                session_model = get_db().query(Session).filter_by(session_id=session_id).one()
+                session_model = get_db().query(SessionOrmModel).filter_by(session_id=session_id).one()
 
                 session = CustomSession(initial=session_model.data,
                                         session_id=session_id, expires=session_model.expires)
@@ -123,7 +123,7 @@ class CustomSessionInterface(SessionInterface):
         response.delete_cookie(app.session_cookie_name, domain=self.get_cookie_domain(app))
 
     def store_session_db(self, session):
-        session_model = Session(session_id=session.session_id, data=session, expires=session.expires)
+        session_model = SessionOrmModel(session_id=session.session_id, data=session, expires=session.expires)
 
         db = get_db()
         db.add(db.merge(session_model))
@@ -135,7 +135,7 @@ class CustomSessionInterface(SessionInterface):
     def delete_session(self, session_id):
         db = get_db()
         try:
-            session_model = db.query(Session).filter_by(session_id=session_id).one()
+            session_model = db.query(SessionOrmModel).filter_by(session_id=session_id).one()
             db.delete(session_model)
             db.commit()
         except NoResultFound:

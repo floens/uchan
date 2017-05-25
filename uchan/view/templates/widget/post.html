@@ -1,14 +1,14 @@
 {% macro render_file(post_item) %}
-    {% if post_item.has_file %}
+    {% if post_item.file %}
         <div class="file">
-            <a class="file-link" href="{{ post_item.file_location }}" data-filewidth="{{ post_item.file_width }}" data-fileheight="{{ post_item.file_height }}" data-filename="{{ post_item.file_name }}" data-filesize="{{ post_item.file_size }}">
-                <img src="{{ post_item.file_thumbnail_location }}" width="{{ post_item.file_thumbnail_width }}" height="{{ post_item.file_thumbnail_height }}">
+            <a class="file-link" href="{{ post_item.file.location|post_file_uri }}" data-filewidth="{{ post_item.file.width }}" data-fileheight="{{ post_item.file.height }}" data-filename="{{ post_item.file.original_name }}" data-filesize="{{ post_item.file.size }}">
+                <img src="{{ post_item.file.thumbnail_location|post_file_uri }}" width="{{ post_item.file.thumbnail_width }}" height="{{ post_item.file.thumbnail_height }}">
             </a>
         </div>
     {% endif %}
 {% endmacro %}
 
-{% macro render(post_item, thread, snippet=False, link_refno=False,
+{% macro render(post_item, thread, board=None, snippet=False, link_refno=False,
                 board_info=False, with_divider=False, checkbox=False,
                 file_position='bottom', is_locked=False, is_sticky=False) %}
     {# NOTE: keep this in line with the javascript post html builder #}
@@ -20,7 +20,7 @@
                 </span>
                 <br>
             {% endif %}
-            <a href="{% if link_refno %}{{ url_for('view_thread', board_name=thread.board.name, thread_refno=thread.refno) }}{% endif %}#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
+            <a href="{% if link_refno %}{{ url_for('view_thread', board_name=board.name, thread_refno=thread.refno) }}{% endif %}#p{{ post_item.refno }}" class="refno">#{{ post_item.refno }}</a>
             <span class="name">
                 {{ post_item.name|post_name }}
             </span>
@@ -38,9 +38,9 @@
             </span>
             {% endif %}
 
-            {% if post_item.has_file %}
+            {% if post_item.file %}
                 <br>
-                File: <a href="{{ post_item.file_location }}">{{ post_item.file_name }}</a> {{ '(' ~ post_item.file_size|filesizeformat ~ ', ' ~ post_item.file_width ~ 'x' ~ post_item.file_height ~ ')' }}
+                File: <a href="{{ post_item.file.location }}">{{ post_item.file.original_name }}</a> {{ '(' ~ post_item.file.size|filesizeformat ~ ', ' ~ post_item.file.width ~ 'x' ~ post_item.file.height ~ ')' }}
             {% endif %}
         </div>
         {% if file_position == 'top' %}
@@ -61,10 +61,10 @@
         {% endif %}
         {% if board_info %}
             <div class="boardinfo">
-                {% if thread.omitted_count > 0 %}
+                {% if thread.omitted_count %}
                     {{ thread.omitted_count ~ ' ' ~ thread.omitted_count|pluralize('reply', 'replies') }} omitted
                 {% endif %}
-                [<a href="{{ url_for('view_thread', board_name=thread.board.name, thread_refno=thread.refno) }}">View thread</a>]
+                [<a href="{{ url_for('view_thread', board_name=board.name, thread_refno=thread.refno) }}">View thread</a>]
             </div>
         {% endif %}
     </div>

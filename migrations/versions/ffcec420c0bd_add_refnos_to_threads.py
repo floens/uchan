@@ -9,8 +9,8 @@ Create Date: 2016-07-17 18:40:09.411372
 # revision identifiers, used by Alembic.
 from sqlalchemy.orm import Session
 
-from uchan.lib.models import Board
-from uchan.lib.models import Thread
+from uchan.lib.ormmodel import BoardOrmModel
+from uchan.lib.ormmodel import ThreadOrmModel
 
 revision = 'ffcec420c0bd'
 down_revision = 'ac1680bc48'
@@ -29,10 +29,10 @@ def upgrade():
     # Adds refnos to each thread, and sets the refno_counter of the board to the last one set
     print('Changing to thread refnos!')
     db = Session(bind=op.get_bind())
-    boards = db.query(Board).all()
+    boards = db.query(BoardOrmModel).all()
     for board in boards:
         print('Changing board {}'.format(board.name))
-        threads = db.query(Thread).filter(Thread.board_id == board.id).order_by(Thread.id.asc())
+        threads = db.query(ThreadOrmModel).filter(ThreadOrmModel.board_id == board.id).order_by(ThreadOrmModel.id.asc())
         refno = 1
         for thread in threads:
             thread.refno = refno

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Query
 
 class PagedModel:
     def __init__(self):
-        self._count = None
+        self._count: int = None
 
     def query(self) -> Query:
         raise NotImplementedError()

@@ -3,20 +3,11 @@ from flask import request, redirect, url_for, render_template, abort, flash
 from uchan.lib import roles
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
-from uchan.lib.models import Page
+from uchan.lib.model import PageModel
+from uchan.lib.ormmodel import PageOrmModel
 from uchan.lib.service import page_service
 from uchan.view import with_token
 from uchan.view.mod import mod, mod_role_restrict
-
-
-def get_page_or_abort(page_id):
-    if not page_id:
-        abort(400)
-
-    page = page_service.find_page_id(page_id)
-    if not page:
-        abort(404)
-    return page
 
 
 @mod.route('/mod_page')
@@ -36,12 +27,7 @@ def mod_page_add():
     page_link_name = request.form['page_link_name']
     page_type = request.form['page_type']
 
-    page = Page()
-    page.title = page_title
-    page.link_name = page_link_name
-    page.type = page_type
-    page.order = 0
-    page.content = ''
+    page = PageModel.from_title_link_type(page_title, page_link_name, page_type)
 
     try:
         page_service.create_page(page)
@@ -57,7 +43,7 @@ def mod_page_add():
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
 def mod_page_delete():
-    page = get_page_or_abort(request.form.get('page_id', type=int))
+    page = page_service.find_page_id(request.form.get('page_id', type=int))
 
     page_service.delete_page(page)
     flash('Page deleted')
@@ -66,20 +52,16 @@ def mod_page_delete():
     return redirect(url_for('.mod_pages'))
 
 
-@mod.route('/mod_page/<int:page_id>')
+@mod.route('/mod_page/<page:page>')
 @mod_role_restrict(roles.ROLE_ADMIN)
-def mod_page(page_id):
-    page = get_page_or_abort(page_id)
-
+def mod_page(page: PageModel):
     return render_template('mod_page.html', page=page)
 
 
-@mod.route('/mod_page/<int:page_id>/update', methods=['POST'])
+@mod.route('/mod_page/<page:page>/update', methods=['POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 @with_token()
-def mod_page_update(page_id):
-    page = get_page_or_abort(page_id)
-
+def mod_page_update(page: PageModel):
     page.title = request.form['page_title']
     page.content = request.form['page_content']
     page.order = request.form.get('page_order', type=int)
@@ -93,4 +75,4 @@ def mod_page_update(page_id):
     except ArgumentError as e:
         flash(e.message)
 
-    return redirect(url_for('.mod_page', page_id=page_id))
+    return redirect(url_for('.mod_page', page=page))

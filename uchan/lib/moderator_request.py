@@ -1,7 +1,7 @@
-from flask import g as flaskg
-from flask import session
+from flask import g as flaskg, session
 
 from uchan.lib.exceptions import ArgumentError
+from uchan.lib.model import ModeratorModel
 from uchan.lib.service import moderator_service
 
 """
@@ -13,7 +13,7 @@ def get_authed():
     return 'mod_auth_id' in session
 
 
-def request_moderator():
+def request_moderator() -> ModeratorModel:
     # Cache for the request
     if not hasattr(flaskg, 'authed_moderator'):
         if not get_authed():

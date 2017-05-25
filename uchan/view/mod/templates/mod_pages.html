@@ -51,7 +51,7 @@
                 <td>{{ page.type }}</td>
                 <td>{{ page.order }}</td>
                 <td>{{ page.link_name }}</td>
-                <td>[<a href="{{ url_for('.mod_page', page_id=page.id) }}">Edit</a>]</td>
+                <td>[<a href="{{ url_for('.mod_page', page=page) }}">Edit</a>]</td>
             </tr>
         {% endfor %}
         </tbody>

@@ -67,6 +67,11 @@ class CacheWrapper(MemcachedCache):
         return int(time()) + timeout
 
 
+def cache_key(*args):
+    # TODO: should we throw an exception on invalid params, to avoid duplicates?
+    return ':'.join(map(lambda i: str(i).replace(':', '_'), args))
+
+
 class CacheDict(dict):
     """
     Makes keys accessible like a property
@@ -108,6 +113,5 @@ class LocalCache:
 cache = CacheWrapper(configuration.memcache.server, configuration.memcache.max_item_size)
 
 import uchan.lib.cache.board_cache
-import uchan.lib.cache.posts_cache
 import uchan.lib.cache.site_cache
 import uchan.lib.cache.page_cache

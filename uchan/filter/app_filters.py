@@ -96,3 +96,10 @@ def post_name(name):
         value = one + '<span class="trip">!' + two + '</span>'
 
     return Markup(value)
+
+
+@app.template_filter()
+def post_file_uri(name):
+    # TODO
+    from uchan.lib.service import file_service
+    return file_service.resolve_to_uri(name)

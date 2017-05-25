@@ -7,7 +7,7 @@
 
     <hr class="content-divider">
 
-    <form action="{{ url_for('.mod_page_update', page_id=page.id) }}" method="POST">
+    <form action="{{ url_for('.mod_page_update', page=page) }}" method="POST">
         <fieldset>
             <legend>Update page</legend>
             {{ csrf_html() }}

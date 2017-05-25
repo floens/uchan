@@ -19,7 +19,7 @@
                 {{ csrf_html() }}
                 <input type="hidden" name="report_id" value="{{ report.id }}">
                 <button name="mode" value="clear" title="Delete the report without taking action">Clear</button>
-                <button name="mode" value="delete" title="Remove the post">Delete{{ ' thread' if post.refno == 1 else '' }}</button>
+                <button name="mode" value="delete" title="Remove the {{ 'thread' if post.refno == 1 else '' }}">Delete{{ ' thread' if post.refno == 1 else '' }}</button>
                 {% if post.has_file %}
                     <button name="mode" value="delete_file" title="Remove file">Remove file</button>
                 {% endif %}

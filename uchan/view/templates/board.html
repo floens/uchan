@@ -18,12 +18,12 @@
 {% endblock %}
 
 {% block board_view_content %}
-    {% for thread in threads %}
-        {{ post_widget.render(thread.posts[0], thread, board_info=True, with_divider=thread.posts|length > 1,
+    {% for thread in board_page.threads %}
+        {{ post_widget.render(thread.posts[0], thread, board, board_info=True, with_divider=thread.posts|length > 1,
             is_sticky=thread.sticky, is_locked=thread.locked) }}
 
         {% for post_snippet in thread.posts[1:] %}
-            {{ post_widget.render(post_snippet, thread, link_refno=True, snippet=True, with_divider=not loop.last) }}
+            {{ post_widget.render(post_snippet, thread, board, link_refno=True, snippet=True, with_divider=not loop.last) }}
         {% endfor %}
         {% if not loop.last %}
             <hr class="content-divider">

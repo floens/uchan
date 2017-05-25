@@ -2,6 +2,8 @@ import re
 
 from markupsafe import escape, Markup
 
+from uchan.lib import roles
+
 POST_REFNO_PATTERN = re.compile('&gt;&gt;(\\d{1,16})')
 
 
@@ -108,3 +110,12 @@ def parse_text_line(line, linkify, bigheaders):
         line += '<br>'
 
     return line
+
+
+def parse_moderator_code(moderator):
+    if roles.ROLE_ADMIN in moderator.roles:
+        role_name = 'Admin'
+    else:
+        role_name = 'Board moderator'
+
+    return '## ' + role_name

@@ -1,21 +1,37 @@
+from contextlib import contextmanager
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm.session import Session
 
 from uchan import configuration
 
-ModelBase = declarative_base()
+OrmModelBase = declarative_base()
 
-_sessionconstruct = None
+_scoped_session = None
+_session_cls = None
 _engine = None
 
-from sqlalchemy.orm.session import Session
+
+@contextmanager
+def session():
+    global _session_cls
+
+    s = _session_cls()
+    try:
+        yield s
+    except:
+        s.rollback()
+        raise
+    finally:
+        s.close()
 
 
 def get_db() -> Session:
-    global _sessionconstruct
+    global _scoped_session
 
-    return _sessionconstruct()
+    return _scoped_session()
 
 
 def connect_string():
@@ -23,8 +39,8 @@ def connect_string():
 
 
 def clean_up():
-    global _sessionconstruct
-    _sessionconstruct.remove()
+    global _scoped_session
+    _scoped_session.remove()
 
 
 def register_teardown(flask_app):
@@ -38,16 +54,20 @@ def init_db():
     """Initialize function for the database.
     """
 
-    global _sessionconstruct
+    global _scoped_session
+    global _session_cls
     global _engine
-    global ModelBase
+    global OrmModelBase
 
     _engine = create_engine(connect_string(), pool_size=configuration.database.pool_size,
                             echo=configuration.database.echo)
-    _sessionconstruct = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=_engine))
 
-    import uchan.lib.models
+    _session_cls = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
+
+    _scoped_session = scoped_session(_session_cls)
+
+    import uchan.lib.ormmodel
 
 
 def metadata_create_all():
-    ModelBase.metadata.create_all(_engine)
+    OrmModelBase.metadata.create_all(_engine)

@@ -6,7 +6,7 @@
 {% block title %}Mod bans{% endblock %}
 {% block mod_title %}Bans{% endblock %}
 {% block mod_content %}
-    {{ form_widget.render(ban_form) }}
+    {{ form_widget.render(ban_form, ban_messages) }}
 
     <form action="{{ url_for('.mod_ban_delete') }}" method="POST">
         {{ csrf_html() }}

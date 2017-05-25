@@ -1,7 +1,12 @@
-{% macro render(form) %}
-    <form action="{{ form.action_url or url_for(form.action) }}" method="POST">
+{% import "widget/messages.html" as messages_widget %}
+
+{% macro render(form, messages=[], element_id='') %}
+    <form action="{{ form.action_url or url_for(form.action) }}" method="POST"{% if element_id %} id="{{ element_id }}"{% endif %}>
         <fieldset class="generic-form">
             <legend>{{ form.name }}</legend>
+
+            {{ messages_widget.render(messages) }}
+
             {% for field in form %}
                 {% if field.widget.input_type != 'submit' and field.widget.input_type != 'hidden' %}
                     {# Label #}

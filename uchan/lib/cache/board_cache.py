@@ -1,6 +1,7 @@
 from uchan.lib.cache import cache, CacheDict, LocalCache
-from uchan.lib.configs import BoardConfig
-from uchan.lib.service import board_service, config_service
+from uchan.lib.model import BoardConfigModel
+from uchan.lib.repository import boards
+from uchan.lib.service import board_service
 
 
 class AllBoardsCacheProxy(CacheDict):
@@ -26,28 +27,32 @@ Anything related to posts (so the board pages and catalog) are in the PostsCache
 """
 
 
-def find_board_config(board_name):
+def find_board_config(board_name) -> BoardConfigModel:
     key = get_board_config_key(board_name)
 
     local_cached = local_cache.get(key)
     if local_cached is not None:
         return local_cached
 
-    config_cache = cache.get(key, True)
-    if config_cache is None:
-        board = board_service.find_board(board_name)
-        if not board:
-            return None
+    # config_cache = cache.get(key, True)
+    # if config_cache is None:
+    #     board = board_service.find_board(board_name)
+    #     if not board:
+    #         return None
+    #
+    #     config_cache = config_service.load_config_dict(board.config)
+    #     cache.set(key, config_cache)
+    #
+    # board_config = BoardConfig()
+    # board_config.set_values_from_cache(config_cache)
 
-        config_cache = config_service.load_config_dict(board.config)
-        cache.set(key, config_cache)
+    board = boards.find_by_name(board_name, include_config=True)
+    if not board:
+        return None
 
-    board_config = BoardConfig()
-    board_config.set_values_from_cache(config_cache)
+    local_cache.set(key, board.config)
 
-    local_cache.set(key, board_config)
-
-    return board_config
+    return board.config
 
 
 def get_board_config_key(board_name):

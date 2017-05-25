@@ -1,9 +1,9 @@
 {% macro render(board_name, thread, post_item, snippet=False, is_locked=False, is_sticky=False) %}
     <div class="catalog-post" id="p{{ post_item.refno }}">
-        {% if post_item.has_file %}
+        {% if post_item.file %}
             <div class="file">
-                <a class="file-link" href="{{ post_item.file_location }}">
-                    <img src="{{ post_item.file_thumbnail_location }}" width="{{ post_item.file_thumbnail_width }}" height="{{ post_item.file_thumbnail_height }}">
+                <a class="file-link" href="{{ post_item.file.location|post_file_uri }}">
+                    <img src="{{ post_item.file.thumbnail_location|post_file_uri }}" width="{{ post_item.file.thumbnail_width }}" height="{{ post_item.file.thumbnail_height }}">
                 </a>
             </div>
         {% endif %}

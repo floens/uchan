@@ -3,10 +3,10 @@ from flask import request, redirect, url_for, render_template, flash
 from wtforms import StringField, SubmitField, PasswordField, HiddenField
 from wtforms.validators import DataRequired
 
-from uchan.lib import roles
+from uchan.lib import roles, validation
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
-from uchan.lib.models import Moderator
+from uchan.lib.model import ModeratorModel
 from uchan.lib.moderator_request import request_moderator, unset_mod_authed
 from uchan.lib.service import board_service, moderator_service
 from uchan.view import with_token
@@ -40,21 +40,20 @@ class AddModeratorBoardForm(CSRFForm):
 def mod_moderators():
     add_moderator_form = AddModeratorForm(request.form)
     if request.method == 'POST' and add_moderator_form.validate():
-        moderator = Moderator()
-        moderator.roles = []
-        moderator.username = add_moderator_form.username.data
         try:
-            moderator_service.create_moderator(moderator, add_moderator_form.password.data)
+            moderator = moderator_service.user_register(add_moderator_form.username.data,
+                                                        add_moderator_form.password.data,
+                                                        add_moderator_form.password.data)
             flash('Moderator created')
             mod_log('moderator add {} username {}'.format(moderator.id, moderator.username))
         except ArgumentError as e:
             flash(e.message)
 
-    moderators = moderator_service.get_all_moderators()
+    all_moderators = moderator_service.get_all_moderators(include_boards=True)
 
     return render_template('mod_moderators.html',
                            add_moderator_form=add_moderator_form,
-                           moderators=moderators)
+                           moderators=all_moderators)
 
 
 @mod.route('/mod_moderator/delete', methods=['POST'])
@@ -67,9 +66,9 @@ def mod_moderator_delete():
     authed_moderator = request_moderator()
     self_delete = authed_moderator == moderator
 
-    moderator_service.delete_moderator(moderator)
-    if self_delete:
-        unset_mod_authed()
+    # moderator_service.delete_moderator(moderator)
+    # if self_delete:
+    #    unset_mod_authed()
     flash('Moderator deleted')
     mod_log('moderator delete username {}'.format(username), moderator_name=authed_moderator.username)
 
@@ -81,7 +80,7 @@ def mod_moderator_delete():
 
 @mod.route('/mod_moderator/<moderator:moderator>', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
-def mod_moderator(moderator):
+def mod_moderator(moderator: ModeratorModel):
     all_roles = ', '.join(roles.ALL_ROLES)
     all_board_roles = ', '.join(roles.ALL_BOARD_ROLES)
 
@@ -90,7 +89,7 @@ def mod_moderator(moderator):
     if request.method == 'POST' and request.form.get('board_add') is not None and add_moderator_board_form.validate():
         try:
             board = board_service.find_board(add_moderator_board_form.board.data)
-            board_service.board_add_moderator(board, moderator)
+            board_service.add_moderator(board, moderator)
             flash('Assigned ' + board.name)
             mod_log('add board to {} /{}/'.format(moderator.username, board.name))
         except ArgumentError as e:
@@ -109,7 +108,7 @@ def mod_moderator(moderator):
 
         for board in boards_to_remove:
             try:
-                board_service.board_remove_moderator(board, moderator)
+                board_service.remove_moderator(board, moderator)
                 flash('Revoked ' + board.name)
                 mod_log('remove board from {} /{}/'.format(moderator.username, board.name))
             except ArgumentError as e:
@@ -118,8 +117,11 @@ def mod_moderator(moderator):
     if request.method == 'POST' and request.form.get('role_remove'):
         pass
 
+    moderating_boards = moderator_service.get_all_moderating_boards(moderator)
+
     return render_template('mod_moderator.html',
                            moderator=moderator,
+                           moderating_boards=moderating_boards,
                            all_roles=all_roles,
                            all_board_roles=all_board_roles,
                            add_moderator_board_form=add_moderator_board_form)
@@ -131,12 +133,12 @@ def mod_moderator(moderator):
 def mod_moderator_password(moderator):
     new_password = request.form['new_password']
 
-    if not moderator_service.check_password_validity(new_password):
+    if not validation.check_password_validity(new_password):
         flash('Invalid password')
         return redirect(url_for('.mod_moderator', moderator_id=moderator.id))
 
     try:
-        moderator_service.change_password_admin(moderator, new_password)
+        moderator_service.set_password(moderator, new_password)
         flash('Changed password')
         mod_log('changed password for {}'.format(moderator.username))
     except ArgumentError as e:

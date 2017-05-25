@@ -4,7 +4,7 @@ from uchan import configuration
 from uchan.lib import roles
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.cache import board_cache
-from uchan.lib.service import ban_service, moderator_service, verification_service
+from uchan.lib.model import ModeratorModel, BoardModel
 
 
 class NoPermissionError(Exception):
@@ -81,7 +81,7 @@ def authorize_post_action(actor, action, post=None, post_details=None, board=Non
                 raise e
 
         board_config = board_cache.find_board_config(board.name)
-        if board_config.get('posting_verification_required'):
+        if board_config.posting_verification_required:
             if post_details.verification_data is None or \
                     not verification_service.data_is_verified(post_details.verification_data):
                 e = VerificationError('[Please verify here first](_{})'.format('/verify/'))
@@ -108,13 +108,13 @@ def authorize_post_action(actor, action, post=None, post_details=None, board=Non
             raise e
     elif action is PostAction.THREAD_STICKY_TOGGLE or action is PostAction.THREAD_LOCKED_TOGGLE:
         req_roles = [roles.BOARD_ROLE_FULL_PERMISSION]
-        if not moderator_service.has_board_roles(actor, board, req_roles):
+        if not moderator_service.has_any_of_board_roles(actor, board, req_roles):
             raise NoPermissionError()
     else:
         raise Exception('Unknown post action')
 
 
-def authorize_action(actor, action):
+def authorize_action(actor: ModeratorModel, action: ModeratorAction):
     if has_role(actor, roles.ROLE_ADMIN):
         return
 
@@ -137,7 +137,7 @@ def authorize_action(actor, action):
         raise Exception('Unknown action')
 
 
-def authorize_board_action(actor, board, action, data=None):
+def authorize_board_action(actor: ModeratorModel, board: BoardModel, action: ModeratorBoardAction, data=None):
     if has_role(actor, roles.ROLE_ADMIN):
         return
 
@@ -145,11 +145,19 @@ def authorize_board_action(actor, board, action, data=None):
         if not has_board_roles(actor, board, [roles.BOARD_ROLE_FULL_PERMISSION]):
             raise NoPermissionError()
     elif action is ModeratorBoardAction.ROLE_ADD:
-        adding_role = data
+        subject, adding_role = data
+
+        if has_board_roles(subject, board, [roles.BOARD_ROLE_CREATOR]):
+            raise NoPermissionError()
+
         if adding_role == roles.BOARD_ROLE_CREATOR:
             raise NoPermissionError()
     elif action is ModeratorBoardAction.ROLE_REMOVE:
-        removing_role = data
+        subject, removing_role = data
+
+        if has_board_roles(subject, board, [roles.BOARD_ROLE_CREATOR]):
+            raise NoPermissionError()
+
         if removing_role == roles.BOARD_ROLE_CREATOR:
             raise NoPermissionError()
     elif action is ModeratorBoardAction.MODERATOR_ADD:
@@ -164,7 +172,7 @@ def authorize_board_action(actor, board, action, data=None):
         if not has_board_roles(actor, board, [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_CONFIG]):
             raise NoPermissionError()
     elif action is ModeratorBoardAction.VIEW_LOG:
-        if board not in actor.boards:
+        if not moderator_service.moderates_board(actor, board):
             raise NoPermissionError()
     else:
         raise Exception('Unknown board action')
@@ -184,4 +192,7 @@ def has_role(moderator, role):
 
 
 def has_board_roles(moderator, board, req_roles):
-    return moderator_service.has_board_roles(moderator, board, req_roles)
+    return moderator_service.has_any_of_board_roles(moderator, board, req_roles)
+
+
+from uchan.lib.service import ban_service, moderator_service, verification_service

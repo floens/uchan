@@ -1,37 +1,117 @@
-import string
-
-import bcrypt
-from sqlalchemy import desc
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload
-from sqlalchemy.orm.exc import NoResultFound
-
-from uchan.lib.models import Board
-
-USERNAME_MAX_LENGTH = 50
-USERNAME_ALLOWED_CHARS = string.ascii_letters + string.digits + '_'
-PASSWORD_MIN_LENGTH = 6
-PASSWORD_MAX_LENGTH = 255
-PASSWORD_ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation + '_'
+from typing import List
 
 from uchan.lib import action_authorizer, roles
+from uchan.lib.action_authorizer import ModeratorBoardAction, NoPermissionError
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
-from uchan.lib.models import BoardModerator, ModeratorLog, Moderator
-from uchan.lib.models.moderator_log import ModeratorLogType
-from uchan.lib.service import board_service, config_service
+from uchan.lib.model import ModeratorLogType, ModeratorModel, BoardModel, BoardModeratorModel, ModeratorLogModel
+from uchan.lib.repository import moderators, board_moderators, boards, moderator_logs
+from uchan.lib.service import board_service
 from uchan.lib.utils import now
 
+MESSAGE_PASSWORD_INCORRECT = 'Password does not match'
 
-def user_create_board(moderator, board_name):
+
+# Moderators
+
+def find_moderator_id(moderator_id: int) -> ModeratorModel:
+    return moderators.find_by_id(moderator_id)
+
+
+def find_moderator_username(username: str) -> ModeratorModel:
+    return moderators.find_by_username_case_insensitive(username)
+
+
+def delete_moderator(moderator: ModeratorModel):
+    moderators.delete(moderator)
+
+
+def get_all_moderators(include_boards=False) -> 'List[ModeratorModel]':
+    return moderators.get_all(include_boards)
+
+
+def check_password(moderator: ModeratorModel, password: str):
+    moderators.check_password_match(moderator, password)
+
+
+def set_password(moderator: ModeratorModel, password: str):
+    moderators.update_password(moderator, password)
+
+
+def check_and_set_password(moderator: ModeratorModel, old_password: str, new_password: str):
+    check_password(moderator, old_password)
+    set_password(moderator, new_password)
+
+
+# Moderator roles
+
+def role_exists(role):
+    return role is not None and role in roles.ALL_ROLES
+
+
+def has_role(moderator: ModeratorModel, role: str) -> bool:
+    return moderators.has_role(moderator, role)
+
+
+def add_role(moderator: ModeratorModel, role: str):
+    moderators.add_role(moderator, role)
+
+
+def remove_role(moderator: ModeratorModel, role: str):
+    moderators.remove_role(moderator, role)
+
+
+# Board moderators
+
+def get_all_board_moderators_by_moderator(moderator: ModeratorModel) -> 'List[BoardModeratorModel]':
+    return board_moderators.get_all_board_moderators_by_moderator(moderator)
+
+
+def get_all_board_moderators_by_board(board: BoardModel) -> 'List[BoardModeratorModel]':
+    return board_moderators.get_all_board_moderators_by_board(board)
+
+
+def get_all_moderating_boards(moderator: ModeratorModel) -> 'List[BoardModel]':
+    return board_moderators.get_all_moderating_boards(moderator)
+
+
+def moderates_board(moderator: ModeratorModel, board: BoardModel) -> bool:
+    return board_moderators.moderator_has_board(moderator, board)
+
+
+def moderates_board_id(moderator: ModeratorModel, board_id: int) -> bool:
+    if has_role(moderator, roles.ROLE_ADMIN):
+        return True
+
+    return board_moderators.moderator_has_board_id(moderator, board_id)
+
+
+# Board moderator roles
+
+def has_any_of_board_roles(moderator: ModeratorModel, board: BoardModel, role_list: 'List[str]'):
+    return board_moderators.has_any_of_board_roles(moderator, board, role_list)
+
+
+def add_board_role(moderator: ModeratorModel, board: BoardModel, role: str):
+    return board_moderators.add_board_role(moderator, board, role)
+
+
+def remove_board_role(moderator: ModeratorModel, board: BoardModel, role: str):
+    return board_moderators.remove_board_role(moderator, board, role)
+
+
+# Board moderator user actions
+# Various actions checked with the authorizer
+
+def user_create_board(moderator: ModeratorModel, board_name: str):
     action_authorizer.authorize_action(moderator, action_authorizer.ModeratorAction.BOARD_CREATE)
-    board = Board()
-    board.name = board_name
-    board_service.add_board(board)
-    board_service.board_add_moderator(board, moderator)
-    add_board_role(moderator, board, roles.BOARD_ROLE_CREATOR)
-    add_board_role(moderator, board, roles.BOARD_ROLE_FULL_PERMISSION)
+
+    # TODO: make this atomic
+    board = BoardModel.from_name(board_name)
+    board = board_service.add_board(board)
+    board_service.add_moderator(board, moderator)
+    board_moderators.add_board_role(moderator, board, roles.BOARD_ROLE_CREATOR)
+    board_moderators.add_board_role(moderator, board, roles.BOARD_ROLE_FULL_PERMISSION)
 
     mod_log('Board {} created'.format(board.name))
 
@@ -45,348 +125,166 @@ def user_delete_board(moderator, board):
     mod_log('Board {} deleted'.format(board_name))
 
 
-def user_update_board_config(moderator, board, board_config, board_config_row, form):
+def can_update_board_config(moderator: ModeratorModel, board: BoardModel) -> bool:
+    try:
+        action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.CONFIG_UPDATE)
+        return True
+    except NoPermissionError:
+        return False
+
+
+# TODO: merge with authorizer
+def can_update_advanced_board_configs(moderator: ModeratorModel) -> bool:
+    return has_role(moderator, roles.ROLE_ADMIN)
+
+
+def can_update_roles(moderator: ModeratorModel, board: BoardModel) -> bool:
+    try:
+        action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.ROLES_UPDATE)
+        return True
+    except NoPermissionError:
+        return False
+
+
+def can_invite_moderator(moderator: ModeratorModel, board: BoardModel):
+    try:
+        action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_ADD)
+        return True
+    except NoPermissionError:
+        return False
+
+
+def can_remove_moderator(moderator: ModeratorModel, board: BoardModel):
+    try:
+        action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.MODERATOR_REMOVE)
+        return True
+    except NoPermissionError:
+        return False
+
+
+def can_delete_board(moderator: ModeratorModel):
+    return has_role(moderator, roles.ROLE_ADMIN)
+
+
+def required_roles_for_viewing_reports():
+    return [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_JANITOR]
+
+
+def user_update_board_config(moderator: ModeratorModel, board: BoardModel):
     action_authorizer.authorize_board_action(moderator, board, action_authorizer.ModeratorBoardAction.CONFIG_UPDATE)
-    config_service.save_from_form(moderator, board_config, board_config_row, form)
+
+    boards.update_config(board)
+
     log(ModeratorLogType.CONFIG_UPDATE, moderator, board, 'Config updated')
 
 
-def user_invite_moderator(moderator, board, username):
+def user_invite_moderator(moderator: ModeratorModel, board: BoardModel, username: str):
     action_authorizer.authorize_board_action(moderator, board, action_authorizer.ModeratorBoardAction.MODERATOR_ADD)
 
     invitee = find_moderator_username(username)
     if not invitee:
         raise ArgumentError('Moderator not found')
 
-    board_service.board_add_moderator(board, invitee)
+    board_service.add_moderator(board, invitee)
 
     log(ModeratorLogType.MODERATOR_INVITE, moderator, board, 'Invited {}'.format(invitee.username))
 
 
-def user_remove_moderator(moderator, board, username):
+def user_remove_moderator(moderator: ModeratorModel, board: BoardModel, username: str):
     member = find_moderator_username(username)
     if not member:
         raise ArgumentError('Moderator not found')
 
-    if has_board_roles(member, board, [roles.BOARD_ROLE_CREATOR]):
+    if has_any_of_board_roles(member, board, [roles.BOARD_ROLE_CREATOR]):
         raise ArgumentError('Cannot remove creator')
 
-    if moderator == member:
+    if moderator.id == member.id:
         action_authorizer.authorize_board_action(moderator, board,
                                                  action_authorizer.ModeratorBoardAction.MODERATOR_REMOVE_SELF)
-        board_service.board_remove_moderator(board, member)
+        board_service.remove_moderator(board, member)
         log(ModeratorLogType.MODERATOR_REMOVE, moderator, board, 'Removed self')
         return True
     else:
         action_authorizer.authorize_board_action(moderator, board,
                                                  action_authorizer.ModeratorBoardAction.MODERATOR_REMOVE)
-        board_service.board_remove_moderator(board, member)
+        board_service.remove_moderator(board, member)
         log(ModeratorLogType.MODERATOR_REMOVE, moderator, board, 'Removed {}'.format(member.username))
         return False
 
 
-def user_update_roles(moderator, board, username, new_roles):
+def user_update_roles(moderator: ModeratorModel, board: BoardModel, username: str, new_roles: 'List[str]'):
     action_authorizer.authorize_board_action(moderator, board, action_authorizer.ModeratorBoardAction.ROLES_UPDATE)
 
     subject = find_moderator_username(username)
     if not subject:
         raise ArgumentError('Moderator not found')
 
-    if moderator == subject and not has_role(moderator, roles.ROLE_ADMIN):
+    if moderator.id == subject.id:  # and not has_role(moderator, roles.ROLE_ADMIN):
         raise ArgumentError('Cannot change self')
 
-    board_moderator = get_board_moderator(subject, board)
+    board_moderator = board_moderators.get_board_moderator(board, subject)
     if not board_moderator:
         raise ArgumentError('Not a mod of that board')
 
     changed = set(new_roles) ^ set(board_moderator.roles)
-    # creator is disabled in the ui so it is always unchecked
+    # creator is unchangeable
     if roles.BOARD_ROLE_CREATOR in changed:
         changed.remove(roles.BOARD_ROLE_CREATOR)
 
     if changed:
-        added = []
-        removed = []
+        added_roles = []
+        removed_roles = []
         for i in changed:
             if i not in board_moderator.roles:
-                added.append(i)
+                added_roles.append(i)
             else:
-                removed.append(i)
+                removed_roles.append(i)
 
-        for add in added:
-            action_authorizer.authorize_board_action(moderator, board, action_authorizer.ModeratorBoardAction.ROLE_ADD,
-                                                     add)
+        for add in added_roles:
+            action_authorizer.authorize_board_action(
+                moderator, board, action_authorizer.ModeratorBoardAction.ROLE_ADD, (subject, add))
             add_board_role(subject, board, add)
             log(ModeratorLogType.MODERATOR_ROLE_ADD, moderator, board,
                 'Added role {} to {}'.format(add, subject.username))
 
-        for remove in removed:
-            action_authorizer.authorize_board_action(moderator, board,
-                                                     action_authorizer.ModeratorBoardAction.ROLE_REMOVE, remove)
+        for remove in removed_roles:
+            action_authorizer.authorize_board_action(
+                moderator, board, action_authorizer.ModeratorBoardAction.ROLE_REMOVE, (subject, remove))
             remove_board_role(subject, board, remove)
             log(ModeratorLogType.MODERATOR_ROLE_REMOVE, moderator, board,
                 'Removed role {} from {}'.format(remove, subject.username))
 
 
-def user_register(username, password, password_repeat):
-    if not check_username_validity(username):
-        raise ArgumentError('Invalid username')
-
-    if not check_password_validity(password) or not check_password_validity(password_repeat):
-        raise ArgumentError('Invalid password')
+def user_register(username: str, password: str, password_repeat: str):
+    """
+    Register a moderator with the given passwords. The created moderator has no roles and no relationships to boards.
+    :param username: username to register with
+    :param password: password to register with
+    :param password_repeat: repeated version of password, used for the error message.
+    :raises ArgumentError if the two passwords don't match.
+    :raises ArgumentError any error defined in :meth:`uchan.lib.repository.moderators.create_with_password`
+    :return: the created moderator
+    """
 
     if password != password_repeat:
-        raise ArgumentError('Password does not match')
+        raise ArgumentError(MESSAGE_PASSWORD_INCORRECT)
 
-    if find_moderator_username(username) is not None:
-        raise ArgumentError('Username taken')
-
-    moderator = Moderator()
-    moderator.roles = []
-    moderator.username = username
-
-    create_moderator(moderator, password)
+    moderator = ModeratorModel.from_username(username)
+    moderators.create_with_password(moderator, password)
 
     mod_log('User {} registered'.format(username))
 
     return moderator
 
 
-def user_get_logs(moderator, board, page, per_page):
+def user_get_logs(moderator: ModeratorModel, board: BoardModel, page: int, per_page: int) -> 'List[ModeratorLogModel]':
     action_authorizer.authorize_board_action(moderator, board, action_authorizer.ModeratorBoardAction.VIEW_LOG)
 
-    db = get_db()
-    logs = db.query(ModeratorLog) \
-        .filter(ModeratorLog.board == board) \
-        .order_by(desc(ModeratorLog.date)) \
-        .options(joinedload('moderator')) \
-        .offset(page * per_page).limit(per_page).all()
-    return logs
+    return moderator_logs.get_all_logs_by_board(board, page * per_page, per_page)
 
 
-def log(log_type: ModeratorLogType, moderator, board, text):
-    db = get_db()
-    row = ModeratorLog()
-    row.date = now()
-    row.type = log_type.value
-    row.text = text
-    if moderator is not None:
-        row.moderator = moderator
-    if board is not None:
-        row.board = board
+def log(log_type: ModeratorLogType, moderator: ModeratorModel, board: BoardModel, text: str):
+    log_model = ModeratorLogModel.from_date_type_text_moderator_board(
+        date=now(), type=log_type.value, text=text, moderator=moderator, board=board)
 
-    db.add(row)
-    db.commit()
-
-
-def get_moderating_boards(moderator):
-    return moderator.boards
-
-
-def moderates_board(moderator, board):
-    if has_role(moderator, roles.ROLE_ADMIN):
-        return True
-    return board in moderator.boards
-
-
-def moderates_board_id(moderator, board_id):
-    if has_role(moderator, roles.ROLE_ADMIN):
-        return True
-    db = get_db()
-    try:
-        db.query(BoardModerator).filter_by(moderator_id=moderator.id, board_id=board_id).one()
-        return True
-    except NoResultFound:
-        return False
-
-
-def board_role_exists(role):
-    return role is not None and role in roles.ALL_BOARD_ROLES
-
-
-def has_board_roles(moderator, board, roles):
-    if not all(board_role_exists(role) for role in roles):
-        raise ArgumentError('Invalid board role')
-
-    board_moderator = get_board_moderator(moderator, board)
-    if board_moderator is None:
-        return False
-
-    return any(role in board_moderator.roles for role in roles)
-
-
-def add_board_role(moderator, board, role):
-    if not board_role_exists(role):
-        raise ArgumentError('Invalid board role')
-
-    board_moderator = get_board_moderator(moderator, board)
-    if board_moderator is None:
-        raise ArgumentError('Not a moderator of that board')
-
-    if role in board_moderator.roles:
-        raise ArgumentError('Role already added')
-
-    db = get_db()
-    board_moderator.roles.append(role)
-    db.commit()
-
-
-def remove_board_role(moderator, board, role):
-    if not board_role_exists(role):
-        raise ArgumentError('Invalid board role')
-
-    board_moderator = get_board_moderator(moderator, board)
-    if board_moderator is None:
-        raise ArgumentError('Not a moderator of that board')
-
-    if role not in board_moderator.roles:
-        raise ArgumentError('Role not added')
-
-    db = get_db()
-    board_moderator.roles.remove(role)
-    db.commit()
-
-
-def get_board_moderator(moderator, board):
-    db = get_db()
-    try:
-        return db.query(BoardModerator).filter_by(moderator_id=moderator.id, board_id=board.id).one()
-    except NoResultFound:
-        return None
-
-
-def role_exists(role):
-    return role is not None and role in roles.ALL_ROLES
-
-
-def has_role(moderator, role):
-    return role is not None and role in moderator.roles
-
-
-def add_role(moderator, role):
-    if not role_exists(role):
-        raise ArgumentError('Invalid role')
-
-    if has_role(moderator, role):
-        raise ArgumentError('Role already added')
-
-    moderator.roles.append(role)
-
-    db = get_db()
-    db.commit()
-
-
-def remove_role(moderator, role):
-    if not role:
-        raise ArgumentError('Invalid role')
-
-    if not has_role(moderator, role):
-        raise ArgumentError('Role not added')
-
-    moderator.roles.remove(role)
-
-    db = get_db()
-    db.commit()
-
-
-def check_username_validity(username):
-    if not 0 < len(username) <= USERNAME_MAX_LENGTH:
-        return False
-
-    if not all(c in USERNAME_ALLOWED_CHARS for c in username):
-        return False
-
-    return True
-
-
-def check_password_validity(password):
-    if password is None or len(password) < PASSWORD_MIN_LENGTH or len(password) >= PASSWORD_MAX_LENGTH:
-        return False
-
-    if not all(c in PASSWORD_ALLOWED_CHARS for c in password):
-        return False
-
-    return True
-
-
-def create_moderator(moderator, password):
-    if not check_username_validity(moderator.username):
-        raise ArgumentError('Invalid username')
-
-    if not check_password_validity(password):
-        raise ArgumentError('Invalid password')
-
-    moderator.password = hash_password(password)
-
-    db = get_db()
-
-    db.add(moderator)
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
-        raise ArgumentError('This username is already in use')
-
-
-def delete_moderator(moderator):
-    db = get_db()
-    db.delete(moderator)
-    db.commit()
-
-
-def find_moderator_id(id):
-    db = get_db()
-    try:
-        return db.query(Moderator).filter_by(id=id).one()
-    except NoResultFound:
-        return None
-
-
-def find_moderator_username(username):
-    if not check_username_validity(username):
-        raise ArgumentError('Invalid username')
-
-    db = get_db()
-    try:
-        # Username chars are safe because it is checked above
-        return db.query(Moderator).filter(Moderator.username.ilike(username)).one()
-    except NoResultFound:
-        return None
-
-
-def get_all_moderators():
-    return get_db().query(Moderator).all()
-
-
-def change_password(moderator, old_password, new_password):
-    if not check_password_validity(old_password):
-        raise ArgumentError('Invalid password')
-
-    check_password(moderator, old_password)
-
-    _update_password(moderator, new_password)
-
-
-def change_password_admin(moderator, new_password):
-    _update_password(moderator, new_password)
-
-
-def check_password(moderator: Moderator, password: str):
-    moderator_hashed_password = moderator.password
-
-    if bcrypt.hashpw(password.encode(), moderator_hashed_password) != moderator_hashed_password:
-        raise ArgumentError('Password does not match')
-
-
-def hash_password(password):
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
-
-
-def _update_password(moderator, new_password):
-    if not check_password_validity(new_password):
-        raise ArgumentError('Invalid new password')
-
-    moderator.password = hash_password(new_password)
-
-    db = get_db()
-    db.commit()
+    moderator_logs.create(log_model)

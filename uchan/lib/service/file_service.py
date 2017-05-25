@@ -23,7 +23,7 @@ THUMBNAIL_POSTFIX = '_t'
 
 from uchan import logger
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.models import File
+from uchan.lib.ormmodel import FileOrmModel
 
 
 class FileCdn:
@@ -106,7 +106,7 @@ def init(_upload_queue_path, _cdn):
     cdn = _cdn
 
     # Register on the event when a post row is deleted to also remove it from the cdn
-    listen(File, 'after_delete', _on_file_deleted)
+    listen(FileOrmModel, 'after_delete', _on_file_deleted)
 
 
 def resolve_to_uri(name):

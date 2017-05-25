@@ -1,6 +1,7 @@
 from flask import request, redirect, url_for, render_template, abort, flash, session
 
 from uchan import configuration
+from uchan.lib import validation
 from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, request_moderator
@@ -55,7 +56,7 @@ def mod_auth():
             username = request.form['username']
             password = request.form['password']
 
-            if not moderator_service.check_username_validity(username) or not moderator_service.check_password_validity(password):
+            if not validation.check_username_validity(username) or not validation.check_password_validity(password):
                 raise BadRequestError('Invalid username or password')
             else:
                 moderator = moderator_service.find_moderator_username(username)

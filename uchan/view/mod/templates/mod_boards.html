@@ -18,7 +18,7 @@
         </tr>
         </thead>
         <tbody>
-        {% for board_moderator in moderator.board_moderators %}
+        {% for board_moderator in board_moderators %}
             <tr>
                 <td>{{ board_moderator.board.name }}</td>
                 <td><b>{{ board_moderator.roles|join(', ') }}</b></td>

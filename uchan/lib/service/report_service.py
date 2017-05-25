@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import desc
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import joinedload
@@ -9,8 +11,9 @@ from uchan.lib import roles, action_authorizer
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.action_authorizer import ReportAction, PostAction
 from uchan.lib.database import get_db
-from uchan.lib.models import Report, BoardModerator, Thread, Board, Post
-from uchan.lib.models.moderator_log import ModeratorLogType
+from uchan.lib.ormmodel import ReportOrmModel, BoardModeratorOrmModel, ThreadOrmModel, BoardOrmModel, PostOrmModel
+from uchan.lib.model import ModeratorLogType, BoardModel, ModeratorModel
+from uchan.lib.repository import reports
 from uchan.lib.service import posts_service, moderator_service
 from uchan.lib.tasks.report_task import ManageReportDetails
 from uchan.lib.utils import now
@@ -53,12 +56,12 @@ def add_report(report):
 
     existing_report = None
     try:
-        existing_report = db.query(Report).filter_by(post_id=report.post_id).one()
+        existing_report = db.query(ReportOrmModel).filter_by(post_id=report.post_id).one()
     except NoResultFound:
         pass
 
     if existing_report is not None:
-        existing_report.count = Report.count + 1
+        existing_report.count = ReportOrmModel.count + 1
     else:
         report.count = 1
         db.add(report)
@@ -74,39 +77,13 @@ def delete_report(report):
     db.commit()
 
 
-def get_reports(moderator, page, per_page, board_ids=None):
-    db = get_db()
-
-    reports_query = db.query(Report)
-    # Show all reports when the moderator has the admin role
-    if not moderator_service.has_role(moderator, roles.ROLE_ADMIN):
-        # Filter that gets all reports for the moderator id
-        reports_query = reports_query.filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
-                                             Thread.board_id == Board.id,
-                                             Board.id == BoardModerator.board_id,
-                                             BoardModerator.moderator_id == moderator.id,
-                                             BoardModerator.roles.overlap(
-                                                 cast([roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_JANITOR],
-                                                      ARRAY(String))))
-    else:
-        reports_query = reports_query.filter(Report.post_id == Post.id, Post.thread_id == Thread.id,
-                                             Thread.board_id == Board.id)
-
-    if board_ids:
-        reports_query = reports_query.filter(Board.id.in_(board_ids))
-
-    reports_query = reports_query.order_by(desc(Report.date))
-    reports_query = reports_query.options(
-        joinedload('post').joinedload('thread').joinedload('board')
-    )
-    reports = reports_query.offset(page * per_page).limit(per_page).all()
-
-    return reports
+def get_reports(moderator: ModeratorModel, page: int, per_page: int, for_boards: List[BoardModel] = None):
+    return reports.get_reports(moderator, page, per_page, for_boards)
 
 
 def find_report_id(id):
     db = get_db()
     try:
-        return db.query(Report).filter_by(id=id).one()
+        return db.query(ReportOrmModel).filter_by(id=id).one()
     except NoResultFound:
         return None

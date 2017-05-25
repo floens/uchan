@@ -1,3 +1,5 @@
+print('Initializing')
+
 import configparser
 
 from celery import Celery
@@ -21,8 +23,6 @@ import uchan.config
 
 
 def init():
-    print('Initializing')
-
     global app, celery, cache, configuration
 
     config_parser = configparser.ConfigParser()
@@ -90,7 +90,7 @@ def init():
 
     # database.metadata_create_all()
 
-    print('Done')
+    print('Ready')
 
 
 def setup_logging():

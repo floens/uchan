@@ -14,12 +14,12 @@ config = context.config
 fileConfig(config.config_file_name)
 
 # override the sqlalchemy url here to keep the password in config.py
-from uchan.lib.database import ModelBase, connect_string
+from uchan.lib.database import OrmModelBase, connect_string
 config.set_main_option('sqlalchemy.url', connect_string())
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-target_metadata = ModelBase.metadata
+target_metadata = OrmModelBase.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

@@ -2,29 +2,90 @@ from flask import request, abort, redirect, url_for, render_template, jsonify
 
 from uchan import app, configuration
 from uchan.filter.app_filters import time_remaining
-from uchan.lib.exceptions import BadRequestError, ArgumentError
-from uchan.lib.action_authorizer import RequestBannedException
-from uchan.lib.action_authorizer import RequestSuspendedException
+from uchan.lib import validation
+from uchan.lib.action_authorizer import RequestBannedException, RequestSuspendedException
 from uchan.lib.cache import board_cache, site_cache
+from uchan.lib.exceptions import BadRequestError, ArgumentError
+from uchan.lib.model import PostResultModel
 from uchan.lib.moderator_request import request_moderator, get_authed
 from uchan.lib.proxy_request import get_request_ip4
 from uchan.lib.service import board_service, file_service, posts_service, verification_service
-from uchan.lib.service.file_service import UploadQueueFiles
-from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, post_task
+from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, manage_post_task, execute_post_task, \
+    execute_manage_post_task
 from uchan.lib.utils import now, valid_id_range
 from uchan.view import check_csrf_referer
+
+MESSAGE_POSTING_DISABLED = 'Posting is disabled'
+MESSAGE_FILE_POSTING_DISABLED = 'File posting is disabled'
+MESSAGE_REQUEST_BANNED = 'You are [banned](/banned/)'
+MESSAGE_REQUEST_SUSPENDED = 'You must wait {} before posting again'
 
 
 @app.route('/post', methods=['POST'])
 def post():
-    form = request.form
+    # We don't have csrf tokens for session-less endpoints like this.
+    # Do it another way, with a referer check.
+    _check_headers()
 
+    post_details = _gather_post_params()
+
+    _check_post_settings(post_details.has_file)
+
+    board_config = board_cache.find_board_config(post_details.board_name)
+    if not board_config:
+        abort(404)
+
+    upload_queue_files = None
+    try:
+        # If a image was uploaded validate it and save it to the upload queue
+        if post_details.has_file:
+            upload_queue_files = _queue_file(post_details)
+
+        # Queue the post task that inserts the details in the database
+        try:
+            post_result = _execute_post(post_details)
+        except Exception as e:
+            raise _convert_exception(e)
+
+        # If that was successful, upload the file to the cdn from the upload queue
+        if post_details.has_file:
+            _upload_files(upload_queue_files)
+    finally:
+        # Clean up the files in the upload queue, if there was an error too
+        if upload_queue_files:
+            _clean_files(upload_queue_files)
+
+    return _create_post_response(post_result)
+
+
+def _convert_exception(exception):
+    try:
+        raise exception
+    except RequestBannedException:
+        raise BadRequestError(MESSAGE_REQUEST_BANNED)
+    except RequestSuspendedException as e:
+        raise BadRequestError(MESSAGE_REQUEST_SUSPENDED.format(time_remaining(now() + 1000 * e.suspend_time)))
+    except ArgumentError as e:
+        raise BadRequestError(e.message)
+        # Throw original too, as a server error
+
+
+def _check_headers():
     if not check_csrf_referer(request):
         raise BadRequestError('Bad referer header')
 
+
+def _check_post_settings(has_file):
     site_config = site_cache.find_site_config()
     if not site_config.get('posting_enabled'):
-        raise BadRequestError('Posting is disabled')
+        raise BadRequestError(MESSAGE_POSTING_DISABLED)
+
+    if has_file and not site_config.get('file_posting_enabled'):
+        raise BadRequestError(MESSAGE_FILE_POSTING_DISABLED)
+
+
+def _gather_post_params() -> PostDetails:
+    form = request.form
 
     # Gather params
     thread_refno_raw = form.get('thread', None)
@@ -37,140 +98,146 @@ def post():
             abort(400)
 
     board_name = form.get('board', None)
-    if not board_name or len(board_name) > board_service.BOARD_NAME_MAX_LENGTH:
+    if not validation.check_board_name_validity(board_name):
         abort(400)
 
     text = form.get('comment', None)
+    name = form.get('name', None)
+    subject = form.get('subject', None)
+    password = form.get('password', None)
+
+    # Convert empty strings to None
     if not text:
         text = None
-    name = form.get('name', None)
     if not name:
         name = None
-    subject = form.get('subject', None)
     if not subject:
         subject = None
-    password = form.get('password', None)
     if not password:
         password = None
 
     file = request.files.get('file', None)
     has_file = file is not None and file.filename is not None and len(file.filename) > 0
 
-    if has_file and not site_config.get('file_posting_enabled'):
-        raise BadRequestError('File posting is disabled')
-
     ip4 = get_request_ip4()
 
-    board_config = board_cache.find_board_config(board_name)
-    if not board_config:
-        abort(404)
-
-    post_details = PostDetails(form, board_name, thread_refno, text, name, subject, password, has_file, ip4)
-    post_details.verification_data = verification_service.get_verification_data_for_request(request, ip4, 'post')
-
     with_mod = form.get('with_mod', default=False, type=bool)
+    mod_id = None
     if with_mod:
         moderator = request_moderator() if get_authed() else None
         if moderator is not None:
-            post_details.mod_id = moderator.id
+            mod_id = moderator.id
 
-    upload_queue_files = None
-    try:
-        # If a image was uploaded validate it and save it to the upload queue
-        if has_file:
-            start_time = now()
-            thumbnail_size = configuration.app.thumbnail_reply if thread_refno else configuration.app.thumbnail_op
-            try:
-                post_details.uploaded_file, upload_queue_files = file_service.prepare_upload(file, thumbnail_size)
-            except ArgumentError as e:
-                raise BadRequestError(e.message)
-            post_details.file_time = now() - start_time
+    verification_data = verification_service.get_verification_data_for_request(request, ip4, 'post')
 
-        # Queue the post task that inserts the details in the database
-        try:
-            board_name, thread_refno, post_refno = post_task.delay(post_details).get()
-            # board_name, thread_refno, post_refno = post_task(post_details)
-        except RequestBannedException:
-            raise BadRequestError('You are [banned](/banned/)')
-        except RequestSuspendedException as e:
-            raise BadRequestError(
-                'You must wait {} before posting again'.format(time_remaining(now() + 1000 * e.suspend_time)))
-        except ArgumentError as e:
-            raise BadRequestError(e.message)
+    return PostDetails(form, board_name, thread_refno, text, name, subject, password, has_file,
+                       ip4, mod_id, verification_data)
 
-        if has_file:
-            # If that was successful, upload the file to the cdn from the upload queue
-            file_service.do_upload(upload_queue_files)
-    finally:
-        if upload_queue_files:
-            # Clean up the files in the upload queue, if there was an error too
-            file_service.clean_up_queue(upload_queue_files)
 
+def _execute_post(post_details) -> PostResultModel:
+    return execute_post_task(post_details)
+
+
+def _create_post_response(post_result):
     if request.is_xhr:
         return jsonify({
-            'boardName': board_name,
-            'threadRefno': thread_refno,
-            'postRefno': post_refno
+            'boardName': post_result.board_name,
+            'threadRefno': post_result.thread_refno,
+            'postRefno': post_result.post_refno
         })
     else:
-        return redirect(url_for_post(board_name, thread_refno, post_refno))
+        return redirect(url_for_post(post_result.board_name, post_result.thread_refno, post_result.post_refno))
+
+
+def _queue_file(post_details):
+    file = request.files['file']
+    start_time = now()
+    thumbnail_size = configuration.app.thumbnail_reply if post_details.thread_refno else configuration.app.thumbnail_op
+    try:
+        post_details.uploaded_file, upload_queue_files = file_service.prepare_upload(file, thumbnail_size)
+    except ArgumentError as e:
+        raise BadRequestError(e.message)
+    post_details.file_time = now() - start_time
+    return upload_queue_files
+
+
+def _upload_files(upload_queue_files):
+    file_service.do_upload(upload_queue_files)
+
+
+def _clean_files(upload_queue_files):
+    file_service.clean_up_queue(upload_queue_files)
 
 
 @app.route('/post_manage', methods=['POST'])
 def post_manage():
     form = request.form
 
-    if not check_csrf_referer(request):
-        raise BadRequestError('Bad referer header')
+    # We don't have csrf tokens for session-less endpoints like this.
+    # Do it another way, with a referer check.
+    _check_headers()
+
+    details = _gather_manage_params()
+
+    success_message = 'Success!'
+    if details.mode == 'delete':
+        details.mode = ManagePostDetails.DELETE
+        success_message = 'Post deleted'
+    elif details.mode == 'report':
+        details.mode = ManagePostDetails.REPORT
+        success_message = 'Post reported'
+        data = verification_service.get_verification_data_for_request(request, details.ip4, 'report')
+        details.report_verification_data = data
+    elif details.mode == 'toggle_sticky':
+        details.mode = ManagePostDetails.TOGGLE_STICKY
+        success_message = 'Toggled sticky'
+    elif details.mode == 'toggle_locked':
+        details.mode = ManagePostDetails.TOGGLE_LOCKED
+        success_message = 'Toggled locked'
+    else:
+        abort(400)
+
+    try:
+        execute_manage_post_task(details)
+    except RequestBannedException:
+        raise BadRequestError('You are [banned](/banned/)')
+
+    return render_template('message.html', message=success_message)
+
+
+def _gather_manage_params() -> ManagePostDetails:
+    form = request.form
 
     board_name = form.get('board', None)
-    if not board_name or len(board_name) > board_service.BOARD_NAME_MAX_LENGTH:
+    if not validation.check_board_name_validity(board_name):
         abort(400)
 
     thread_refno = form.get('thread', type=int)
     valid_id_range(thread_refno)
 
     post_id = form.get('post_id', type=int)
+    if not post_id:
+        post_id = None
+
     if post_id is not None:
         valid_id_range(post_id)
 
     password = form.get('password', None)
-    if not password or len(password) > posts_service.MAX_PASSWORD_LENGTH:
+    if not password:
         password = None
+
+    if password and not validation.check_password_validity(password):
+        abort(400)
 
     ip4 = get_request_ip4()
 
-    details = ManagePostDetails(board_name, thread_refno, post_id, ip4)
+    mod_id = None
+    if get_authed():
+        mod_id = request_moderator().id
+
     mode_string = form.get('mode')
-    success_message = 'Success!'
-    if mode_string == 'delete':
-        details.mode = ManagePostDetails.DELETE
-        details.password = password
-        success_message = 'Post deleted'
-    elif mode_string == 'report':
-        details.mode = ManagePostDetails.REPORT
-        success_message = 'Post reported'
-        data = verification_service.get_verification_data_for_request(request, ip4, 'report')
-        details.report_verification_data = data
-    elif mode_string == 'toggle_sticky':
-        details.mode = ManagePostDetails.TOGGLE_STICKY
-        success_message = 'Toggled sticky'
-    elif mode_string == 'toggle_locked':
-        details.mode = ManagePostDetails.TOGGLE_LOCKED
-        success_message = 'Toggled locked'
-    else:
-        abort(400)
 
-    moderator = request_moderator() if get_authed() else None
-    if moderator is not None:
-        details.mod_id = moderator.id
-
-    try:
-        manage_post_task.delay(details).get()
-    except RequestBannedException:
-        raise BadRequestError('You are [banned](/banned/)')
-
-    return render_template('message.html', message=success_message)
+    return ManagePostDetails(board_name, thread_refno, post_id, ip4, mod_id, mode_string, password)
 
 
 @app.route('/find_post/<int:post_id>')

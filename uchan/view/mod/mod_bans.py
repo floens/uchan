@@ -1,26 +1,24 @@
 from flask import render_template, abort, request, flash, redirect, url_for
 from markupsafe import Markup
+from sqlalchemy import desc
 from wtforms import StringField, IntegerField, SubmitField, TextAreaField
-from wtforms.validators import NumberRange, DataRequired, IPAddress, ValidationError, Optional, Length
+from wtforms.validators import NumberRange, DataRequired, IPAddress, Optional, Length
 
 from uchan.filter.app_filters import formatted_time, time_remaining
 from uchan.lib import roles
 from uchan.lib.database import get_db
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
-from uchan.lib.models import Ban
+from uchan.lib.model import BanModel
+from uchan.lib.ormmodel import BanOrmModel
 from uchan.lib.proxy_request import parse_ip4
-from uchan.lib.service import ban_service, board_service, posts_service
+from uchan.lib.service import ban_service, posts_service
 from uchan.lib.utils import ip4_to_str, now
 from uchan.view import with_token
 from uchan.view.form import CSRFForm
+from uchan.view.form.validators import BoardNameValidator
 from uchan.view.mod import mod, mod_role_restrict
 from uchan.view.mod.paged_model import PagedModel
-
-
-def board_input(form, field):
-    if not board_service.check_board_name_validity(field.data):
-        raise ValidationError('Board name not valid.')
 
 
 class BanForm(CSRFForm):
@@ -33,7 +31,7 @@ class BanForm(CSRFForm):
     ban_ip4_end = StringField('IPv4 address end range', [Optional(), IPAddress(ipv4=True, ipv6=False)],
                               description='If specified then IPv4 range from start to end will be banned.',
                               render_kw={'placeholder': '123.123.123.123'})
-    board = StringField('Board code', [Optional(), board_input],
+    board = StringField('Board code', [Optional(), BoardNameValidator()],
                         description='If specified then the ban will be restricted to the given board, '
                                     'otherwise the ban is for all boards.',
                         render_kw={'placeholder': 'a'})
@@ -48,7 +46,7 @@ class BanForm(CSRFForm):
 
 class PagedBans(PagedModel):
     def query(self):
-        return get_db().query(Ban)
+        return get_db().query(BanOrmModel).order_by(desc(BanOrmModel.date))
 
     def limit(self):
         return 50
@@ -56,7 +54,7 @@ class PagedBans(PagedModel):
     def header(self):
         return 'ip', 'to ip', 'from', 'until', 'board', 'reason', ''
 
-    def row(self, ban: Ban):
+    def row(self, ban: BanOrmModel):
         if ban.length > 0:
             expire_time = ban.date + ban.length
             until = formatted_time(expire_time) + ' - '
@@ -83,6 +81,8 @@ class PagedBans(PagedModel):
 @mod.route('/mod_ban', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_bans():
+    ban_messages = []
+
     if request.method == 'POST':
         ban_form = BanForm(request.form)
         if ban_form.validate():
@@ -90,7 +90,7 @@ def mod_bans():
             ip4_end_form = ban_form.ban_ip4_end.data
             ip4_end = parse_ip4(ip4_end_form) if ip4_end_form else None
 
-            ban = Ban()
+            ban = BanModel()
             ban.ip4 = ip4
             if ip4_end is not None:
                 ban.ip4_end = ip4_end
@@ -101,12 +101,9 @@ def mod_bans():
 
             try:
                 ban_service.add_ban(ban)
-                flash('Ban added')
-                mod_log('ban add {} from {} to {}{} for {} hours reason {}'.format(
-                    ban.id, ip4_to_str(ip4), ip4_to_str(ip4_end) if ip4_end is not None else '-',
-                    ' on {}'.format(ban.board) if ban.board else '', ban_form.duration.data, ban_form.reason.data))
+                ban_messages.append('Ban added')
             except ArgumentError as e:
-                flash(e.message)
+                ban_messages.append(e.message)
     else:
         # Searches for the ip4 of the post and fills it in if for_post was set to a post id
         filled_in_ip4 = ''
@@ -117,9 +114,7 @@ def mod_bans():
                 filled_in_ip4 = ip4_to_str(post.ip4)
         ban_form = BanForm(None, ban_ip4=filled_in_ip4)
 
-    bans = ban_service.get_all_bans()
-
-    return render_template('mod_bans.html', ban_form=ban_form, bans=bans, paged_bans=PagedBans())
+    return render_template('mod_bans.html', ban_messages=ban_messages, ban_form=ban_form, paged_bans=PagedBans())
 
 
 @mod.route('/mod_ban/delete', methods=['POST'])

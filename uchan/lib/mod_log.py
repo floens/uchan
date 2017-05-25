@@ -1,9 +1,5 @@
 from flask.globals import _request_ctx_stack
 
-from uchan import mod_logger
-from uchan.lib.moderator_request import request_moderator, get_authed
-from uchan.lib.proxy_request import get_request_ip4_str
-
 
 def mod_log(what, moderator_name=None, ip4_str=None):
     """Logs to a log file."""
@@ -27,3 +23,8 @@ def mod_log(what, moderator_name=None, ip4_str=None):
     output += what
 
     mod_logger.info(output)
+
+
+from uchan import mod_logger
+from uchan.lib.moderator_request import request_moderator, get_authed
+from uchan.lib.proxy_request import get_request_ip4_str
