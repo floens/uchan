@@ -1,12 +1,12 @@
 from uchan.lib import action_authorizer, plugin_manager
 from uchan.lib.action_authorizer import PostAction
-from uchan.lib.cache import board_cache, site_cache
+from uchan.lib.cache import board_cache
 from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.model import BoardModel, ThreadModel, PostModel, PostResultModel, FileModel
 from uchan.lib.repository import posts
-from uchan.lib.service import board_service, moderator_service
+from uchan.lib.service import board_service, moderator_service, site_service
 from uchan.lib.tasks.post_task import PostDetails
 from uchan.lib.utils import now, ip4_to_str
 
@@ -39,7 +39,7 @@ def create_post(post_details: PostDetails) -> PostResultModel:
 
     to_thread = None
     if post_details.thread_refno is not None:
-        to_thread = posts.find_thread_by_board_thread_refno(board, post_details.thread_refno)
+        to_thread = posts.find_thread_by_board_name_thread_refno(board.name, post_details.thread_refno)
         if to_thread is None:
             raise ArgumentError(MESSAGE_THREAD_NOT_FOUND)
 
@@ -47,8 +47,8 @@ def create_post(post_details: PostDetails) -> PostResultModel:
 
     plugin_manager.execute_hook('on_handle_post', post_details)
 
-    site_config = site_cache.find_site_config()
-    default_name = site_config.get('default_name')
+    site_config = site_service.get_site_config()
+    default_name = site_config.default_name
     board_config = board_cache.find_board_config(board.name)
 
     # Get moderator if mod_id was set

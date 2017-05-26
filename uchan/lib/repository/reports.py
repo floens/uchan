@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy import cast, desc
 from sqlalchemy.dialects.postgresql import ARRAY
@@ -7,12 +7,43 @@ from sqlalchemy.sql.sqltypes import String
 
 from uchan.lib import roles
 from uchan.lib.database import session
-from uchan.lib.model import ModeratorModel, BoardModel, ReportModel
+from uchan.lib.model import ModeratorModel, BoardModel, ReportModel, PostModel
 from uchan.lib.ormmodel import PostOrmModel, ThreadOrmModel, BoardOrmModel, BoardModeratorOrmModel, ReportOrmModel
 from uchan.lib.service.moderator_service import required_roles_for_viewing_reports, has_role
 
 
-def get_reports(moderator: ModeratorModel, page: int, per_page: int, for_boards: List[BoardModel]):
+def create(report: ReportModel):
+    with session() as s:
+        m = report.to_orm_model()
+        s.add(m)
+        s.commit()
+        r = ReportModel.from_orm_model(m)
+        s.commit()
+        return r
+
+
+def find_by_id(report_id: int) -> Optional[ReportModel]:
+    with session() as s:
+        m = s.query(ReportOrmModel).filter_by(id=report_id).one()
+        res = None
+        if m:
+            res = ReportModel.from_orm_model(m)
+        s.commit()
+        return res
+
+
+def find_by_post(post: PostModel) -> Optional[ReportModel]:
+    with session() as s:
+        m = s.query(ReportOrmModel).filter_by(post_id=post.id).one_or_none()
+        res = None
+        if m:
+            res = ReportModel.from_orm_model(m)
+        s.commit()
+        return res
+
+
+def find_by_moderator(moderator: ModeratorModel, page: int, per_page: int, for_boards: List[BoardModel]) \
+        -> List[ReportModel]:
     with session() as s:
         q = s.query(ReportOrmModel)
 
@@ -47,3 +78,17 @@ def get_reports(moderator: ModeratorModel, page: int, per_page: int, for_boards:
         res = list(map(lambda i: ReportModel.from_orm_model(i), q.all()))
         s.commit()
         return res
+
+
+def increase_report_count(report: ReportModel):
+    with session() as s:
+        m = s.query(ReportOrmModel).filter_by(id=report.id).one()
+        m.count = ReportOrmModel.count + 1
+        s.commit()
+
+
+def delete(report: ReportModel):
+    with session() as s:
+        m = s.query(ReportOrmModel).filter_by(id=report.id).one()
+        s.delete(m)
+        s.commit()

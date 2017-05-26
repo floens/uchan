@@ -43,7 +43,7 @@ def init():
 
     # Import it here so that the templates resolve correctly
     from uchan.flask import create_web_app, CustomFlaskApp
-    app = CustomFlaskApp(__name__, template_folder='view/templates')
+    app = CustomFlaskApp(__name__, template_folder='view/templates', static_folder='view/static')
     setup_logging()
     create_web_app(configuration, app)
 

@@ -323,6 +323,18 @@ class BoardConfigModel:
         self.posting_verification_required: bool = None
 
     @classmethod
+    def from_defaults(cls):
+        m = cls()
+        m.pages = 10
+        m.per_page = 15
+        m.full_name = ''
+        m.description = ''
+        m.bump_limit = 300
+        m.file_posting = True
+        m.posting_verification_required = False
+        return m
+
+    @classmethod
     def from_orm_model(cls, model: ConfigOrmModel):
         if model.type != 'board_config':
             raise Exception('Config type incorrect')
@@ -395,6 +407,111 @@ class BoardConfigModel:
             'bump_limit': self.bump_limit,
             'file_posting': self.file_posting,
             'posting_verification_required': self.posting_verification_required
+        }
+
+
+class SiteConfigModel:
+    def __init__(self):
+        self.id: int = None
+        self.motd: str = None
+        self.footer_text: str = None
+        self.boards_top: bool = None
+        self.default_name: str = None
+        self.posting_enabled: bool = None
+        self.file_posting: bool = None
+
+    def copy(self):
+        m = SiteConfigModel()
+        m.id = self.id
+        m.motd = self.motd
+        m.footer_text = self.footer_text
+        m.boards_top = self.boards_top
+        m.default_name = self.default_name
+        m.posting_enabled = self.posting_enabled
+        m.file_posting = self.file_posting
+        return m
+
+    @classmethod
+    def from_defaults(cls):
+        m = cls()
+        m.motd = ''
+        m.footer_text = 'Page served by [µchan](https://github.com/Floens/uchan)'
+        m.boards_top = True
+        m.default_name = 'Anonymous'
+        m.posting_enabled = True
+        m.file_posting = True
+        return m
+
+    @classmethod
+    def from_orm_model(cls, model: ConfigOrmModel):
+        if model.type != 'site':
+            raise Exception('Config type incorrect')
+
+        m = cls()
+        m.id = model.id
+
+        def g(key, default):
+            for item in model.config:
+                if item['name'] == key:
+                    return item['value']
+            return default
+
+        m.motd = g('motd', '')
+        m.footer_text = g('footer_text', '')
+        m.boards_top = g('boards_top', '')
+        m.default_name = g('default_name', 'Anonymous')
+        m.posting_enabled = g('posting_enabled', True)
+        m.file_posting = g('file_posting_enabled', True)
+
+        return m
+
+    @classmethod
+    def from_cache(cls, cache: dict):
+        m = cls()
+        m.id = cache['id']
+        m.motd = cache['motd']
+        m.footer_text = cache['footer_text']
+        m.boards_top = cache['boards_top']
+        m.default_name = cache['default_name']
+        m.posting_enabled = cache['posting_enabled']
+        m.file_posting = cache['file_posting']
+        return m
+
+    def to_orm_model(self):
+        orm_model = ConfigOrmModel()
+        orm_model.id = self.id
+        orm_model.type = 'site'
+        res = []
+
+        def s(key, value, value_type):
+            if type(value) != value_type:
+                raise Exception('Incorrect value for site config, '
+                                'expected {} for {}, got {}'.format(value_type, key, type(value)))
+
+            res.append({
+                'name': key,
+                'value': value
+            })
+
+        s('motd', self.motd, str)
+        s('footer_text', self.footer_text, str)
+        s('boards_top', self.boards_top, bool)
+        s('default_name', self.default_name, str)
+        s('posting_enabled', self.posting_enabled, bool)
+        s('file_posting_enabled', self.file_posting, bool)
+
+        orm_model.config = res
+        return orm_model
+
+    def to_cache(self):
+        return {
+            'id': self.id,
+            'motd': self.motd,
+            'footer_text': self.footer_text,
+            'boards_top': self.boards_top,
+            'default_name': self.default_name,
+            'posting_enabled': self.posting_enabled,
+            'file_posting': self.file_posting
         }
 
 
@@ -747,6 +864,14 @@ class ReportModel:
         self.post: PostModel = None
 
     @classmethod
+    def from_post_count_date(cls, post: PostModel, count: int, date: int):
+        m = cls()
+        m.count = count
+        m.date = date
+        m.post = post
+        return m
+
+    @classmethod
     def from_orm_model(cls, report: ReportOrmModel):
         m = cls()
         m.id = report.id
@@ -756,6 +881,16 @@ class ReportModel:
         m.post = PostModel.from_orm_model(report.post, include_thread=True)
 
         return m
+
+    def to_orm_model(self):
+        orm_model = ReportOrmModel()
+        orm_model.id = self.id
+        orm_model.count = self.count
+        orm_model.date = self.date
+
+        orm_model.post_id = self.post.id
+
+        return orm_model
 
 
 class PostResultModel:

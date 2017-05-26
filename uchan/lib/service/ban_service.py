@@ -33,7 +33,7 @@ def is_request_suspended(ip4: int, board: BoardModel, thread: ThreadModel) -> Tu
     post_list = posts.find_posts_by_ip4_from_time(ip4, from_time, by_thread=thread)
 
     if post_list:
-        most_recent = next(post_list)
+        most_recent = post_list[0]
         time_left = (most_recent.date + timeout - now()) // 1000
         return True, time_left
     return False, 0

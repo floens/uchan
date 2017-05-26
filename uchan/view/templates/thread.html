@@ -1,6 +1,7 @@
 {% extends "board_view.html" %}
 
-{% block title %}/{{ thread.board.name }}/ - {{ full_name }}{% endblock %}
+{# TODO: snippet of OP in title. #}
+{% block title %}/{{ thread.board.name }}/{% if full_name %} - {{ full_name }}{% endif %}{% endblock %}
 
 {% import "widget/post.html" as post_widget %}
 {% import "widget/post_form.html" as post_form_widget %}

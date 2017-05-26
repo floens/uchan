@@ -1,50 +1,81 @@
-from flask import request, render_template, abort, flash, redirect, url_for, session
+from flask import request, render_template, redirect, url_for, session
+from wtforms import StringField, TextAreaField, BooleanField, SubmitField
+from wtforms.validators import Length
 
 from uchan import app
 from uchan.lib import roles
-from uchan.lib.dynamic_config import DynamicConfig
-from uchan.lib.exceptions import ArgumentError
-from uchan.lib.cache import cache, site_cache
-from uchan.lib.configs import SiteConfig
+from uchan.lib.cache import cache
 from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
-from uchan.lib.ormmodel import BoardOrmModel, PostOrmModel, ThreadOrmModel, SessionOrmModel, BanOrmModel, ReportOrmModel, ModeratorOrmModel, FileOrmModel, ConfigOrmModel
-from uchan.lib.moderator_request import request_moderator
+from uchan.lib.model import SiteConfigModel
+from uchan.lib.ormmodel import SessionOrmModel
 from uchan.lib.proxy_request import get_request_ip4_str
-from uchan.lib.service import config_service
-from uchan.view import check_csrf_token, with_token
+from uchan.lib.service import site_service
+from uchan.view import with_token
+from uchan.view.form import CSRFForm
 from uchan.view.mod import mod, mod_role_restrict
+
+
+class SiteConfigurationForm(CSRFForm):
+    name = 'Site configuration'
+    action = '.mod_site'
+
+    motd = TextAreaField('MOTD', [Length(max=500)], default='',
+                         description='The message of the day is displayed at the top of every board page.',
+                         render_kw={'cols': 60, 'rows': 6})
+    footer_text = TextAreaField('Footer text', [Length(max=100)], default='',
+                                description='The footer text is displayed at the bottom of every page.',
+                                render_kw={'cols': 60, 'rows': 6})
+    boards_top = BooleanField('Boards at top', default=True,
+                              description='Show board list at the top of every page.')
+    default_name = StringField('Default posting name', [Length(max=25)], default='',
+                               description='The default name for the posting form.')
+    posting_enabled = BooleanField('Posting enabled', default=True,
+                                   description='If unchecked, globally disables posting.')
+    file_posting_enabled = BooleanField('File posting enabled', default=True,
+                                        description='If unchecked, globally disables file posting.')
+
+    submit = SubmitField('Update')
 
 
 @mod.route('/mod_site', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_site():
-    site_config: DynamicConfig = config_service.get_config_by_type(SiteConfig.TYPE)
+    site_config: SiteConfigModel = site_service.get_site_config()
 
-    moderator = request_moderator()
+    site_configuration_form = None
 
-    if request.method == 'GET':
-        session_count = get_db().query(SessionOrmModel).count()
+    if request.method == 'POST':
+        site_configuration_form = SiteConfigurationForm(request.form)
+        if site_configuration_form.validate():
+            site_config.motd = site_configuration_form.motd.data
+            site_config.footer_text = site_configuration_form.footer_text.data
+            site_config.boards_top = site_configuration_form.boards_top.data
+            site_config.default_name = site_configuration_form.default_name.data
+            site_config.posting_enabled = site_configuration_form.posting_enabled.data
+            site_config.file_posting = site_configuration_form.file_posting_enabled.data
 
-        current_ip4_str = get_request_ip4_str()
+            site_service.update_site_config(site_config)
 
-        return render_template('mod_site.html', site_config_config=site_config, session_count=session_count,
-                               current_ip4_str=current_ip4_str)
-    else:
-        form = request.form
+    if not site_configuration_form:
+        site_configuration_form = SiteConfigurationForm(
+            motd=site_config.motd,
+            footer_text=site_config.footer_text,
+            boards_top=site_config.boards_top,
+            default_name=site_config.default_name,
+            posting_enabled=site_config.posting_enabled,
+            file_posting_enabled=site_config.file_posting
+        )
 
-        if not check_csrf_token(form.get('token')):
-            abort(400)
+    current_ip4_str = get_request_ip4_str()
+    memcache_stats = _gather_memcache_stats()
+    db_stats = site_service.get_model_counts()
 
-        try:
-            config_service.save_from_form(moderator, site_config, site_config_row, form, 'mod_site_')
-            flash('Site config updated')
-            mod_log('site config updated')
-            site_cache.invalidate_site_config()
-        except ArgumentError as e:
-            flash(str(e))
-
-        return redirect(url_for('.mod_site'))
+    return render_template('mod_site.html',
+                           current_ip4_str=current_ip4_str,
+                           memcache_stats=memcache_stats,
+                           db_stats=db_stats,
+                           site_configuration_form=site_configuration_form)
 
 
 @mod.route('/mod_site/reset_sessions', methods=['POST'])
@@ -56,29 +87,7 @@ def reset_sessions():
     return redirect(url_for('.mod_site'))
 
 
-@mod.route('/stat')
-@mod_role_restrict(roles.ROLE_ADMIN)
-def mod_stat():
-    db = get_db()
-
-    stats = {
-        'board count': db.query(BoardOrmModel).count(),
-        'thread count': db.query(ThreadOrmModel).count(),
-        'post count': db.query(PostOrmModel).count(),
-        'ban count': db.query(BanOrmModel).count(),
-        'report count': db.query(ReportOrmModel).count(),
-        'session count': db.query(SessionOrmModel).count(),
-        'moderator count': db.query(ModeratorOrmModel).count(),
-        'file count': db.query(FileOrmModel).count(),
-        'config count': db.query(ConfigOrmModel).count()
-    }
-
-    return render_template('stat.html', stats=stats)
-
-
-@mod.route('/memcache_stat')
-@mod_role_restrict(roles.ROLE_ADMIN)
-def mod_memcache_stat():
+def _gather_memcache_stats():
     client = cache._client
 
     stats = client.get_stats()
@@ -90,5 +99,4 @@ def mod_memcache_stat():
         for k, v in stat[1].items():
             t.append((k.decode('utf8'), v.decode('utf8')))
         servers.append((s, t))
-
-    return render_template('memcache_stat.html', stats=servers)
+    return servers

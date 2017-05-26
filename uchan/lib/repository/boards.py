@@ -2,12 +2,10 @@ from typing import List, Optional
 
 from uchan.lib import validation
 from uchan.lib.cache import board_cache, cache, cache_key
-from uchan.lib.configs import BoardConfig
 from uchan.lib.database import session
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.model import BoardModel
+from uchan.lib.model import BoardModel, BoardConfigModel
 from uchan.lib.ormmodel import BoardOrmModel
-from uchan.lib.service import config_service
 
 MESSAGE_DUPLICATE_BOARD_NAME = 'Duplicate board name'
 MESSAGE_INVALID_NAME = 'Invalid board name'
@@ -24,9 +22,12 @@ def create(board: BoardModel) -> BoardModel:
 
         orm_board = board.to_orm_model()
 
-        # TODO clean this up
-        board_config = BoardConfig()
-        orm_board.config_id = config_service.save_config(board_config, None).id
+        board_config = BoardConfigModel.from_defaults()
+        board_config_orm = board_config.to_orm_model()
+        s.add(board_config_orm)
+        s.flush()
+
+        orm_board.config_id = board_config_orm.id
 
         s.add(orm_board)
         s.commit()

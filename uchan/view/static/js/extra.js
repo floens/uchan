@@ -394,10 +394,10 @@ var uchan;
                 PageVisibility.listeners.splice(index, 1);
             }
         };
-        PageVisibility.eventListenerRegistered = false;
-        PageVisibility.listeners = [];
         return PageVisibility;
     }());
+    PageVisibility.eventListenerRegistered = false;
+    PageVisibility.listeners = [];
     uchan.PageVisibility = PageVisibility;
 })(uchan || (uchan = {}));
 /// <reference path="imageexpansion.ts" />
@@ -407,7 +407,7 @@ var uchan;
     var Watcher = (function () {
         function Watcher(boardName, threadRefno, postsElement, statusElements, imageExpansion) {
             var _this = this;
-            this.delays = [10, 15, 20, 30, 60, 90, 120, 180, 240, 300];
+            this.delays = [10, 15, 20, 30, 60, 90, 120, 180, 240, 300, 600];
             this.endPoint = '/api/thread/';
             this.xhr = null;
             this.error = false;

@@ -48,7 +48,7 @@ blockquote {
     text-decoration: none;
 }
 
-.link-list a:hover {
+.link-list a:hover, .link-list a.active {
     text-decoration: underline;
 }
 

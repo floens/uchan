@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import Blueprint, url_for
+from flask import Blueprint, url_for, request
 
 from uchan.lib import roles
 from uchan.lib.action_authorizer import NoPermissionError
@@ -27,23 +27,26 @@ def mod_role_restrict(role):
 def inject_variables():
     if get_authed():
         mod_links = [
-            ('auth', url_for('.mod_auth')),
-            ('mod reports', url_for('.mod_report')),
-            ('mod account', url_for('.mod_self')),
-            ('mod boards', url_for('.mod_boards'))
+            ('auth', 'mod.mod_auth'),
+            ('reports', 'mod.mod_report'),
+            ('account', 'mod.mod_self'),
+            ('boards', 'mod.mod_boards')
         ]
 
         if request_has_role(roles.ROLE_ADMIN):
             mod_links += [
-                ('mod bans', url_for('.mod_bans')),
-                ('stats', url_for('.mod_stat')),
-                ('memcache stats', url_for('.mod_memcache_stat')),
-                ('mod moderators', url_for('.mod_moderators')),
-                ('mod pages', url_for('.mod_pages')),
-                ('mod site', url_for('.mod_site')),
+                ('bans', 'mod.mod_bans'),
+                ('moderators', 'mod.mod_moderators'),
+                ('pages', 'mod.mod_pages'),
+                ('site', 'mod.mod_site'),
             ]
 
-        return dict(mod_links=mod_links)
+        with_current_and_url = []
+        for mod_link in mod_links:
+            current = mod_link[1].startswith(request.endpoint)
+            with_current_and_url.append((mod_link[0], url_for(mod_link[1]), current))
+
+        return dict(mod_links=with_current_and_url)
     else:
         return {}
 

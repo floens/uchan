@@ -9,8 +9,8 @@ from markupsafe import escape, Markup
 from uchan import app, configuration
 from uchan.filter.app_filters import page_formatting
 from uchan.lib import plugin_manager
-from uchan.lib.cache import site_cache, board_cache
-from uchan.lib.service import page_service
+from uchan.lib.cache import board_cache
+from uchan.lib.service import page_service, site_service
 from uchan.lib.utils import ip4_to_str, now
 
 
@@ -27,10 +27,10 @@ class ExtraJavascript:
 
 @app.context_processor
 def inject_variables():
-    site_config = site_cache.find_site_config()
+    site_config = site_service.get_site_config()
 
     all_boards = None
-    if site_config.get('boards_top'):
+    if site_config.boards_top:
         all_boards = board_cache.all_boards()
 
     footer_pages_cached = page_service.find_footer_pages()

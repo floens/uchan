@@ -12,6 +12,7 @@ from uchan.lib.mod_log import mod_log
 from uchan.lib.model import BanModel
 from uchan.lib.ormmodel import BanOrmModel
 from uchan.lib.proxy_request import parse_ip4
+from uchan.lib.repository import bans
 from uchan.lib.service import ban_service, posts_service
 from uchan.lib.utils import ip4_to_str, now
 from uchan.view import with_token
@@ -45,8 +46,11 @@ class BanForm(CSRFForm):
 
 
 class PagedBans(PagedModel):
-    def query(self):
-        return get_db().query(BanOrmModel).order_by(desc(BanOrmModel.date))
+    def provide_count(self):
+        return bans.count()
+
+    def provide_data(self, offset: int, limit: int):
+        return bans.get_all(offset, limit)
 
     def limit(self):
         return 50
@@ -78,6 +82,7 @@ class PagedBans(PagedModel):
         )
 
 
+# TODO: add search
 @mod.route('/mod_ban', methods=['GET', 'POST'])
 @mod_role_restrict(roles.ROLE_ADMIN)
 def mod_bans():

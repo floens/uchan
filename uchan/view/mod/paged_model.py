@@ -1,13 +1,11 @@
+from typing import List, Any
+
 from flask import request, url_for
-from sqlalchemy.orm import Query
 
 
 class PagedModel:
     def __init__(self):
-        self._count: int = None
-
-    def query(self) -> Query:
-        raise NotImplementedError()
+        self.cached_count: int = None
 
     def header(self):
         raise NotImplementedError()
@@ -15,16 +13,22 @@ class PagedModel:
     def row(self, model):
         raise NotImplementedError()
 
+    def provide_count(self) -> int:
+        raise NotImplementedError()
+
+    def provide_data(self, offset: int, limit: int) -> List[Any]:
+        raise NotImplementedError()
+
     def count(self) -> int:
-        if self._count is None:
-            self._count = self.query().count()
-        return self._count
+        if self.cached_count is None:
+            self.cached_count = self.provide_count()
+        return self.cached_count
 
     def data(self, name):
         offset = self.offset(name)
         limit = self.limit()
 
-        yield from self.query().offset(offset).limit(limit).all()
+        return self.provide_data(offset, limit)
 
     def offset(self, name):
         offset_key = name + '_offset'
@@ -39,7 +43,7 @@ class PagedModel:
         limit = self.limit()
         count = self.count()
 
-        last_page = (count - 1) // limit
+        last_page = (max(count - 1, 0)) // limit
 
         current_page = offset // limit
 

@@ -100,7 +100,7 @@ class Recaptcha2Method(verification_service.VerificationMethod):
         timestamp = dateutil.parser.parse(timestamp_iso)
         time_ago = now() - int(timestamp.timestamp() * 1000)
 
-        if time_ago > 1000 * 30:
+        if time_ago > 1000 * 60 * 30:
             # Expired
             return False
 

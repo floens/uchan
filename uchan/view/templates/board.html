@@ -1,6 +1,6 @@
 {% extends "board_view.html" %}
 
-{% block title %}Board /{{ board.name }}/ - {{ full_name }}{% endblock %}
+{% block title %}/{{ board.name }}/{% if full_name %} - {{ full_name }}{% endif %}{% endblock %}
 
 {% import "widget/post.html" as post_widget %}
 {% import "widget/post_form.html" as post_form_widget %}

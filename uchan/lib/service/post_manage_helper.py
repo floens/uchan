@@ -3,7 +3,6 @@ from uchan.lib.action_authorizer import PostAction, NoPermissionError, RequestBa
 from uchan.lib.exceptions import BadRequestError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.model import ThreadModel, ModeratorModel, PostModel
-from uchan.lib.ormmodel import ReportOrmModel
 from uchan.lib.repository import posts
 from uchan.lib.service import ban_service, moderator_service, report_service
 from uchan.lib.tasks.post_task import ManagePostDetails
@@ -69,8 +68,7 @@ def _manage_delete(details: ManagePostDetails, moderator: ModeratorModel, post: 
 def _manage_report(details: ManagePostDetails, moderator: ModeratorModel, post: PostModel):
     action_authorizer.authorize_post_action(moderator, PostAction.POST_REPORT, post, details)
 
-    report = ReportOrmModel(post_id=post.id)
-    report_service.add_report(report)
+    report_service.report_post(post)
 
     message = 'post {} reported'.format(post.id)
     mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator_name=moderator.username)

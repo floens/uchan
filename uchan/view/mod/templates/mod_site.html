@@ -1,21 +1,74 @@
 {% extends "mod_base.html" %}
 
-{% import "widget/dynamic_config.html" as dynamic_config_widget %}
+{% import "widget/form.html" as form_widget %}
 
 {% block title %}Modify site{% endblock %}
 {% block mod_title %}Modify site{% endblock %}
 {% block mod_content %}
-    Detected ip: <b>{{ current_ip4_str }}</b><br>
-    <br>
+    {{ form_widget.render(site_configuration_form) }}
 
-    {{ dynamic_config_widget.render(site_config_config, url_for('.mod_site'), 'mod_site_') }}
+    <fieldset>
+        <legend>IP configuration</legend>
+        <p>
+            Please check if this IP address corresponds to your external IP by which you access this page.<br>
+            If incorrect, adjust the <code>proxy_fixer_num_proxies</code> setting.<br>
+            <br>
+            Detected ip: <b>{{ current_ip4_str }}</b>
+        </p>
+    </fieldset>
 
-    <br>
+    <fieldset>
+        <legend>Sessions</legend>
+        <form action="{{ url_for('.reset_sessions') }}" method="POST">
+            {{ csrf_html() }}
+            <input type="submit" value="Reset all sessions">
+        </form>
+    </fieldset>
 
-    Current session count: {{ session_count }}<br>
-    <form action="{{ url_for('.reset_sessions') }}" method="POST">
-        {{ csrf_html() }}
-        <input type="submit" value="Reset all sessions">
-    </form>
+    <fieldset>
+        <legend>Database statistics</legend>
+        <table class="datatable">
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Detail</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for k, v in db_stats.items() %}
+                <tr>
+                    <td>{{ k }}</td>
+                    <td>{{ v }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </fieldset>
+
+    <fieldset>
+        <legend>Memcache configuration</legend>
+        {% for server in memcache_stats %}
+            <h3>{{ server[0] }}</h3>
+
+            <table class="datatable">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Detail</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for stat in server[1] %}
+                    <tr>
+                        <td>{{ stat[0] }}</td>
+                        <td>{{ stat[1] }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+        {% endfor %}
+    </fieldset>
+
 
 {% endblock %}

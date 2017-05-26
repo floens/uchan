@@ -3,15 +3,15 @@ from flask import render_template, abort
 from flask import url_for
 
 from uchan import app
-from uchan.lib.cache import board_cache, site_cache
+from uchan.lib import validation
 from uchan.lib.model import BoardConfigModel, BoardModel, CatalogModel
 from uchan.lib.moderator_request import get_authed, request_moderator
+from uchan.lib.service import posts_service, moderator_service, board_service, site_service
 from uchan.lib.utils import valid_id_range
-from uchan.lib.service import posts_service, moderator_service, board_service
 
 
 def get_board_view_params(board_config: BoardConfigModel, mode, board_name, additional_page_details=None):
-    global_posting_enabled = site_cache.find_site_config().get('file_posting_enabled')
+    global_posting_enabled = site_service.get_site_config().file_posting
     file_posting_enabled = board_config.file_posting and global_posting_enabled
 
     details = {
@@ -45,6 +45,9 @@ def show_moderator_buttons(board_id):
 @app.route('/<string(maxlength=20):board_name>/')
 @app.route('/<string(maxlength=20):board_name>/<int:page>')
 def board(board_name, page=None):
+    if not validation.check_board_name_validity(board_name):
+        abort(404)
+
     board: BoardModel = board_service.find_board(board_name, include_config=True)
 
     if not board:

@@ -1,15 +1,16 @@
 {% extends "base.html" %}
 
 {% block top_content %}
-{% if mod_links %}
-    <div class="link-list">
-        [
-        {%- for mod_link in mod_links -%}
-            <a href="{{ mod_link[1] }}">{{ mod_link[0] }}</a>{% if not loop.last %} / {% endif %}
-        {%- endfor -%}
-        ]
-    </div>
-{% endif %}
+    {% if mod_links %}
+        <div class="link-list">
+            [
+            {%- for mod_link in mod_links -%}
+                <a href="{{ mod_link[1] }}"{% if mod_link[2] %} class="active"{% endif -%}>
+                    {{- mod_link[0] }}</a>{% if not loop.last %} / {% endif %}
+            {%- endfor -%}
+            ]
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block content %}

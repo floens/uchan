@@ -226,7 +226,7 @@ def find_posts_by_ip4_from_time(ip4: int, from_time: int, by_thread: ThreadModel
         q = s.query(PostOrmModel)
         q = q.filter((PostOrmModel.ip4 == ip4) & (PostOrmModel.date >= from_time))
 
-        if bytearray:
+        if by_thread:
             q = q.filter_by(thread_id=by_thread.id)
         else:
             q = q.filter_by(refno=1)

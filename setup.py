@@ -6,11 +6,6 @@ from uchan.lib.service import moderator_service, config_service
 
 
 def init_models():
-    from uchan.lib.configs import SiteConfig
-
-    if config_service.get_config_by_type(SiteConfig.TYPE) is None:
-        config_service.save_config(SiteConfig(), None)
-
     from uchan.lib.service import page_service
     from uchan.lib.ormmodel import PageOrmModel
     front_page = page_service.get_pages_for_type(pages.TYPE_FRONT_PAGE)

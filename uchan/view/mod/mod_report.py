@@ -1,13 +1,10 @@
 from flask import render_template, request, abort, flash, redirect, url_for
 
-from uchan.filter.text_parser import parse_text
-from uchan.lib import roles, validation
+from uchan.lib import roles
 from uchan.lib.exceptions import BadRequestError, ArgumentError
-from uchan.lib.database import get_db
-from uchan.lib.ormmodel import BoardOrmModel
 from uchan.lib.moderator_request import request_moderator
 from uchan.lib.service import board_service, moderator_service, report_service
-from uchan.lib.tasks.report_task import ManageReportDetails, manage_report_task
+from uchan.lib.tasks.report_task import ManageReportDetails, execute_manage_report_task
 from uchan.lib.utils import ip4_to_str
 from uchan.view import with_token
 from uchan.view.mod import mod
@@ -54,37 +51,46 @@ def mod_report(page=0, boards=None):
 @mod.route('/mod_report/manage', methods=['POST'])
 @with_token()
 def mod_report_manage():
-    form = request.form
+    if request.form['mode'] == 'ban':
+        return _handle_ban()
 
-    report_id = form.get('report_id', type=int)
-    moderator = request_moderator()
-    details = ManageReportDetails(report_id, moderator.id)
-
-    success_message = None
-    mode_string = form['mode']
-    if mode_string == 'ban':
-        report = report_service.find_report_id(report_id)
-        if not report:
-            abort(400)
-        post_id = report.post_id
-        return redirect(url_for('.mod_bans', for_post=post_id))
-
-    if mode_string == 'clear':
-        details.mode = ManageReportDetails.CLEAR
-        success_message = 'Cleared report'
-    elif mode_string == 'delete':
-        details.mode = ManageReportDetails.DELETE_POST
-        success_message = 'Deleted post'
-    elif mode_string == 'delete_file':
-        details.mode = ManageReportDetails.DELETE_FILE
-        success_message = 'Deleted file'
-    else:
-        abort(400)
+    details, success_message = _gather_report_manage_params()
 
     try:
-        manage_report_task.delay(details).get()
+        execute_manage_report_task(details)
     except ArgumentError as e:
         raise BadRequestError(e.message)
 
     flash(success_message)
     return redirect(url_for('.mod_report'))
+
+
+def _handle_ban():
+    report = report_service.find_report_id(request.form.get('report_id', type=int))
+    if not report:
+        abort(404)
+    return redirect(url_for('.mod_bans', for_post=report.post.id))
+
+
+def _gather_report_manage_params():
+    form = request.form
+
+    report_id = form.get('report_id', type=int)
+    moderator = request_moderator()
+
+    success_message = None
+    mode_string = form['mode']
+
+    if mode_string == 'clear':
+        mode = ManageReportDetails.CLEAR
+        success_message = 'Cleared report'
+    elif mode_string == 'delete':
+        mode = ManageReportDetails.DELETE_POST
+        success_message = 'Deleted post'
+    elif mode_string == 'delete_file':
+        mode = ManageReportDetails.DELETE_FILE
+        success_message = 'Deleted file'
+    else:
+        abort(400)
+
+    return ManageReportDetails(report_id, moderator.id, mode), success_message
