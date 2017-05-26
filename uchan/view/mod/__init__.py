@@ -27,24 +27,24 @@ def mod_role_restrict(role):
 def inject_variables():
     if get_authed():
         mod_links = [
-            ('auth', 'mod.mod_auth'),
-            ('reports', 'mod.mod_report'),
-            ('account', 'mod.mod_self'),
-            ('boards', 'mod.mod_boards')
+            ('auth', ['mod.mod_auth']),
+            ('reports', ['mod.mod_report']),
+            ('account', ['mod.mod_self']),
+            ('boards', ['mod.mod_boards', 'mod.mod_board_log'])
         ]
 
         if request_has_role(roles.ROLE_ADMIN):
             mod_links += [
-                ('bans', 'mod.mod_bans'),
-                ('moderators', 'mod.mod_moderators'),
-                ('pages', 'mod.mod_pages'),
-                ('site', 'mod.mod_site'),
+                ('bans', ['mod.mod_bans']),
+                ('moderators', ['mod.mod_moderators']),
+                ('pages', ['mod.mod_pages']),
+                ('site', ['mod.mod_site']),
             ]
 
         with_current_and_url = []
         for mod_link in mod_links:
-            current = mod_link[1].startswith(request.endpoint)
-            with_current_and_url.append((mod_link[0], url_for(mod_link[1]), current))
+            current = any(i.startswith(request.endpoint) for i in mod_link[1])
+            with_current_and_url.append((mod_link[0], url_for(mod_link[1][0]), current))
 
         return dict(mod_links=with_current_and_url)
     else:

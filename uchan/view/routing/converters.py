@@ -41,7 +41,7 @@ class PageConverter(ModelIdConverter):
 class BoardConverter(BaseConverter):
     def __init__(self, url_map):
         super().__init__(url_map)
-        self.regex = '[^/]'
+        self.regex = '[^/]+'
 
     def to_python(self, value):
         if not validation.check_board_name_validity(value):

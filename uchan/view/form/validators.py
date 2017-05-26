@@ -1,7 +1,7 @@
 from wtforms import ValidationError
 
 from uchan.lib import validation
-from uchan.lib.service import board_service, moderator_service
+from uchan.lib.service import board_service
 
 
 class BoardValidator:

@@ -13,6 +13,34 @@
     max-width: 400px;
 }
 
+.mod-tabs {
+    margin: 10px 20px 0 20px;
+    border-bottom: 1px solid #B1B1B1;
+}
+
+.mod-tabs a {
+    text-decoration: none;
+    padding: 8px 12px 8px 10px;
+    border: 1px solid transparent;
+    /*margin-right: -4px;*/
+    color: #666;
+    line-height: calc(1em + 2px + 8px * 2);
+}
+
+.mod-tabs a:hover {
+    color: #222;
+}
+
+.mod-tabs a.active {
+    border: 1px solid #B1B1B1;
+    border-bottom-color: #EBF3FF;
+    color: #000;
+}
+
+.mod-tabs a:hover.active {
+    color: #000;
+}
+
 .report-boards {
     list-style: none;
     padding: 0;
