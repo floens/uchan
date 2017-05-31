@@ -3,11 +3,12 @@ from uuid import uuid4
 
 from flask.sessions import SessionInterface, SessionMixin
 from sqlalchemy.orm.exc import NoResultFound
+from werkzeug.datastructures import CallbackDict
+
 from uchan.lib.cache import CacheDict
-from uchan.lib.database import get_db
+from uchan.lib.database import session as sessioncontext
 from uchan.lib.ormmodel import SessionOrmModel
 from uchan.lib.utils import now
-from werkzeug.datastructures import CallbackDict
 
 
 class CustomSession(CallbackDict, SessionMixin):
@@ -101,17 +102,18 @@ class CustomSessionInterface(SessionInterface):
         if cache_data is not None:
             return CustomSession(initial=cache_data.data, session_id=session_id, expires=cache_data.expires)
         else:
-            try:
-                session_model = get_db().query(SessionOrmModel).filter_by(session_id=session_id).one()
+            with sessioncontext() as s:
+                try:
+                    session_model = s.query(SessionOrmModel).filter_by(session_id=session_id).one()
 
-                session = CustomSession(initial=session_model.data,
-                                        session_id=session_id, expires=session_model.expires)
+                    session = CustomSession(initial=session_model.data,
+                                            session_id=session_id, expires=session_model.expires)
 
-                self.store_session_cache(session)
+                    self.store_session_cache(session)
 
-                return session
-            except NoResultFound:
-                return None
+                    return session
+                except NoResultFound:
+                    return None
 
     def store_cookie(self, app, session, response):
         # expire_date = datetime.datetime.now() + datetime.timedelta(minutes=self.EXPIRES_MINUTES)
@@ -125,20 +127,20 @@ class CustomSessionInterface(SessionInterface):
     def store_session_db(self, session):
         session_model = SessionOrmModel(session_id=session.session_id, data=session, expires=session.expires)
 
-        db = get_db()
-        db.add(db.merge(session_model))
-        db.commit()
+        with sessioncontext() as s:
+            s.add(s.merge(session_model))
+            s.commit()
 
     def store_session_cache(self, session):
         self.cache.set(self.prefix + session.session_id, CustomSessionCacheDict(session, session.expires))
 
     def delete_session(self, session_id):
-        db = get_db()
-        try:
-            session_model = db.query(SessionOrmModel).filter_by(session_id=session_id).one()
-            db.delete(session_model)
-            db.commit()
-        except NoResultFound:
-            pass
+        with sessioncontext() as s:
+            try:
+                session_model = s.query(SessionOrmModel).filter_by(session_id=session_id).one()
+                s.delete(session_model)
+                s.commit()
+            except NoResultFound:
+                pass
 
         self.cache.delete(self.prefix + session_id)

@@ -56,9 +56,8 @@ def get_method():
 def handle_not_verified(verification_error, request, ip4):
     name = verification_error.for_name
     message = verification_error.request_message
-    single_shot = verification_error.single_shot
 
-    set_verification(request, ip4, name, False, request_message=message, single_shot=single_shot)
+    set_verification(request, ip4, name, False, request_message=message)
 
 
 def process_request(request, ip4, name):
@@ -66,11 +65,7 @@ def process_request(request, ip4, name):
     if verification_data is None:
         return False
 
-    ret = verification_data['verified'] is True
-    if 'single_shot' in verification_data and verification_data['single_shot']:
-        # Update verified to false again, not changing the other options
-        set_verification(request, ip4, name, False)
-    return ret
+    return verification_data['verified'] is True
 
 
 def data_is_verified(verification_data):
@@ -104,7 +99,7 @@ def do_verify(request, ip4):
     return verification
 
 
-def set_verification(request, ip4, name, verified, request_message=None, single_shot=None, extra_data=None):
+def set_verification(request, ip4, name, verified, request_message=None):
     verification = get_verification_for_request(request, ip4, with_cache=False)
 
     db = get_db()
@@ -131,13 +126,6 @@ def set_verification(request, ip4, name, verified, request_message=None, single_
     data[name]['verified'] = verified
     if request_message:
         data[name]['request_message'] = request_message
-
-    if single_shot is not None:
-        data[name]['single_shot'] = bool(single_shot)
-
-    if extra_data is not None:
-        for item in extra_data:
-            data[name][item] = extra_data[item]
 
     # Force a db refresh
     flag_modified(verification, 'data')

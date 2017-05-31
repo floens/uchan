@@ -40,7 +40,10 @@ def mod_report(page=0, boards=None):
     view_ips = is_admin
     show_ban_button = is_admin
 
-    moderator_boards = moderator.boards if not is_admin else board_service.get_all_boards()
+    if is_admin:
+        moderator_boards = board_service.get_all_boards()
+    else:
+        moderator_boards = moderator_service.get_all_moderating_boards(moderator)
 
     pager_suffix = '/' + ','.join(board_names) if board_names else ''
     return render_template('mod_report.html', page=page, pages=pages, pager_suffix=pager_suffix,

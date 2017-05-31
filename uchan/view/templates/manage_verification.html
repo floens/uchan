@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="message">
+        <h1>Verification required</h1>
+
+        <form action="{{ action }}" method="POST">
+            {% for k, v in form_params.items() %}
+                <input type="hidden" name="{{ k }}" value="{{ v }}">
+            {% endfor %}
+
+            {{ method.html|safe }}
+            <br>
+
+            <input type="submit" value="Continue">
+        </form>
+    </div>
+
+{% endblock %}

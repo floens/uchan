@@ -1,9 +1,9 @@
 from enum import unique, Enum
-from typing import List
+from typing import List, Dict, Tuple
 
 from uchan.filter.text_parser import parse_text, parse_moderator_code
 from uchan.lib.ormmodel import ModeratorOrmModel, BoardOrmModel, ThreadOrmModel, BoardModeratorOrmModel, ConfigOrmModel, \
-    PageOrmModel, ModeratorLogOrmModel, PostOrmModel, FileOrmModel, BanOrmModel, ReportOrmModel
+    PageOrmModel, ModeratorLogOrmModel, PostOrmModel, FileOrmModel, BanOrmModel, ReportOrmModel, VerificationOrmModel
 
 """
 Plain models that don't have a connection to the database models or view models.
@@ -891,6 +891,82 @@ class ReportModel:
         orm_model.post_id = self.post.id
 
         return orm_model
+
+
+class VerificationsModel:
+    def __init__(self):
+        self.id: str = None
+        self.ip4: int = None
+        self.expires: int = None
+
+        self.verifications: Dict[str, VerificationModel] = None
+
+    def get(self, name: str):
+        return self.verifications[name] if name in self.verifications else None
+
+    @classmethod
+    def from_orm_model(cls, model: VerificationOrmModel):
+        m = cls()
+        m.id = model.verification_id
+        m.ip4 = model.ip4
+        m.expires = model.expires
+
+        m.verifications = []
+        for k, v in model.data:
+            m.verifications[k] = VerificationModel.from_data(k, v)
+
+        return m
+
+    def to_orm_model(self):
+        orm_model = VerificationOrmModel()
+        orm_model.verification_id = self.id
+        orm_model.ip4 = self.ip4
+        orm_model.expires = self.expires
+
+        data = {}
+        for k, v in self.verifications:
+            data[k] = self.verifications[k].to_data()
+
+        orm_model.data = data
+
+        return orm_model
+
+
+"""
+{
+  "verifications": {
+    "report": {
+      "verified": true,
+      "request_message": "reporting",
+      "single_shot": false
+    },
+    "post": {
+      "verified": false,
+      "request_message": "posting",
+      "single_shot": false
+    }
+  }
+}"""
+
+
+class VerificationModel:
+    def __init__(self):
+        self.name: str = None
+        self.verified: bool = None
+
+        # TODO: self.count: int = None etc...
+
+    @classmethod
+    def from_data(cls, name: str, data: dict):
+        m = cls()
+        m.name = name
+        m.verified = data['verified']
+        return m
+
+    def to_data(self) -> Tuple[str, dict]:
+        return self.name, {
+            'verified': self.verified
+        }
 
 
 class PostResultModel:

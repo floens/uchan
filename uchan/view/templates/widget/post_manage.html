@@ -1,5 +1,5 @@
 {% macro render_begin() %}
-    <form class="post-manage-form" action="{{ url_for('post_manage') }}" method="post">
+    <form class="post-manage-form" action="{{ url_for('post_manage') }}" method="post" target="_blank">
 {% endmacro %}
 
 {% macro render_content(thread, show_moderator_buttons=False) %}

@@ -5,8 +5,8 @@ import bcrypt
 from uchan.lib import roles, validation
 from uchan.lib.database import session
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.model import ModeratorModel, BoardModel
-from uchan.lib.ormmodel import ModeratorOrmModel, BoardModeratorOrmModel
+from uchan.lib.model import ModeratorModel
+from uchan.lib.ormmodel import ModeratorOrmModel
 
 MESSAGE_INVALID_USERNAME = 'Invalid username'
 MESSAGE_INVALID_PASSWORD = 'Invalid password'
@@ -37,7 +37,10 @@ def create_with_password(moderator: ModeratorModel, password: str):
         orm_moderator = moderator.to_orm_model()
         orm_moderator.password = _hash_password(password)
         s.add(orm_moderator)
+        s.flush()
+        moderator = ModeratorModel.from_orm_model(orm_moderator)
         s.commit()
+        return moderator
 
 
 def get_all(include_boards=False) -> 'List[ModeratorModel]':

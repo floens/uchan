@@ -4,12 +4,11 @@ from uchan import app, configuration
 from uchan.filter.app_filters import time_remaining
 from uchan.lib import validation
 from uchan.lib.action_authorizer import RequestBannedException, RequestSuspendedException
-from uchan.lib.cache import board_cache
 from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.model import PostResultModel
 from uchan.lib.moderator_request import request_moderator, get_authed
 from uchan.lib.proxy_request import get_request_ip4
-from uchan.lib.service import file_service, posts_service, verification_service, site_service
+from uchan.lib.service import file_service, posts_service, verification_service, site_service, board_service
 from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, execute_post_task, \
     execute_manage_post_task
 from uchan.lib.utils import now, valid_id_range
@@ -30,10 +29,6 @@ def post():
     post_details = _gather_post_params()
 
     _check_post_settings(post_details.has_file)
-
-    board_config = board_cache.find_board_config(post_details.board_name)
-    if not board_config:
-        abort(404)
 
     upload_queue_files = None
     try:
@@ -100,6 +95,9 @@ def _gather_post_params() -> PostDetails:
     board_name = form.get('board', None)
     if not validation.check_board_name_validity(board_name):
         abort(400)
+
+    if not board_service.find_board(board_name):
+        abort(404)
 
     text = form.get('comment', None)
     name = form.get('name', None)
@@ -171,8 +169,6 @@ def _clean_files(upload_queue_files):
 
 @app.route('/post_manage', methods=['POST'])
 def post_manage():
-    form = request.form
-
     # We don't have csrf tokens for session-less endpoints like this.
     # Do it another way, with a referer check.
     _check_headers()
@@ -184,10 +180,19 @@ def post_manage():
         details.mode = ManagePostDetails.DELETE
         success_message = 'Post deleted'
     elif details.mode == 'report':
-        details.mode = ManagePostDetails.REPORT
-        success_message = 'Post reported'
-        data = verification_service.get_verification_data_for_request(request, details.ip4, 'report')
-        details.report_verification_data = data
+        action = url_for('.post_manage')
+
+        return respond_verification_required(action, {
+            'mode': details.mode,
+            'board': details.board_name,
+            'thread': details.thread_refno,
+            'post_id': details.post_id
+        })
+
+        # details.mode = ManagePostDetails.REPORT
+        # success_message = 'Post reported'
+        # data = verification_service.get_verification_data_for_request(request, details.ip4, 'report')
+        # details.report_verification_data = data
     elif details.mode == 'toggle_sticky':
         details.mode = ManagePostDetails.TOGGLE_STICKY
         success_message = 'Toggled sticky'
@@ -203,6 +208,12 @@ def post_manage():
         raise BadRequestError('You are [banned](/banned/)')
 
     return render_template('message.html', message=success_message)
+
+
+def respond_verification_required(action, form_params):
+    method = verification_service.get_method()
+
+    return render_template('manage_verification.html', action=action, form_params=form_params, method=method)
 
 
 def _gather_manage_params() -> ManagePostDetails:

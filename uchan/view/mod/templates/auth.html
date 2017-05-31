@@ -9,7 +9,7 @@
         <form action="{{ url_for('.mod_auth') }}" method="POST">
             {{ csrf_html() }}
             <input name="deauth" type="hidden" value="yes">
-            <input type="submit" value="Deauth">
+            <input type="submit" value="Logout">
         </form>
     {% else %}
         <form action="{{ url_for('.mod_auth') }}" method="POST">

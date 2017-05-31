@@ -27,10 +27,8 @@ def mod_role_restrict(role):
 def inject_variables():
     if get_authed():
         mod_links = [
-            ('auth', ['mod.mod_auth']),
-            ('reports', ['mod.mod_report']),
-            ('account', ['mod.mod_self']),
-            ('boards', ['mod.mod_boards', 'mod.mod_board_log'])
+            ('boards', ['mod.mod_boards', 'mod.mod_board_log']),
+            ('reports', ['mod.mod_report'])
         ]
 
         if request_has_role(roles.ROLE_ADMIN):
@@ -40,6 +38,11 @@ def inject_variables():
                 ('pages', ['mod.mod_pages']),
                 ('site', ['mod.mod_site']),
             ]
+
+        mod_links += [
+            ('account', ['mod.mod_self']),
+            ('logout', ['mod.mod_auth'])
+        ]
 
         with_current_and_url = []
         for mod_link in mod_links:

@@ -4,6 +4,8 @@
     {% if mod_links %}
         <div class="mod-tabs">
 
+        <span>Moderation tools</span>
+
         {%- for mod_link in mod_links -%}
             <a href="{{ mod_link[1] }}"{% if mod_link[2] %} class="active"{% endif -%}>
                 {{- mod_link[0] }}</a>

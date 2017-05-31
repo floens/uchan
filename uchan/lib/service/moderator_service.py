@@ -270,7 +270,7 @@ def user_register(username: str, password: str, password_repeat: str):
         raise ArgumentError(MESSAGE_PASSWORD_INCORRECT)
 
     moderator = ModeratorModel.from_username(username)
-    moderators.create_with_password(moderator, password)
+    moderator = moderators.create_with_password(moderator, password)
 
     mod_log('User {} registered'.format(username))
 

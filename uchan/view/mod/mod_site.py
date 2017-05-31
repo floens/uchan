@@ -1,14 +1,11 @@
-from flask import request, render_template, redirect, url_for, session
+from flask import request, render_template, redirect, url_for
 from wtforms import StringField, TextAreaField, BooleanField, SubmitField
 from wtforms.validators import Length
 
-from uchan import app
 from uchan.lib import roles
 from uchan.lib.cache import cache
-from uchan.lib.database import get_db
 from uchan.lib.mod_log import mod_log
 from uchan.lib.model import SiteConfigModel
-from uchan.lib.ormmodel import SessionOrmModel
 from uchan.lib.proxy_request import get_request_ip4_str
 from uchan.lib.service import site_service
 from uchan.view import with_token
@@ -83,7 +80,7 @@ def mod_site():
 @with_token()
 def reset_sessions():
     mod_log('reset sessions')
-    app.reset_sessions(get_db(), [session.session_id])
+    site_service.reset_sessions()
     return redirect(url_for('.mod_site'))
 
 

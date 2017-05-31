@@ -25,10 +25,9 @@ class RequestSuspendedException(ArgumentError):
 
 class VerificationError(Exception):
     def __init__(self, *args):
-        Exception.__init__(self, *args)
+        Exception.__init__(self, '[Please verify here first](_{})'.format('/verify/'), *args)
         self.for_name = None
         self.request_message = None
-        self.single_shot = False
 
 
 @unique
@@ -65,7 +64,7 @@ class PostAction(Enum):
     THREAD_LOCKED_TOGGLE = 6
 
 
-def authorize_post_action(actor, action, post=None, post_details=None, board=None, thread=None):
+def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, post_details=None, board=None, thread=None):
     if actor is not None and has_role(actor, roles.ROLE_ADMIN):
         return
 
@@ -84,7 +83,7 @@ def authorize_post_action(actor, action, post=None, post_details=None, board=Non
         if board_config.posting_verification_required:
             if post_details.verification_data is None or \
                     not verification_service.data_is_verified(post_details.verification_data):
-                e = VerificationError('[Please verify here first](_{})'.format('/verify/'))
+                e = VerificationError()
                 e.for_name = 'post'
                 e.request_message = 'posting'
                 raise e
@@ -102,7 +101,7 @@ def authorize_post_action(actor, action, post=None, post_details=None, board=Non
     elif action is PostAction.POST_REPORT:
         if post_details.report_verification_data is None or \
                 not verification_service.data_is_verified(post_details.report_verification_data):
-            e = VerificationError('[Please verify here first](_{})'.format('/verify/'))
+            e = VerificationError()
             e.for_name = 'report'
             e.request_message = 'reporting'
             raise e
@@ -120,7 +119,7 @@ def authorize_action(actor: ModeratorModel, action: ModeratorAction):
 
     if action is ModeratorAction.BOARD_CREATE:
         creator_roles = 0
-        for board_moderator in actor.board_moderators:
+        for board_moderator in moderator_service.get_all_board_moderators_by_moderator(actor):
             if roles.BOARD_ROLE_CREATOR in board_moderator.roles:
                 creator_roles += 1
 

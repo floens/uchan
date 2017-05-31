@@ -1,3 +1,4 @@
+from uchan import app
 from uchan.lib.database import session
 from uchan.lib.model import SiteConfigModel
 from uchan.lib.ormmodel import ConfigOrmModel, FileOrmModel, ModeratorOrmModel, SessionOrmModel, ReportOrmModel, \
@@ -29,3 +30,9 @@ def get_model_counts():
         }
         s.commit()
         return stats
+
+
+# TODO: remove
+def reset_sessions():
+    with session() as s:
+        app.reset_sessions(s, [session.session_id])
