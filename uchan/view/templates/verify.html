@@ -1,46 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}Verify{% endblock %}
+{% block title %}Verification required{% endblock %}
 
 {% block content %}
     <div class="message">
-        {% if not request_message and not verified_message %}
-            No pending verifications
+        <h1>Verification required</h1>
+        {% if verified %}
+            <p>You are verified, you may now close this page.</p>
+            <script>
+                // Close the verify page if the source was the posting page and reload that page causing the agent to
+                // retry the post.
+                if (window.opener && window.opener.location.pathname == '{{ url_for('.post') }}') {
+                    window.opener.location.reload();
+                    window.close();
+                }
+            </script>
         {% else %}
-            {% if request_message %}
-                <b>Requested verifications:</b>
-                {{ request_message|page_formatting }}
-            {% endif %}
-            {% if verified_message %}
-                {% if request_message %}
-                    <br>
-                    <hr class="content-divider"><br>
-                {% endif %}
-                <b>You're verified for:</b>
-                {{ verified_message|page_formatting }}
-                {% if not request_message %}
-                    <br><i>You may now close this tab.</i>
-                    <script>
-                        // Close the verify page if the source was the posting page and retry posting
-                        if (window.opener && window.opener.location.pathname == '{{ url_for('.post') }}') {
-                            window.opener.location.reload();
-                            window.close();
-                        }
-                    </script>
-                {% endif %}
-            {% endif %}
-        {% endif %}
-        {% if method_html %}
-            <br>
-            <hr class="content-divider">
-            <br>
-            <form action="{{ url_for('verify_do') }}" method="post">
-                <script>
-                    window.globalCaptchaEntered = function () {
-                        document.forms[0].submit();
-                    }
-                </script>
-                {{ method_html|safe }}<br>
+            <form action="{{ url_for('.verify') }}" method="POST">
+                <p>
+                    {% if verified_message %}
+                        {{ verified_message }}
+                    {% endif %}
+                </p>
+
+                {{ method.html|safe }}
+                <br>
                 <input type="submit" value="Verify">
             </form>
         {% endif %}

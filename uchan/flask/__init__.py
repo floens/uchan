@@ -60,7 +60,7 @@ def create_web_app(configuration: UchanConfiguration, app):
 
         return render_error(user_message, 400)
 
-    from uchan.lib.action_authorizer import NoPermissionError, VerificationError
+    from uchan.lib.action_authorizer import NoPermissionError
 
     @app.errorhandler(NoPermissionError)
     def no_permission_handler(error):
@@ -69,11 +69,6 @@ def create_web_app(configuration: UchanConfiguration, app):
     from uchan.lib.proxy_request import get_request_ip4
 
     from uchan.lib.service import verification_service
-
-    @app.errorhandler(VerificationError)
-    def not_verified_handler(error):
-        verification_service.handle_not_verified(error, request, get_request_ip4())
-        return render_error(str(error), with_retry=True)
 
     @app.after_request
     def after_request_handler(response):

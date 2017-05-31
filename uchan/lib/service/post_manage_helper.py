@@ -36,7 +36,7 @@ def handle_manage_post(details: ManagePostDetails):
     elif details.mode == ManagePostDetails.TOGGLE_STICKY or details.mode == ManagePostDetails.TOGGLE_LOCKED:
         _manage_thread(thread, details, moderator)
     else:
-        raise Exception()
+        raise Exception('Unknown mode')
 
 
 def _manage_post(details: ManagePostDetails, moderator: ModeratorModel):
@@ -55,12 +55,12 @@ def _manage_delete(details: ManagePostDetails, moderator: ModeratorModel, post: 
         action_authorizer.authorize_post_action(moderator, PostAction.POST_DELETE, post, details)
 
         message = 'post {} delete'.format(details.post_id)
-        mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator_name=moderator.username)
+        mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator=moderator)
 
         posts.delete_post(post)
     except NoPermissionError as e:
         message = 'post {} delete failed, {}'.format(details.post_id, str(e))
-        mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator_name=moderator.username)
+        mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator=moderator)
 
         raise BadRequestError(MESSAGE_DELETE_NO_PERMISSION)
 
@@ -71,7 +71,7 @@ def _manage_report(details: ManagePostDetails, moderator: ModeratorModel, post: 
     report_service.report_post(post)
 
     message = 'post {} reported'.format(post.id)
-    mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator_name=moderator.username)
+    mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator=moderator)
 
 
 def _manage_thread(thread: ThreadModel, details: ManagePostDetails, moderator: ModeratorModel):
@@ -90,7 +90,7 @@ def _manage_sticky_toggle(thread: ThreadModel, details: ManagePostDetails, moder
     posts.update_thread_sticky(thread, not thread.sticky)
 
     message = 'sticky on /{}/{} {}'.format(thread.board.name, thread.id, 'disabled' if thread.sticky else 'enabled')
-    mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator_name=moderator.username)
+    mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator=moderator)
 
 
 def _manage_locked_toggle(thread: ThreadModel, details: ManagePostDetails, moderator: ModeratorModel):
@@ -99,4 +99,4 @@ def _manage_locked_toggle(thread: ThreadModel, details: ManagePostDetails, moder
     posts.update_thread_locked(thread, not thread.locked)
 
     message = 'lock on /{}/{} {}'.format(thread.board.name, thread.id, 'disabled' if thread.locked else 'enabled')
-    mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator_name=moderator.username)
+    mod_log(message, ip4_str=ip4_to_str(details.ip4), moderator=moderator)

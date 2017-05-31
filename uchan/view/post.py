@@ -1,18 +1,22 @@
+from typing import Tuple
+
 from flask import request, abort, redirect, url_for, render_template, jsonify
+from markupsafe import Markup
 
 from uchan import app, configuration
-from uchan.filter.app_filters import time_remaining
+from uchan.filter.app_filters import time_remaining, page_formatting
 from uchan.lib import validation
 from uchan.lib.action_authorizer import RequestBannedException, RequestSuspendedException
 from uchan.lib.exceptions import BadRequestError, ArgumentError
-from uchan.lib.model import PostResultModel
+from uchan.lib.model import PostResultModel, BoardModel
 from uchan.lib.moderator_request import request_moderator, get_authed
 from uchan.lib.proxy_request import get_request_ip4
-from uchan.lib.service import file_service, posts_service, verification_service, site_service, board_service
+from uchan.lib.service import file_service, posts_service, verification_service, site_service, board_service, \
+    post_manage_helper
 from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, execute_post_task, \
     execute_manage_post_task
 from uchan.lib.utils import now, valid_id_range
-from uchan.view import check_csrf_referer
+from uchan.view import check_csrf_referer, render_error
 
 MESSAGE_POSTING_DISABLED = 'Posting is disabled'
 MESSAGE_FILE_POSTING_DISABLED = 'File posting is disabled'
@@ -26,9 +30,11 @@ def post():
     # Do it another way, with a referer check.
     _check_headers()
 
-    post_details = _gather_post_params()
+    board, post_details = _gather_post_params()
 
-    _check_post_settings(post_details.has_file)
+    r = _check_post_settings(board, post_details)
+    if r:
+        return r
 
     upload_queue_files = None
     try:
@@ -70,16 +76,39 @@ def _check_headers():
         raise BadRequestError('Bad referer header')
 
 
-def _check_post_settings(has_file):
+def _check_post_settings(board: BoardModel, post_details):
     site_config = site_service.get_site_config()
     if not site_config.posting_enabled:
         raise BadRequestError(MESSAGE_POSTING_DISABLED)
 
-    if has_file and not site_config.file_posting:
+    if post_details.has_file and not site_config.file_posting:
         raise BadRequestError(MESSAGE_FILE_POSTING_DISABLED)
 
+    if board.config.posting_verification_required and not verification_service.is_verified(request):
+        method = verification_service.get_method()
+        if method.verification_in_request(request):
+            try:
+                method.verify_request(request)
+                verification_service.set_verified(request)
+            except ArgumentError as e:
+                raise BadRequestError(e)
+        else:
+            message = 'Please verify here first before posting.'
 
-def _gather_post_params() -> PostDetails:
+            if request.is_xhr:
+                xhr_response = {
+                    'error': True,
+                    'message': page_formatting('[{}](_/verify/)'.format(message))
+                }
+
+                return jsonify(xhr_response), 400
+            else:
+                with_refresh = '[{}](_/verify/)\n\n**Refresh this page after verifying.**'.format(message)
+
+                return render_template('error.html', message=with_refresh, with_retry=True), 400
+
+
+def _gather_post_params() -> Tuple[BoardModel, PostDetails]:
     form = request.form
 
     # Gather params
@@ -96,7 +125,8 @@ def _gather_post_params() -> PostDetails:
     if not validation.check_board_name_validity(board_name):
         abort(400)
 
-    if not board_service.find_board(board_name):
+    board = board_service.find_board(board_name)
+    if not board:
         abort(404)
 
     text = form.get('comment', None)
@@ -126,10 +156,8 @@ def _gather_post_params() -> PostDetails:
         if moderator is not None:
             mod_id = moderator.id
 
-    verification_data = verification_service.get_verification_data_for_request(request, ip4, 'post')
-
-    return PostDetails(form, board_name, thread_refno, text, name, subject, password, has_file,
-                       ip4, mod_id, verification_data)
+    return board, PostDetails(form, board_name, thread_refno, text, name, subject, password, has_file,
+                              ip4, mod_id, None)
 
 
 def _execute_post(post_details) -> PostResultModel:
@@ -180,19 +208,31 @@ def post_manage():
         details.mode = ManagePostDetails.DELETE
         success_message = 'Post deleted'
     elif details.mode == 'report':
+        if not details.post_id:
+            raise BadRequestError(post_manage_helper.MESSAGE_NO_POST_ID)
+
         action = url_for('.post_manage')
 
-        return respond_verification_required(action, {
-            'mode': details.mode,
+        method = verification_service.get_method()
+
+        retry_params = {
+            'mode': 'report',
             'board': details.board_name,
             'thread': details.thread_refno,
             'post_id': details.post_id
-        })
+        }
 
-        # details.mode = ManagePostDetails.REPORT
-        # success_message = 'Post reported'
-        # data = verification_service.get_verification_data_for_request(request, details.ip4, 'report')
-        # details.report_verification_data = data
+        if method.verification_in_request(request):
+            try:
+                method.verify_request(request)
+                verification_service.set_verified(request)
+            except ArgumentError as e:
+                return respond_verification_required(action, e.message, retry_params)
+        else:
+            return respond_verification_required(action, 'Please verify to report this post', retry_params)
+
+        details.mode = ManagePostDetails.REPORT
+        success_message = 'Post reported'
     elif details.mode == 'toggle_sticky':
         details.mode = ManagePostDetails.TOGGLE_STICKY
         success_message = 'Toggled sticky'
@@ -210,10 +250,11 @@ def post_manage():
     return render_template('message.html', message=success_message)
 
 
-def respond_verification_required(action, form_params):
+def respond_verification_required(action, message, form_params):
     method = verification_service.get_method()
 
-    return render_template('manage_verification.html', action=action, form_params=form_params, method=method)
+    return render_template('verification_required.html', action=action, message=message,
+                           form_params=form_params, method=method)
 
 
 def _gather_manage_params() -> ManagePostDetails:

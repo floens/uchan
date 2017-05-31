@@ -899,10 +899,14 @@ class VerificationsModel:
         self.ip4: int = None
         self.expires: int = None
 
-        self.verifications: Dict[str, VerificationModel] = None
-
-    def get(self, name: str):
-        return self.verifications[name] if name in self.verifications else None
+    @classmethod
+    def from_id_ip4_expires(cls, verification_id: str, ip4: int, expires: int):
+        m = cls()
+        m.id = verification_id
+        m.ip4 = ip4
+        m.expires = expires
+        m.verifications = {}
+        return m
 
     @classmethod
     def from_orm_model(cls, model: VerificationOrmModel):
@@ -912,60 +916,30 @@ class VerificationsModel:
         m.expires = model.expires
 
         m.verifications = []
-        for k, v in model.data:
-            m.verifications[k] = VerificationModel.from_data(k, v)
 
         return m
+
+    @classmethod
+    def from_cache(cls, cache: dict):
+        m = cls()
+        m.id = cache['id']
+        m.ip4 = cache['ip4']
+        m.expires = cache['expires']
 
     def to_orm_model(self):
         orm_model = VerificationOrmModel()
         orm_model.verification_id = self.id
         orm_model.ip4 = self.ip4
         orm_model.expires = self.expires
-
-        data = {}
-        for k, v in self.verifications:
-            data[k] = self.verifications[k].to_data()
-
-        orm_model.data = data
+        orm_model.data = {}
 
         return orm_model
 
-
-"""
-{
-  "verifications": {
-    "report": {
-      "verified": true,
-      "request_message": "reporting",
-      "single_shot": false
-    },
-    "post": {
-      "verified": false,
-      "request_message": "posting",
-      "single_shot": false
-    }
-  }
-}"""
-
-
-class VerificationModel:
-    def __init__(self):
-        self.name: str = None
-        self.verified: bool = None
-
-        # TODO: self.count: int = None etc...
-
-    @classmethod
-    def from_data(cls, name: str, data: dict):
-        m = cls()
-        m.name = name
-        m.verified = data['verified']
-        return m
-
-    def to_data(self) -> Tuple[str, dict]:
-        return self.name, {
-            'verified': self.verified
+    def to_cache(self):
+        return {
+            'id': self.id,
+            'ip4': self.ip4,
+            'expires': self.expires
         }
 
 

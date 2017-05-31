@@ -37,7 +37,7 @@ class AppConfiguration(Configuration):
         self.manifest = json.loads(self.get('manifest', default='{}'))
         self.thumbnail_op = self.get('thumbnail_op', 256)
         self.thumbnail_reply = self.get('thumbnail_reply', 128)
-        self.max_boards_per_moderator = self.get('max_boards_per_moderator', 2)
+        self.max_boards_per_moderator = self.get('max_boards_per_moderator', 5)
 
 
 class HttpConfiguration(Configuration):

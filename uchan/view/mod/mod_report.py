@@ -81,7 +81,6 @@ def _gather_report_manage_params():
     report_id = form.get('report_id', type=int)
     moderator = request_moderator()
 
-    success_message = None
     mode_string = form['mode']
 
     if mode_string == 'clear':
@@ -95,5 +94,6 @@ def _gather_report_manage_params():
         success_message = 'Deleted file'
     else:
         abort(400)
+        return
 
     return ManageReportDetails(report_id, moderator.id, mode), success_message

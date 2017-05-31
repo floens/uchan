@@ -1,6 +1,4 @@
-from flask import redirect
-from flask import render_template, abort
-from flask import url_for
+from flask import redirect, render_template, abort, url_for
 
 from uchan import app
 from uchan.lib import validation

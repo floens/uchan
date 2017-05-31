@@ -23,13 +23,6 @@ class RequestSuspendedException(ArgumentError):
         self.suspend_time = 0
 
 
-class VerificationError(Exception):
-    def __init__(self, *args):
-        Exception.__init__(self, '[Please verify here first](_{})'.format('/verify/'), *args)
-        self.for_name = None
-        self.request_message = None
-
-
 @unique
 class ModeratorAction(Enum):
     BOARD_CREATE = 1
@@ -81,12 +74,8 @@ def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, 
 
         board_config = board_cache.find_board_config(board.name)
         if board_config.posting_verification_required:
-            if post_details.verification_data is None or \
-                    not verification_service.data_is_verified(post_details.verification_data):
-                e = VerificationError()
-                e.for_name = 'post'
-                e.request_message = 'posting'
-                raise e
+            # Handled in post.py
+            pass
 
     elif action is PostAction.POST_DELETE or action is PostAction.POST_DELETE_FILE:
         can_delete = False
@@ -99,12 +88,7 @@ def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, 
         if not can_delete:
             raise NoPermissionError()
     elif action is PostAction.POST_REPORT:
-        if post_details.report_verification_data is None or \
-                not verification_service.data_is_verified(post_details.report_verification_data):
-            e = VerificationError()
-            e.for_name = 'report'
-            e.request_message = 'reporting'
-            raise e
+        pass
     elif action is PostAction.THREAD_STICKY_TOGGLE or action is PostAction.THREAD_LOCKED_TOGGLE:
         req_roles = [roles.BOARD_ROLE_FULL_PERMISSION]
         if not moderator_service.has_any_of_board_roles(actor, board, req_roles):

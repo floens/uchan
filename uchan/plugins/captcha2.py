@@ -37,38 +37,36 @@ class Recaptcha2Method(verification_service.VerificationMethod):
         self.secret = secret
 
         self.html = """
-        <script>
-
-        (function() {
-            if (!window.recaptchaOnloadCallback) {
-                window.recaptchaContainers = [];
-                window.recaptchaOnloadCallback = function() {
-                    for (var i = 0; i < recaptchaContainers.length; i++) {
-                        var container = recaptchaContainers[i];
-                        grecaptcha.render(container, {
-                            'sitekey': '__sitekey__',
-                            'callback': window['globalCaptchaEntered']
-                        });
-                    }
-                };
-                var recaptchaScript = document.createElement('script');
-                recaptchaScript.type = 'text/javascript';
-                recaptchaScript.async = true;
-                recaptchaScript.defer = true;
-                recaptchaScript.src = 'https://www.google.com/recaptcha/api.js?onload=recaptchaOnloadCallback&render=explicit';
-                var s = document.getElementsByTagName('script')[0];
-                s.parentNode.insertBefore(recaptchaScript, s);
-            }
-
-            var containerName = 'g-recaptcha-' + recaptchaContainers.length;
-            recaptchaContainers.push(containerName);
-            document.write('<div id="' + containerName + '"></div>');
-        })();
-        </script>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+        <div class="g-recaptcha" data-sitekey="__sitekey__"></div>
+        <noscript>
+          <div>
+            <div style="width: 302px; height: 422px; position: relative;">
+              <div style="width: 302px; height: 422px; position: absolute;">
+                <iframe src="https://www.google.com/recaptcha/api/fallback?k=__sitekey__"
+                        frameborder="0" scrolling="no"
+                        style="width: 302px; height:422px; border-style: none;">
+                </iframe>
+              </div>
+            </div>
+            <div style="width: 300px; height: 60px; border-style: none;
+                           bottom: 12px; left: 25px; margin: 0px; padding: 0px; right: 25px;
+                           background: #f9f9f9; border: 1px solid #c1c1c1; border-radius: 3px;">
+              <textarea id="g-recaptcha-response" name="g-recaptcha-response"
+                           class="g-recaptcha-response"
+                           style="width: 250px; height: 40px; border: 1px solid #c1c1c1;
+                                  margin: 10px 25px; padding: 0px; resize: none;" >
+              </textarea>
+            </div>
+          </div>
+        </noscript>
         """.replace('__sitekey__', self.sitekey)
 
     def get_html(self):
         return self.html
+
+    def verification_in_request(self, request):
+        return 'g-recaptcha-response' in request.form
 
     def verify_request(self, request):
         form = request.form

@@ -1,8 +1,14 @@
 {% extends "base.html" %}
 
+{% block title %}Verification required{% endblock %}
+
 {% block content %}
     <div class="message">
         <h1>Verification required</h1>
+
+        <p>
+            {{ message }}
+        </p>
 
         <form action="{{ action }}" method="POST">
             {% for k, v in form_params.items() %}

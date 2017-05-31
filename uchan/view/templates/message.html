@@ -8,7 +8,9 @@
 
         <div class="jsonly">
             <br>
-            [<a href="javascript:history.back();">Back</a>]
+            {% if with_back %}
+                [<a href="javascript:history.back();">Back</a>]
+            {% endif %}
         </div>
     </div>
 {% endblock %}

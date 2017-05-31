@@ -210,6 +210,8 @@ class VerificationOrmModel(OrmModelBase):
     verification_id = Column(String(32), primary_key=True)  # Length of a uuid4 with the - stripped
     ip4 = Column(BigInteger(), nullable=False, index=True)
     expires = Column(BigInteger(), nullable=False, index=True)
+
+    # TODO: remove
     data = Column(JSON(), nullable=False)
 
 
