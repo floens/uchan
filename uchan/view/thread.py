@@ -46,7 +46,7 @@ def board(board_name, page=None):
     if not validation.check_board_name_validity(board_name):
         abort(404)
 
-    board: BoardModel = board_service.find_board(board_name, include_config=True)
+    board: BoardModel = board_service.find_board(board_name)
 
     if not board:
         abort(404)
@@ -78,7 +78,7 @@ def board(board_name, page=None):
 def view_thread(board_name, thread_refno):
     valid_id_range(thread_refno)
 
-    board: BoardModel = board_service.find_board(board_name, include_config=True)
+    board: BoardModel = board_service.find_board(board_name)
     if not board:
         abort(404)
 
@@ -104,7 +104,7 @@ def view_thread(board_name, thread_refno):
 
 @app.route('/<string(maxlength=20):board_name>/catalog')
 def board_catalog(board_name):
-    board: BoardModel = board_service.find_board(board_name, include_config=True)
+    board: BoardModel = board_service.find_board(board_name)
     if not board:
         abort(404)
 

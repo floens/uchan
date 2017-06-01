@@ -18,6 +18,7 @@ from uchan.view.mod import mod
 
 class AddBoardForm(CSRFForm):
     name = 'Create new board'
+    action = '.mod_boards'
 
     board_name = StringField('Name', [DataRequired(), BoardNameValidator()],
                              description='Name of the board. This name is used in the url and cannot be changed, '
@@ -70,7 +71,6 @@ def mod_boards():
     board_moderators = moderator_service.get_all_board_moderators_by_moderator(moderator)
 
     add_board_form = AddBoardForm(request.form)
-    add_board_form.action_url = url_for('.mod_boards')
     if request.method == 'POST' and add_board_form.validate():
         try:
             board_name = add_board_form.board_name.data
@@ -87,7 +87,7 @@ def mod_boards():
 
 @mod.route('/mod_board/<board_name>', methods=['GET', 'POST'])
 def mod_board(board_name):
-    board = board_service.find_board(board_name, include_config=True)
+    board = board_service.find_board(board_name)
     if not board:
         abort(404)
 

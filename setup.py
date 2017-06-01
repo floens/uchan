@@ -8,7 +8,7 @@ from uchan.lib.service import moderator_service, config_service
 def init_models():
     from uchan.lib.service import page_service
     from uchan.lib.ormmodel import PageOrmModel
-    front_page = page_service.get_pages_for_type(pages.TYPE_FRONT_PAGE)
+    front_page = page_service.find_pages_for_type(pages.TYPE_FRONT_PAGE)
     if not front_page:
         front_page = PageOrmModel()
         front_page.title = 'Front page'

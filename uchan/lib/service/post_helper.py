@@ -1,6 +1,5 @@
 from uchan.lib import action_authorizer, plugin_manager
 from uchan.lib.action_authorizer import PostAction
-from uchan.lib.cache import board_cache
 from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
@@ -33,7 +32,7 @@ MESSAGE_PASSWORD_TOO_LONG = 'Password too long, at most {} characters allowed'
 def create_post(post_details: PostDetails) -> PostResultModel:
     start_time = now()
 
-    board = board_service.find_board(post_details.board_name, include_config=True)
+    board = board_service.find_board(post_details.board_name)
     if not board:
         raise ArgumentError(MESSAGE_BOARD_NOT_FOUND)
 
@@ -49,7 +48,6 @@ def create_post(post_details: PostDetails) -> PostResultModel:
 
     site_config = site_service.get_site_config()
     default_name = site_config.default_name
-    board_config = board_cache.find_board_config(board.name)
 
     # Get moderator if mod_id was set
     moderator = None
@@ -85,9 +83,9 @@ def create_post(post_details: PostDetails) -> PostResultModel:
     handle_time = now() - start_time
 
     if to_thread is None:
-        res, insert_time, cache_time = posts.create_thread(board, board_config, post)
+        res, insert_time, cache_time = posts.create_thread(board, post)
     else:
-        res, insert_time, cache_time = posts.create_post(board, to_thread, post, sage, board_config.bump_limit)
+        res, insert_time, cache_time = posts.create_post(board, to_thread, post, sage)
 
     _log_post(post_details, res, handle_time + insert_time, cache_time)
 
@@ -120,8 +118,7 @@ def _check_post_details(post_details: PostDetails, thread: ThreadModel, board: B
     action_authorizer.authorize_post_action(moderator, PostAction.POST_CREATE, post_details=post_details,
                                             board=board, thread=thread)
 
-    board_config = board_cache.find_board_config(board.name)
-    if post_details.has_file and not board_config.file_posting:
+    if post_details.has_file and not board.config.file_posting:
         raise ArgumentError(MESSAGE_FILE_POSTING_DISABLED)
 
     # Allow no text when an image is attached

@@ -45,7 +45,7 @@ class BoardOrmModel(OrmModelBase):
     refno_counter = Column(Integer(), nullable=False, default=1)
     config_id = Column(Integer, ForeignKey('config.id'), nullable=False, index=True)
 
-    config = relationship('ConfigOrmModel', cascade='all')
+    config = relationship('ConfigOrmModel', cascade='all', lazy='joined')
     threads = relationship('ThreadOrmModel', backref='board', cascade='all, delete-orphan')
     logs = relationship('ModeratorLogOrmModel', backref='board')
 

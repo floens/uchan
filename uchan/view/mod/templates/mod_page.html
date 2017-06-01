@@ -1,5 +1,7 @@
 {% extends "mod_base.html" %}
 
+{% import "widget/form.html" as form_widget %}
+
 {% block title %}Modify page{% endblock %}
 {% block mod_title %}Modify page{% endblock %}
 {% block mod_content %}
@@ -7,35 +9,9 @@
 
     <hr class="content-divider">
 
-    <form action="{{ url_for('.mod_page_update', page=page) }}" method="POST">
-        <fieldset>
-            <legend>Update page</legend>
-            {{ csrf_html() }}
+    {{ form_widget.render(modify_page_form, modify_page_messages) }}
 
-            <label>Title<br>
-                <input type="text" name="page_title" value="{{ page.title }}">
-            </label>
-            <br>
-
-            <label>Order
-                <small>Non-negative number to order the pages by</small>
-                <br>
-                <input type="text" name="page_order" value="{{ page.order }}">
-            </label>
-            <br>
-
-            <label>Content<br>
-                <textarea name="page_content" rows="30" style="min-width: 800px;">{{ page.content }}</textarea><br>
-            </label>
-            <br>
-
-            <input type="submit" value="Update">
-        </fieldset>
-    </form>
-
-    <br>
     <hr class="content-divider">
-    <br>
 
     <form action="{{ url_for('.mod_page_delete') }}" method="POST">
         {{ csrf_html() }}

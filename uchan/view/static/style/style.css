@@ -23,7 +23,7 @@ blockquote {
     border-left: 1px solid #B1B1B1;
 }
 
-.generic-form input:not(:last-child) {
+.generic-form input:not(:last-child), .generic-form select:not(:last-child) {
     margin-bottom: .8em;
 }
 

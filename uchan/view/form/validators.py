@@ -21,6 +21,10 @@ class BoardNameValidator:
             raise ValidationError('Board name not valid.')
 
 
+class PageTitleValidator(BoardNameValidator):
+    pass
+
+
 class ModeratorUsernameValidator:
     def __call__(self, form, field):
         if not validation.check_username_validity(field.data):

@@ -34,7 +34,7 @@
                                 <small>Required.</small>
                             {% elif validator.__class__.__name__ == 'Optional' %}
                                 <small>Optional.</small>
-                            {% elif validator.__class__.__name__ == 'BoardNameValidator' %}
+                            {% elif validator.__class__.__name__ == 'BoardNameValidator' or validator.__class__.__name__ == 'PageTitleValidator' %}
                                 <small>[a-z0-9_], at most 20 characters.</small>
                             {% elif validator.__class__.__name__ == 'ModeratorUsernameValidator' %}
                                 <small>[a-z0-9_], at most 50 characters.</small>

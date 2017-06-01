@@ -28,12 +28,6 @@ def session():
         s.close()
 
 
-def get_db() -> Session:
-    global _scoped_session
-
-    return _scoped_session()
-
-
 def connect_string():
     return configuration.database.connect_string
 

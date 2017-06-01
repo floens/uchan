@@ -1,7 +1,9 @@
 from typing import List, Optional
 
+from sqlalchemy.orm import load_only, joinedload
+
 from uchan.lib import validation
-from uchan.lib.cache import board_cache, cache, cache_key
+from uchan.lib.cache import cache, cache_key, LocalCache
 from uchan.lib.database import session
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.model import BoardModel, BoardConfigModel
@@ -35,7 +37,10 @@ def create(board: BoardModel) -> BoardModel:
         board = board.from_orm_model(orm_board)
 
         cache.set(cache_key('board_and_config', board.name), board.to_cache())
-        board_cache.invalidate_all_boards()
+
+        _set_all_board_names_cache(s)
+
+        s.commit()
 
         return board
 
@@ -47,7 +52,7 @@ def update_config(board: BoardModel):
         cache.set(cache_key('board_and_config', board.name), board.to_cache())
 
 
-def get_all() -> 'List[BoardModel]':
+def get_all() -> List[BoardModel]:
     with session() as s:
         b = s.query(BoardOrmModel).order_by(BoardOrmModel.name).all()
         res = list(map(lambda i: BoardModel.from_orm_model(i), b))
@@ -55,15 +60,42 @@ def get_all() -> 'List[BoardModel]':
         return res
 
 
-# TODO: we always include the config, remove argument
-def find_by_name(name: str, include_config=False) -> Optional[BoardModel]:
+local_cache = LocalCache()
+
+
+def get_all_board_names() -> List[str]:
+    local_cached = local_cache.get('all_board_names')
+    if local_cached:
+        return local_cached
+
+    all_board_names_cached = cache.get(cache_key('all_board_names'))
+    if all_board_names_cached:
+        # No need to map a list of strings
+        res = all_board_names_cached
+    else:
+        with session() as s:
+            q = s.query(BoardOrmModel).options(load_only('name')).order_by(BoardOrmModel.name)
+            # No mapping here either
+            res = list(map(lambda i: i.name, q.all()))
+            s.commit()
+
+        cache.set(cache_key('all_board_names'), res)
+
+    local_cache.set('all_board_names', res)
+
+    return res
+
+
+def find_by_name(name: str) -> Optional[BoardModel]:
     if not validation.check_board_name_validity(name):
         raise ArgumentError(MESSAGE_INVALID_NAME)
 
     board_cache = cache.get(cache_key('board_and_config', name))
     if not board_cache:
         with session() as s:
-            board_orm_model = s.query(BoardOrmModel).filter_by(name=name).one_or_none()
+            q = s.query(BoardOrmModel).filter_by(name=name)
+            q = q.options(joinedload('config'))
+            board_orm_model = q.one_or_none()
             if not board_orm_model:
                 return None
             board = BoardModel.from_orm_model(board_orm_model, include_config=True)
@@ -73,8 +105,9 @@ def find_by_name(name: str, include_config=False) -> Optional[BoardModel]:
     return BoardModel.from_cache(board_cache)
 
 
-# unknown names are ignored!
 def find_by_names(names: List[str]) -> List[BoardModel]:
+    """unknown names are ignored!"""
+
     for name in names:
         if not validation.check_board_name_validity(name):
             raise ArgumentError(MESSAGE_INVALID_NAME)
@@ -101,6 +134,16 @@ def delete(board: BoardModel):
         s.delete(b)
         s.commit()
 
-        board_cache.invalidate_all_boards()
-        board_cache.invalidate_board_config(board.name)
-        # posts_cache.delete_board_cache(board.name)
+        # The pages etc. will fall out of the cache themselves
+        # This is the first thing all board related endpoints use, so they get cancelled at the start of the request.
+        # If any are still working with caches of this board let them use the left over caches.
+        cache.delete(cache_key('board_and_config', board.name))
+
+        _set_all_board_names_cache(s)
+
+        s.commit()
+
+
+def _set_all_board_names_cache(s):
+    all_board_names_q = s.query(BoardOrmModel).options(load_only('name')).order_by(BoardOrmModel.name)
+    cache.set(cache_key('all_board_names'), list(map(lambda i: i.name, all_board_names_q.all())))

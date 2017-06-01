@@ -21,6 +21,16 @@ class PageModel:
         self.order: int = None
         self.content: str = None
 
+    def copy(self):
+        m = PageModel()
+        m.id = self.id
+        m.title = self.title
+        m.link_name = self.link_name
+        m.type = self.type
+        m.order = self.order
+        m.content = self.content
+        return m
+
     @classmethod
     def from_title_link_type(cls, title: str, link: str, page_type: str):
         page = PageModel()
@@ -42,6 +52,17 @@ class PageModel:
         m.content = model.content
         return m
 
+    @classmethod
+    def from_cache(cls, cache: dict):
+        m = cls()
+        m.id = cache['id']
+        m.title = cache['title']
+        m.link_name = cache['link_name']
+        m.type = cache['type']
+        m.order = cache['order']
+        m.content = cache['content']
+        return m
+
     def to_orm_model(self) -> PageOrmModel:
         orm_model = PageOrmModel()
         orm_model.id = self.id
@@ -51,6 +72,16 @@ class PageModel:
         orm_model.order = self.order
         orm_model.content = self.content
         return orm_model
+
+    def to_cache(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'link_name': self.link_name,
+            'type': self.type,
+            'order': self.order,
+            'content': self.content
+        }
 
 
 class ConfigModel:
@@ -81,7 +112,7 @@ class ThreadModel:
         self.board: BoardModel = None
 
     @classmethod
-    def from_orm_model(cls, model: ThreadOrmModel, include_board=False, include_posts=False):
+    def from_orm_model(cls, model: ThreadOrmModel, include_board=False, include_posts=False, cached_thread_posts=None):
         m = cls()
         m.id = model.id
         m.refno = model.refno
@@ -92,7 +123,13 @@ class ThreadModel:
         if include_board:
             m.board = BoardModel.from_orm_model(model.board)
         if include_posts:
-            m.posts = list(map(lambda i: PostModel.from_orm_model(i), model.posts))
+            cached_posts_by_id = {}
+            if cached_thread_posts:
+                for i in cached_thread_posts:
+                    cached_posts_by_id[i.id] = i
+
+            m.posts = list(
+                map(lambda i: PostModel.from_orm_model(i, cached_posts_by_id=cached_posts_by_id), model.posts))
         return m
 
     @classmethod
@@ -650,7 +687,7 @@ class PostModel:
         return c
 
     @classmethod
-    def from_orm_model(cls, model: PostOrmModel, include_thread=False):
+    def from_orm_model(cls, model: PostOrmModel, include_thread=False, cached_posts_by_id=None):
         m = cls()
         m.id = model.id
         m.date = model.date
@@ -661,7 +698,11 @@ class PostModel:
         m.password = model.password
         m.ip4 = model.ip4
 
-        m.html_text = parse_text(m.text)
+        # We really only reuse the heavy text parser from the old cache.
+        if cached_posts_by_id and m.id in cached_posts_by_id:
+            m.html_text = cached_posts_by_id[m.id].html_text
+        else:
+            m.html_text = parse_text(m.text)
 
         m.mod_code = None
         if model.moderator is not None:

@@ -4,12 +4,16 @@ from uchan.lib.model import BoardModel, ModeratorModel
 from uchan.lib.repository import boards, board_moderators
 
 
-def get_all_boards() -> 'List[BoardModel]':
+def get_all_boards() -> List[BoardModel]:
     return boards.get_all()
 
 
-def find_board(board_name, include_config=False) -> 'Optional[BoardModel]':
-    return boards.find_by_name(board_name, include_config)
+def get_all_board_names() -> List[str]:
+    return boards.get_all_board_names()
+
+
+def find_board(board_name) -> Optional[BoardModel]:
+    return boards.find_by_name(board_name)
 
 
 def find_by_names(names: List[str]) -> List[BoardModel]:

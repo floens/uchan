@@ -3,7 +3,6 @@ from enum import Enum, unique
 from uchan import configuration
 from uchan.lib import roles
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.cache import board_cache
 from uchan.lib.model import ModeratorModel, BoardModel
 
 
@@ -57,7 +56,8 @@ class PostAction(Enum):
     THREAD_LOCKED_TOGGLE = 6
 
 
-def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, post_details=None, board=None, thread=None):
+def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, post_details=None, board=None,
+                          thread=None):
     if actor is not None and has_role(actor, roles.ROLE_ADMIN):
         return
 
@@ -71,11 +71,6 @@ def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, 
                 e = RequestSuspendedException()
                 e.suspend_time = suspend_time
                 raise e
-
-        board_config = board_cache.find_board_config(board.name)
-        if board_config.posting_verification_required:
-            # Handled in post.py
-            pass
 
     elif action is PostAction.POST_DELETE or action is PostAction.POST_DELETE_FILE:
         can_delete = False
@@ -178,4 +173,4 @@ def has_board_roles(moderator, board, req_roles):
     return moderator_service.has_any_of_board_roles(moderator, board, req_roles)
 
 
-from uchan.lib.service import ban_service, moderator_service, verification_service
+from uchan.lib.service import ban_service, moderator_service

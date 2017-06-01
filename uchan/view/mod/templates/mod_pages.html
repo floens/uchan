@@ -1,37 +1,11 @@
 {% extends "mod_base.html" %}
 
+{% import "widget/form.html" as form_widget %}
+
 {% block title %}Mod pages{% endblock %}
 {% block mod_title %}Pages{% endblock %}
 {% block mod_content %}
-    <form action="{{ url_for('.mod_page_add') }}" method="POST">
-        <fieldset>
-            <legend>Add page</legend>
-            {{ csrf_html() }}
-
-            <label>Title<br>
-                <input type="text" name="page_title">
-            </label>
-            <br>
-
-            <label>Link<br>
-                <input type="text" name="page_link_name">
-            </label>
-            <br>
-
-            <label>Type<br>
-                <select name="page_type">
-                    {% for type in page_types %}
-                        <option>{{ type }}</option>
-                    {% endfor %}
-                </select>
-                <br>
-            </label>
-            <br>
-
-            <input type="submit" value="Add">
-        </fieldset>
-    </form>
-
+    {{ form_widget.render(add_page_form, add_page_messages) }}
     <br>
 
     <table class="datatable">

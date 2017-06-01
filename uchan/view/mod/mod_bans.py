@@ -1,12 +1,10 @@
 from flask import render_template, abort, request, flash, redirect, url_for
 from markupsafe import Markup
-from sqlalchemy import desc
 from wtforms import StringField, IntegerField, SubmitField, TextAreaField
 from wtforms.validators import NumberRange, DataRequired, IPAddress, Optional, Length
 
 from uchan.filter.app_filters import formatted_time, time_remaining
 from uchan.lib import roles
-from uchan.lib.database import get_db
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.model import BanModel

@@ -14,7 +14,7 @@ from uchan.lib.utils import now
 MESSAGE_POST_HAS_NO_FILE = 'Post has no file'
 
 
-def create_post(board: BoardModel, thread: ThreadModel, post: PostModel, sage: bool, bump_limit: int) \
+def create_post(board: BoardModel, thread: ThreadModel, post: PostModel, sage: bool) \
         -> Tuple[PostResultModel, int, int]:
     start_time = now()
     with session() as s:
@@ -47,14 +47,14 @@ def create_post(board: BoardModel, thread: ThreadModel, post: PostModel, sage: b
         modify_date = now()
 
         # Use the refno to avoid a count(*)
-        if not sage and post_refno <= bump_limit:
+        if not sage and post_refno <= board.config.bump_limit:
             to_thread_orm_model.last_modified = modify_date
         s.commit()
 
         insert_time = now() - start_time
         start_time = now()
 
-        _invalidate_thread_cache(s, thread)
+        _invalidate_thread_cache(s, thread, board)
         _invalidate_board_pages_catalog_cache(s, board)
 
         cache_time = now() - start_time
@@ -63,7 +63,7 @@ def create_post(board: BoardModel, thread: ThreadModel, post: PostModel, sage: b
         return res, insert_time, cache_time
 
 
-def create_thread(board: BoardModel, board_config: BoardConfigModel, post: PostModel) \
+def create_thread(board: BoardModel, post: PostModel) \
         -> Tuple[PostResultModel, int, int]:
     start_time = now()
     with session() as s:
@@ -97,15 +97,17 @@ def create_thread(board: BoardModel, board_config: BoardConfigModel, post: PostM
             post_orm_model.moderator_id = post.moderator.id
 
         # Purge overflowed threads
-        threads_refnos_to_invalidate = _purge_threads(s, board, board_config.pages, board_config.per_page)
+        threads_refnos_to_purge = _purge_threads(s, board, board.config.pages, board.config.per_page)
         s.commit()
 
         insert_time = now() - start_time
         start_time = now()
 
-        # TODO: threadmodel
-        # TODO: purge overflown thread caches
-        _invalidate_thread_cache(s, ThreadModel.from_orm_model(thread_orm_model))
+        for purging_refno in threads_refnos_to_purge:
+            cache.delete(cache_key('thread', board.name, purging_refno))
+            cache.delete(cache_key('thread_stub', board.name, purging_refno))
+
+        _invalidate_thread_cache(s, ThreadModel.from_orm_model(thread_orm_model), board)
         _invalidate_board_pages_catalog_cache(s, board)
 
         cache_time = now() - start_time
@@ -290,21 +292,26 @@ BOARD_SNIPPET_COUNT = 5
 BOARD_SNIPPET_MAX_LINES = 12
 
 
-def _invalidate_thread_cache(s: Session, thread: ThreadModel):
+def _invalidate_thread_cache(s: Session, old_thread: ThreadModel, board: BoardModel):
     """
     Update the memcache version of the specified thread. This will update the thread cache,
     and the thread stub cache.
     """
+    key = cache_key('thread', board.name, old_thread.refno)
+    stub_key = cache_key('thread_stub', board.name, old_thread.refno)
 
-    # Get a version that includes the board and posts references
-    if not thread.board or not thread.posts:
-        q = s.query(ThreadOrmModel)
-        q = q.filter_by(id=thread.id)
-        q = q.options(lazyload('posts'))
-        thread = ThreadModel.from_orm_model(q.one(), include_board=True, include_posts=True)
+    # Reuse the parsed html from the old cache.
+    old_thread_posts_cache = cache.get(key)
+    old_thread_posts = None
+    if old_thread_posts_cache:
+        old_thread_posts = ThreadModel.from_cache(old_thread_posts_cache).posts
 
-    key = cache_key('thread', thread.board.name, thread.refno)
-    stub_key = cache_key('thread_stub', thread.board.name, thread.refno)
+    # Next, query all the new posts
+    q = s.query(ThreadOrmModel)
+    q = q.filter_by(id=old_thread.id)
+    q = q.options(lazyload('posts'))
+    thread = ThreadModel.from_orm_model(q.one(), include_board=True, include_posts=True,
+                                        cached_thread_posts=old_thread_posts)
 
     if not thread:
         cache.delete(key)
@@ -327,22 +334,10 @@ def _invalidate_board_pages_catalog_cache(s: Session, board: BoardModel):
     This will update the board pages from the already cached thread stubs, and create a new catalog cache.
     """
 
-    # TODO
-    # if not board:
-    #     cache.delete(get_board_cache_key(board_name))
-    #     Delete every page there could have been
-    # for i in range(15):
-    #     cache.delete(get_board_page_cache_key(board_name, i))
-    # return None, None
-    if not board.config or not board:
-        board = BoardModel.from_orm_model(s.query(BoardOrmModel).filter_by(id=board.id).one(),
-                                          include_config=True)
-
     q = s.query(ThreadOrmModel)
     q = q.filter(ThreadOrmModel.board_id == board.id)
-    # q = q.options(lazyload('posts'))
     threads_orm = q.all()
-    thread_models = list(map(lambda j: ThreadModel.from_orm_model(j, include_posts=True), threads_orm))
+    thread_models = list(map(lambda j: ThreadModel.from_orm_model(j, ), threads_orm))
 
     # This builds the board index, stickies first, oldest first, then normal posts, newest first.
     # The pages are split accordingly to the board config,
@@ -352,7 +347,7 @@ def _invalidate_board_pages_catalog_cache(s: Session, board: BoardModel):
     for thread in thread_models:
         thread_stub_cache = cache.get(cache_key('thread_stub', board.name, thread.refno))
         if not thread_stub_cache:
-            thread, thread_stub = _invalidate_thread_cache(s, thread)
+            thread, thread_stub = _invalidate_thread_cache(s, thread, board)
             # The board and thread selects are done separately and there is thus the
             # possibility that the thread was removed after the board select
             if thread_stub is None:
@@ -360,12 +355,7 @@ def _invalidate_board_pages_catalog_cache(s: Session, board: BoardModel):
         else:
             thread_stub = ThreadStubModel.from_cache(thread_stub_cache)
 
-        # TODO
-        # thread_stub_cached.omitted_count = max(0, thread_stub_cached.original_length - 1 - 5)
-        if thread_stub.sticky:
-            stickies.append(thread_stub)
-        else:
-            threads.append(thread_stub)
+        stickies.append(thread_stub) if thread_stub.sticky else threads.append(thread_stub)
 
     stickies = sorted(stickies, key=lambda t: t.last_modified, reverse=False)
     threads = sorted(threads, key=lambda t: t.last_modified, reverse=True)

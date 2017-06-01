@@ -17,7 +17,7 @@ def api_index():
 @api.route('/catalog/<board_name>')
 @jsonres()
 def api_catalog(board_name):
-    board: BoardModel = board_service.find_board(board_name, include_config=True)
+    board: BoardModel = board_service.find_board(board_name)
     if not board:
         abort(404)
 
@@ -33,7 +33,7 @@ def api_catalog(board_name):
 def api_thread(board_name, thread_refno):
     valid_id_range(thread_refno)
 
-    board: BoardModel = board_service.find_board(board_name, include_config=True)
+    board: BoardModel = board_service.find_board(board_name)
     if not board:
         abort(404)
 

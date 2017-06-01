@@ -111,6 +111,3 @@ class LocalCache:
 
 
 cache = CacheWrapper(configuration.memcache.server, configuration.memcache.max_item_size)
-
-import uchan.lib.cache.board_cache
-import uchan.lib.cache.page_cache
