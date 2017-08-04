@@ -40,7 +40,7 @@ A system with support for Docker, Linux is preferred.
 
 Install Docker, either from your package manager, or follow the instructions [from the docker site](https://docs.docker.com/engine/installation/).
 
-Copy `config.ini.sample` to `config.ini`. Take a good look at the `site_url`, the captcha parameters and `proxy_fixer_num_proxies`.
+Copy `config.ini.sample` to `config.ini`. Take a good look at the `site_url`, the captcha parameters and `local_cdn_web_path`.
 Copy `.env.sample` to `.env` and adjust the port uchan should be available at.
 
 Run `make upgrade` and then `make setup`. The setup step will ask for a username and password for the admin account.

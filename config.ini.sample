@@ -2,9 +2,9 @@
 # App name, for logs and the like
 name = uchan
 
-# Url the site is reachable at
-# This needs to match the referer when posting
-site_url = http://127.0.0.1
+# Url the site is reachable at. Trailing slashes or port numbers must be left out.
+# For example, if your site is reachable at https://uchan.example.com/ site_url would equal "https://uchan.example.com"
+site_url = http://localhost
 
 # Content of the manifest.json file
 manifest = {
@@ -12,11 +12,13 @@ manifest = {
            }
 
 [plugins]
-# Comma seperated list of enabled plugins
+# Comma separated list of enabled plugins
 plugins = captcha2
 
 [captcha2]
-# These values bypass checking. Get recaptcha keys for your site here https://www.google.com/recaptcha/intro/index.html
+# Get recaptcha keys for your site here https://www.google.com/recaptcha/intro/index.html
+
+# The following keys are test keys, and do not offer any protection.
 sitekey = 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
 secret = 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
 
@@ -27,7 +29,7 @@ use_proxy_fixer = true
 # The number of proxies this instance is behind
 # This needs to be set to prevent ip spoofing by malicious clients appending their own forwarded-for header
 # See `werkzeug.contrib.fixers.ProxyFix` for more info.
-# Two for a nginx > varnish > uwsgi setup
+# Two for a varnish > nginx > uwsgi setup
 proxy_fixer_num_proxies = 2
 
 # Max POST size to accept.
@@ -42,22 +44,28 @@ file_cdn_type = local
 
 # The temporary dir in which files are placed that are received from the client.
 # The temporary files will be deleted after a post unless the python process crashes.
-upload_queue_path = /var/tmp/uchan_upload_queue
+upload_queue_path = /tmp/uchanmediaqueue
 
 # Settings for the local cdn type
 # Absolute path of where to place the the files.
-local_cdn_path = /var/www/uchan_media/
+local_cdn_path = /opt/app/data/media
 
 # Absolute base url of where the client should request the file.
-local_cdn_web_path = http://uchan.localhost/media/
+local_cdn_web_path = http://localhost/media/
 
 [celery]
 # Celery broker url
-broker_url = amqp://uchan:yourpassword@yourhostname/uchanvhost
+broker_url = amqp://queue/
+
+[varnish]
+# Enable to purge the varnish cache
+enable_purging = true
+# Address we can reach varnish, to send PURGE requests to.
+server = http://varnish
 
 [memcache]
 # Memcache server address
-server = 127.0.0.1:11211
+server = memcached:11211
 
 # The -I flag of memcache, the max size of items
 # note: "-I 2M" means "2 * 1024 * 1024" here
@@ -66,6 +74,6 @@ server = 127.0.0.1:11211
 max_item_size = 1048576
 
 [database]
-connect_string = postgresql+psycopg2://uchan:uchan@/uchan
+connect_string = postgresql+psycopg2://uchan:uchan@db/uchan
 # Check this with your uwsgi total thread count + worker count and the postgres max_connections
 pool_size = 4
