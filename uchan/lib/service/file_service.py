@@ -133,6 +133,8 @@ def prepare_upload(file, thumbnail_size):
     image_output = os.path.join(upload_queue_path, image_name)
     thumbnail_output = os.path.join(upload_queue_path, thumbnail_name)
 
+    os.makedirs(upload_queue_path, exist_ok=True)
+
     # Save the file from the user to the upload queue dir
     file.save(image_output)
 

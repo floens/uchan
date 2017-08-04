@@ -6,6 +6,7 @@ from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.utils import now
 
 
+# Do NOT cache this GET endpoint, an exception in the varnish config has been made.
 @app.route('/banned/', methods=['GET', 'POST'])
 def banned():
     method = verification_service.get_method()

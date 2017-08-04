@@ -69,7 +69,7 @@ def get_all_board_names() -> List[str]:
         return local_cached
 
     all_board_names_cached = cache.get(cache_key('all_board_names'))
-    if all_board_names_cached:
+    if all_board_names_cached is not None:
         # No need to map a list of strings
         res = all_board_names_cached
     else:

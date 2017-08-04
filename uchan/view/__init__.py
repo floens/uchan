@@ -102,7 +102,7 @@ def check_csrf_referer(request):
 
     parsed_url = urlparse(referer)
 
-    final_url = '{}://{}'.format(parsed_url.scheme, parsed_url.hostname)
+    final_url = '{}://{}'.format(parsed_url.scheme, parsed_url.netloc)
     return final_url == configuration.app.site_url
 
 

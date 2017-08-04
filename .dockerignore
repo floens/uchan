@@ -1,0 +1,14 @@
+.git
+.gitignore
+data/*
+docker
+
+.idea
+*.iml
+
+__pycache__/
+*.py[cod]
+
+env/
+
+.DS_Store

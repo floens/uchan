@@ -3,10 +3,11 @@ from typing import Optional, Tuple, List
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, lazyload
 
+from uchan.lib import document_cache
 from uchan.lib.cache import cache, cache_key
 from uchan.lib.database import session
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.model import PostModel, PostResultModel, BoardModel, ThreadModel, BoardConfigModel, ThreadStubModel, \
+from uchan.lib.model import PostModel, PostResultModel, BoardModel, ThreadModel, ThreadStubModel, \
     BoardPageModel, CatalogModel
 from uchan.lib.ormmodel import ThreadOrmModel, BoardOrmModel, PostOrmModel, FileOrmModel
 from uchan.lib.utils import now
@@ -56,6 +57,13 @@ def create_post(board: BoardModel, thread: ThreadModel, post: PostModel, sage: b
 
         _invalidate_thread_cache(s, thread, board)
         _invalidate_board_pages_catalog_cache(s, board)
+
+        purge_thread_future = document_cache.purge_thread(board, thread)
+        # Wait for the thread to be purged, otherwise the chance exists that the client reloads a cached version.
+        # This only holds up the posting client, others have the updated memcache available.
+        purge_thread_future.result()
+        # Don't wait for this
+        document_cache.purge_board(board)
 
         cache_time = now() - start_time
 
@@ -107,8 +115,11 @@ def create_thread(board: BoardModel, post: PostModel) \
             cache.delete(cache_key('thread', board.name, purging_refno))
             cache.delete(cache_key('thread_stub', board.name, purging_refno))
 
-        _invalidate_thread_cache(s, ThreadModel.from_orm_model(thread_orm_model), board)
+        thread = ThreadModel.from_orm_model(thread_orm_model)
+        _invalidate_thread_cache(s, thread, board)
         _invalidate_board_pages_catalog_cache(s, board)
+
+        document_cache.purge_board(board)
 
         cache_time = now() - start_time
 

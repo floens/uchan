@@ -2,12 +2,16 @@ config.ini
 /media/
 /upload_queue/
 /uchan/static/robots.txt
+/data
+!/data/.gitignore
+.env
+
+config_*.ini
+docker/nginx_*.conf
+docker/varnish/uchan_*.vcl
 
 .idea
 *.iml
-
-/log/*
-!/log/.keep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

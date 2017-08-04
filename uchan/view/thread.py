@@ -1,4 +1,5 @@
-from flask import redirect, render_template, abort, url_for
+from flask import redirect, render_template, abort, url_for, Response
+from werkzeug.http import http_date
 
 from uchan import app
 from uchan.lib import validation
@@ -97,9 +98,12 @@ def view_thread(board_name, thread_refno):
     # TODO: don't use the board id
     show_mod_buttons = show_moderator_buttons(thread.board.id)
 
-    return render_template('thread.html', thread=thread, board=thread.board,
-                           show_moderator_buttons=show_mod_buttons,
-                           **get_board_view_params(board.config, 'thread', board_name, additional_page_details))
+    r: Response = app.make_response(render_template('thread.html', thread=thread, board=thread.board,
+                                                    show_moderator_buttons=show_mod_buttons,
+                                                    **get_board_view_params(board.config, 'thread', board_name,
+                                                                            additional_page_details)))
+    r.headers['Last-Modified'] = http_date(thread.last_modified / 1000)
+    return r
 
 
 @app.route('/<string(maxlength=20):board_name>/catalog')

@@ -82,7 +82,7 @@ def find_by_type(page_type: str) -> 'List[PageModel]':
         return list(map(lambda i: i.copy(), lc))
 
     pages_by_type_cached = cache.get(cache_key('pages_by_type', page_type))
-    if pages_by_type_cached:
+    if pages_by_type_cached is not None:
         res = list(map(lambda i: PageModel.from_cache(i), pages_by_type_cached))
     else:
         with session() as s:

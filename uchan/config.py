@@ -1,16 +1,18 @@
 import json
 
-class UchanConfiguration():
+
+class UchanConfiguration:
     def __init__(self, parser):
         self.app = AppConfiguration(parser['app'])
         self.http = HttpConfiguration(parser['http'])
         self.file = FileConfiguration(parser['file'])
         self.celery = CeleryConfiguration(parser['celery'])
+        self.varnish = VarnishConfiguration(parser['varnish'])
         self.memcache = MemcacheConfiguration(parser['memcache'])
         self.database = DatabaseConfiguration(parser['database'])
 
 
-class Configuration():
+class Configuration:
     def __init__(self, section):
         self.section = section
 
@@ -38,6 +40,8 @@ class AppConfiguration(Configuration):
         self.thumbnail_op = self.get('thumbnail_op', 256)
         self.thumbnail_reply = self.get('thumbnail_reply', 128)
         self.max_boards_per_moderator = self.get('max_boards_per_moderator', 5)
+        self.app_log_path = self.get('app_log_path', 'data/log/uchan.log')
+        self.mod_log_path = self.get('mod_log_path', 'data/log/mod.log')
 
 
 class HttpConfiguration(Configuration):
@@ -61,6 +65,13 @@ class CeleryConfiguration(Configuration):
     def __init__(self, section):
         super().__init__(section)
         self.broker_url = self.get('broker_url')
+
+
+class VarnishConfiguration(Configuration):
+    def __init__(self, section):
+        super().__init__(section)
+        self.purging_enabled = self.get('enable_purging', func=section.getboolean, default=True)
+        self.server = self.get('server', 'http://varnish')
 
 
 class MemcacheConfiguration(Configuration):

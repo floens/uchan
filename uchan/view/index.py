@@ -1,4 +1,4 @@
-from flask import render_template
+from flask import render_template, abort
 
 from uchan import app
 from uchan.lib.service import page_service
@@ -7,4 +7,7 @@ from uchan.lib.service import page_service
 @app.route('/')
 def index():
     page = page_service.find_front_page()
+    if not page:
+        abort(404)
+
     return render_template('index.html', page=page)

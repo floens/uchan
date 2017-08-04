@@ -1,0 +1,37 @@
+version: "3"
+services:
+  varnish:
+    build: ./docker/varnish
+    ports:
+      - "${UCHAN_PORT}:80"
+    environment:
+      - UCHAN_VARNISH_MEMSIZE
+  nginx:
+    image: nginx:1.13-alpine
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./uchan/view/static:/opt/uchanstatic:ro
+      - ./data/media:/opt/app/data/media:ro
+  app:
+    build: .
+    volumes:
+      - ./docker/uwsgi.ini:/etc/uwsgi/uwsgi.ini:ro
+      - ./data/log:/opt/app/data/log
+      - ./data/media:/opt/app/data/media
+    command: app
+  worker:
+    build: .
+    volumes:
+      - ./data/log:/opt/app/data/log
+    command: worker
+  db:
+    image: postgres:9.6-alpine
+    environment:
+      - POSTGRES_USER=uchan
+      - POSTGRES_PASSWORD=uchan
+    volumes:
+      - ./data/database:/var/lib/postgresql/data
+  memcached:
+    image: memcached:1.4-alpine
+  queue:
+    image: rabbitmq:alpine

@@ -23,22 +23,22 @@
 </head>
 <body>
 
-{% if all_board_names %}
-    <div class="top-bar link-list">
-        [<a href="{{ url_for('index') }}">index</a>]
-        [
-        {%- for name in all_board_names -%}
-            <a href="{{ url_for('board', board_name=name) }}">{{ name }}</a>{% if not loop.last %} / {% endif %}
-        {%- endfor -%}
-        ]
+<div class="top-bar link-list">
+    [<a href="{{ url_for('index') }}">index</a>]
+    {% if all_board_names %}
+    [
+    {%- for name in all_board_names -%}
+        <a href="{{ url_for('board', board_name=name) }}">{{ name }}</a>{% if not loop.last %} / {% endif %}
+    {%- endfor -%}
+    ]
+    {% endif %}
 
-        <div class="top-bar-right link-list-right">
-            {%- for header_link in header_links -%}
-                [<a href="{{ header_link[1] }}">{{ header_link[0] }}</a>]
-            {%- endfor -%}
-        </div>
+    <div class="top-bar-right link-list-right">
+        {%- for header_link in header_links -%}
+            [<a href="{{ header_link[1] }}">{{ header_link[0] }}</a>]
+        {%- endfor -%}
     </div>
-{% endif %}
+</div>
 
 {% block top_content %}{% endblock %}
 

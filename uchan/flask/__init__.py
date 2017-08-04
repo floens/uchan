@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from flask import Flask, request
 from werkzeug.contrib.fixers import ProxyFix
 
@@ -65,8 +67,6 @@ def create_web_app(configuration: UchanConfiguration, app):
     @app.errorhandler(NoPermissionError)
     def no_permission_handler(error):
         return render_error('No permission', 401)
-
-    from uchan.lib.proxy_request import get_request_ip4
 
     from uchan.lib.service import verification_service
 

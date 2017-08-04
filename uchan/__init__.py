@@ -1,7 +1,8 @@
-print('Initializing')
-
+import argparse
 import configparser
+import sys
 
+import os
 from celery import Celery
 from celery.loaders.app import AppLoader
 
@@ -25,8 +26,14 @@ import uchan.config
 def init():
     global app, celery, cache, configuration
 
+    config_file = 'config.ini'
+    if 'UCHAN_CONFIG_FILE' in os.environ:
+        config_file = os.environ['UCHAN_CONFIG_FILE']
+
     config_parser = configparser.ConfigParser()
-    config_parser.read('config.ini')
+    if not config_parser.read(config_file):
+        print('Error reading config.ini. Please copy config.ini.sample to config.ini and adjust accordingly.')
+        sys.exit(1)
     configuration = config.UchanConfiguration(config_parser)
 
     import uchan.lib.database as database
@@ -90,8 +97,6 @@ def init():
 
     # database.metadata_create_all()
 
-    print('Ready')
-
 
 def setup_logging():
     global app, logger, mod_logger
@@ -99,11 +104,19 @@ def setup_logging():
     import logging
     from logging.handlers import RotatingFileHandler
 
-    app.logger.handlers[0].setFormatter(
-        logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"))
-    log_handler = RotatingFileHandler('log/' + configuration.app.name + '.log', maxBytes=5000000, backupCount=5)
-    log_handler.setFormatter(logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"))
+    app_log_path = configuration.app.app_log_path
+    os.makedirs(os.path.dirname(app_log_path), exist_ok=True)
+
+    log_format = '[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s'
+    max_bytes = 5000000
+    backup_count = 5
+
+    app.logger.handlers[0].setFormatter(logging.Formatter(log_format))
+    log_handler = RotatingFileHandler(app_log_path, maxBytes=max_bytes, backupCount=backup_count)
+    log_handler.setFormatter(logging.Formatter(log_format))
+
     app.logger.addHandler(log_handler)
+
     if configuration.app.debug:
         log_handler.setLevel(logging.DEBUG)
         app.logger.setLevel(logging.DEBUG)
@@ -113,7 +126,9 @@ def setup_logging():
 
     logger = app.logger
 
-    mod_log_handler = RotatingFileHandler('log/mod.log', maxBytes=5000000, backupCount=5)
+    mod_log_path = configuration.app.mod_log_path
+    os.makedirs(os.path.dirname(mod_log_path), exist_ok=True)
+    mod_log_handler = RotatingFileHandler(mod_log_path, maxBytes=max_bytes, backupCount=backup_count)
     mod_log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s"))
 
     mod_logger = logging.getLogger('mod log')
