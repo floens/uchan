@@ -45,6 +45,11 @@ Copy `.env.sample` to `.env` and adjust the port uchan should be available at.
 
 Run `make upgrade` and then `make setup`. The setup step will ask for a username and password for the admin account.
 
+#### Troubleshooting
+
+Run `docker-compose logs <component>` for logs of a component, where component is either `app` or `worker`.
+
+
 #### Upgrading
 
 To upgrade to the newest version of µchan, run `make upgrade`. This pulls the newest version from git, runs a database upgrade and restarts the stack.

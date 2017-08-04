@@ -6,6 +6,10 @@ services:
       - "${UCHAN_PORT}:80"
     environment:
       - UCHAN_VARNISH_MEMSIZE
+    depends_on:
+      - nginx
+      - app
+      - worker
   nginx:
     image: nginx:1.13-alpine
     volumes:
