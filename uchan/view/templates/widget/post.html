@@ -40,7 +40,7 @@
 
             {% if post_item.file %}
                 <br>
-                File: <a href="{{ post_item.file.location }}">{{ post_item.file.original_name }}</a> {{ '(' ~ post_item.file.size|filesizeformat ~ ', ' ~ post_item.file.width ~ 'x' ~ post_item.file.height ~ ')' }}
+                File: <a href="{{ post_item.file.location|post_file_uri }}">{{ post_item.file.original_name }}</a> {{ '(' ~ post_item.file.size|filesizeformat ~ ', ' ~ post_item.file.width ~ 'x' ~ post_item.file.height ~ ')' }}
             {% endif %}
         </div>
         {% if file_position == 'top' %}
