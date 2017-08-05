@@ -16,6 +16,10 @@ upgrade:
 	docker-compose run app upgrade
 
 setup: start
+	@# TODO: clean this up
+	chown 1001 -R data/log data/media
+	docker-compose down
+	docker-compose up -d
 	docker-compose run app setup
 
 start:

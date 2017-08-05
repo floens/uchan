@@ -15,7 +15,7 @@ ADD requirements /opt/app/requirements
 WORKDIR /opt/app
 RUN pip3 install -r requirements
 
-RUN addgroup -S uchan && adduser -S uchan uchan
+RUN addgroup -S uchan && adduser -u 1001 -S uchan uchan
 
 ADD . /opt/app
 RUN mkdir -p /opt/app/data/log && chown -R uchan:uchan /opt/app/data/log && \
