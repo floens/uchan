@@ -28,8 +28,8 @@ secret = 6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe
 use_proxy_fixer = true
 # The number of proxies this instance is behind
 # This needs to be set to prevent ip spoofing by malicious clients appending their own forwarded-for header
-# See `werkzeug.contrib.fixers.ProxyFix` for more info.
-# Two for a varnish > nginx > uwsgi setup
+# 2 for a varnish > nginx > uwsgi setup
+# 3 for a front_end > varnish > nginx > uwsgi setup
 proxy_fixer_num_proxies = 2
 
 # Max POST size to accept.
