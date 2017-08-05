@@ -29,7 +29,14 @@ sub vcl_recv {
     return (purge);
   }
 
-  set req.http.X-Forwarded-For = client.ip;
+  # IP forwarding.
+  if (req.restarts == 0) {
+    if (req.http.x-forwarded-for) {
+      set req.http.X-Forwarded-For = req.http.X-Forwarded-For + ", " + client.ip;
+    } else {
+      set req.http.X-Forwarded-For = client.ip;
+    }
+  }
 
   # Only cache GET or HEAD requests. This makes sure the POST requests are always passed.
   if (req.method != "GET" && req.method != "HEAD") {
