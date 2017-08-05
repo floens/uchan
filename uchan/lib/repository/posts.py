@@ -136,8 +136,13 @@ def delete_post(post: PostModel):
             s.delete(post_orm_model)
             s.commit()
 
-            # posts_cache.invalidate_thread_cache(board_name, thread_refno)
-            # posts_cache.invalidate_board_page_cache(board_name)
+            thread = post.thread
+
+            _invalidate_thread_cache(s, thread, thread.board)
+            _invalidate_board_pages_catalog_cache(s, thread.board)
+
+            document_cache.purge_thread(thread.board, thread)
+            document_cache.purge_board(thread.board)
 
 
 def delete_post_file(post: PostModel):
@@ -149,8 +154,13 @@ def delete_post_file(post: PostModel):
         s.delete(file_orm_model)
         s.commit()
 
-        # posts_cache.invalidate_thread_cache(board_name, thread_refno)
-        # posts_cache.invalidate_board_page_cache(board_name)
+        thread = post.thread
+
+        _invalidate_thread_cache(s, thread, thread.board)
+        _invalidate_board_pages_catalog_cache(s, thread.board)
+
+        document_cache.purge_thread(thread.board, thread)
+        document_cache.purge_board(thread.board)
 
 
 def delete_thread(thread: ThreadModel):
@@ -159,8 +169,11 @@ def delete_thread(thread: ThreadModel):
         s.delete(thread_orm_model)
         s.commit()
 
-        # posts_cache.invalidate_thread_cache(board_name, thread_refno)
-        # posts_cache.invalidate_board_page_cache(board_name)
+        _invalidate_thread_cache(s, thread, thread.board)
+        _invalidate_board_pages_catalog_cache(s, thread.board)
+
+        document_cache.purge_thread(thread.board, thread)
+        document_cache.purge_board(thread.board)
 
 
 def update_thread_sticky(thread: ThreadModel, sticky: bool):
@@ -189,12 +202,12 @@ def update_thread_locked(thread: ThreadModel, locked: bool):
         document_cache.purge_board(thread.board)
 
 
-def find_post_by_id(post_id: int) -> Optional[PostModel]:
+def find_post_by_id(post_id: int, include_thread=False) -> Optional[PostModel]:
     with session() as s:
         m = s.query(PostOrmModel).filter_by(id=post_id).one_or_none()
         res = None
         if m:
-            res = PostModel.from_orm_model(m)
+            res = PostModel.from_orm_model(m, include_thread=include_thread)
         return res
 
 
@@ -333,13 +346,14 @@ def _invalidate_thread_cache(s: Session, old_thread: ThreadModel, board: BoardMo
     q = s.query(ThreadOrmModel)
     q = q.filter_by(id=old_thread.id)
     q = q.options(lazyload('posts'))
-    thread = ThreadModel.from_orm_model(q.one(), include_board=True, include_posts=True,
-                                        cached_thread_posts=old_thread_posts)
-
-    if not thread:
+    res = q.one_or_none()
+    if not res:
         cache.delete(key)
         cache.delete(stub_key)
         return
+
+    thread = ThreadModel.from_orm_model(res, include_board=True, include_posts=True,
+                                        cached_thread_posts=old_thread_posts)
 
     thread_cache = thread.to_cache(include_board=True, include_posts=True)
     cache.set(key, thread_cache, timeout=0)

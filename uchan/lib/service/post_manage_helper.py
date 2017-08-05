@@ -40,7 +40,7 @@ def handle_manage_post(details: ManagePostDetails):
 
 
 def _manage_post(details: ManagePostDetails, moderator: ModeratorModel):
-    post = posts.find_post_by_id(details.post_id)
+    post = posts.find_post_by_id(details.post_id, include_thread=True)
     if not post:
         raise BadRequestError(MESSAGE_NO_POST_ID if not details.post_id else MESSAGE_POST_NOT_FOUND)
 
