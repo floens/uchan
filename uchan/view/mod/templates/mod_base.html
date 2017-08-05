@@ -27,5 +27,7 @@
 
 {% block styles %}
     {{ super() }}
+    {% if is_authed %}
     <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename = 'style/mod_style.css') }}">
+    {% endif %}
 {% endblock %}

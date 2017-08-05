@@ -49,7 +49,10 @@ def inject_variables():
             current = any(i.startswith(request.endpoint) for i in mod_link[1])
             with_current_and_url.append((mod_link[0], url_for(mod_link[1][0]), current))
 
-        return dict(mod_links=with_current_and_url)
+        return dict(
+            mod_links=with_current_and_url,
+            is_authed=True
+        )
     else:
         return {}
 
