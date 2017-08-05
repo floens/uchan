@@ -12,7 +12,6 @@ update:
 	docker-compose up -d --build
 
 upgrade:
-	git pull origin $(git rev-parse --abbrev-ref HEAD)
 	docker-compose up -d --build
 	docker-compose run app upgrade
 

@@ -2,7 +2,7 @@
 # App name, for logs and the like
 name = uchan
 
-# Url the site is reachable at. Trailing slashes or port numbers must be left out.
+# Url the site is reachable at. Trailing slashes must be left out.
 # For example, if your site is reachable at https://uchan.example.com/ site_url would equal "https://uchan.example.com"
 site_url = http://localhost
 

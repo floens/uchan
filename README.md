@@ -52,4 +52,4 @@ Run `docker-compose logs <component>` for logs of a component, where component i
 
 #### Upgrading
 
-To upgrade to the newest version of µchan, run `make upgrade`. This pulls the newest version from git, runs a database upgrade and restarts the stack.
+To upgrade to the newest version of µchan, run `git pull origin` and then `make upgrade`. This pulls the newest version from git, runs a database upgrade and restarts the stack.
