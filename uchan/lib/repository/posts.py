@@ -169,12 +169,24 @@ def update_thread_sticky(thread: ThreadModel, sticky: bool):
         existing.sticky = sticky
         s.commit()
 
+        _invalidate_thread_cache(s, thread, thread.board)
+        _invalidate_board_pages_catalog_cache(s, thread.board)
+
+        document_cache.purge_thread(thread.board, thread)
+        document_cache.purge_board(thread.board)
+
 
 def update_thread_locked(thread: ThreadModel, locked: bool):
     with session() as s:
         existing = s.query(ThreadOrmModel).filter_by(id=thread.id).one()
         existing.locked = locked
         s.commit()
+
+        _invalidate_thread_cache(s, thread, thread.board)
+        _invalidate_board_pages_catalog_cache(s, thread.board)
+
+        document_cache.purge_thread(thread.board, thread)
+        document_cache.purge_board(thread.board)
 
 
 def find_post_by_id(post_id: int) -> Optional[PostModel]:
