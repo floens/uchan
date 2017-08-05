@@ -43,6 +43,16 @@ Install Docker, either from your package manager, or follow the instructions [fr
 Copy `config.ini.sample` to `config.ini`. Take a good look at the `site_url`, the captcha parameters and `local_cdn_web_path`.
 Copy `.env.sample` to `.env` and adjust the port uchan should be available at.
 
+##### Behind a proxy
+If you plan to run uchan behind a proxy, for example if you already run a nginx server, and want to put uchan under a separate domain,
+then you need to adjust a few parameters to make sure the correct ip is given to uchan.
+In the config, change `proxy_fixer_num_proxies` to 3. In the varnish config (located at docker/varnish/uchan.vcl)
+uncomment the block that adds the ip forwarding. And finally, change the port in .env to something else.
+Make sure that port isn't reachable directly from the outside. After this you can configure your server to forward all requests to localhost
+with the specified port, as a proxy.
+
+#### Setup
+
 Run `make upgrade` and then `make setup`. The setup step will ask for a username and password for the admin account.
 
 #### Troubleshooting
