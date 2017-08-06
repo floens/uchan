@@ -37,8 +37,7 @@ class Recaptcha2Method(verification_service.VerificationMethod):
         self.secret = secret
 
         self.html = """
-        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-        <div class="g-recaptcha" data-sitekey="__sitekey__"></div>
+        <div class="g-recaptcha"></div>
         <noscript>
           <div>
             <div style="width: 302px; height: 422px; position: relative;">
@@ -62,8 +61,25 @@ class Recaptcha2Method(verification_service.VerificationMethod):
         </noscript>
         """.replace('__sitekey__', self.sitekey)
 
+        self.javascript = """
+        <script src="https://www.google.com/recaptcha/api.js?onload=g_captcha2_callback&render=explicit" async defer></script>
+        <script>
+        window.g_captcha2_callback = function() {
+            var captchas = document.querySelectorAll('.g-recaptcha');
+            for (var i = 0; i < captchas.length; i++) {
+                grecaptcha.render(captchas[i], {
+                    'sitekey': '__sitekey__'
+                });
+            }
+        };
+        </script>
+        """.replace('__sitekey__', self.sitekey)
+
     def get_html(self):
         return self.html
+
+    def get_javascript(self):
+        return self.javascript
 
     def verification_in_request(self, request):
         return 'g-recaptcha-response' in request.form

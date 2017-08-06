@@ -19,6 +19,9 @@ class VerificationMethod:
     def get_html(self):
         raise NotImplementedError()
 
+    def get_javascript(self):
+        raise NotImplementedError()
+
     def verification_in_request(self, request):
         raise NotImplementedError()
 

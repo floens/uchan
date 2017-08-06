@@ -36,54 +36,64 @@ def verify_method():
 @mod.route('/auth', methods=['GET', 'POST'])
 def mod_auth():
     if request.method == 'POST':
-        if get_authed():
-            if request.form.get('deauth') == 'yes':
-                if not check_csrf_token(request.form.get('token')):
-                    abort(400)
-
-                mod_log('logged out')
-                unset_mod_authed()
-                session.clear()
-
-                return redirect(url_for('.mod_auth'))
-        else:
-            if not check_csrf_referer(request):
-                raise BadRequestError('Bad referer header')
-
-            if not configuration.app.debug:
-                verify_method()
-
-            username = request.form['username']
-            password = request.form['password']
-
-            if not validation.check_username_validity(username) or not validation.check_password_validity(password):
-                raise BadRequestError('Invalid username or password')
-            else:
-                moderator = moderator_service.find_moderator_username(username)
-                if not moderator:
-                    mod_log('log in with invalid username')
-                    raise BadRequestError('Invalid username or password')
-                else:
-                    try:
-                        moderator_service.check_password(moderator, password)
-                        set_mod_authed(moderator)
-                        flash('Logged in')
-                        mod_log('logged in')
-                    except ArgumentError:
-                        mod_log('log in with invalid password for username {}'.format(moderator.username))
-                        raise BadRequestError('Invalid username or password')
-
-        return redirect(url_for('.mod_auth'))
+        _mod_auth_post()
     else:
         authed = get_authed()
         moderator = request_moderator() if authed else None
 
-        method_html = ''
-        if not authed and not configuration.app.debug:
+        method = None
+        if not authed:
             method = verification_service.get_method()
-            method_html = method.get_html()
 
-        return render_template('auth.html', authed=authed, moderator=moderator, method_html=method_html)
+        return render_template('auth.html', authed=authed, moderator=moderator, method=method)
+
+
+def _mod_auth_post():
+    if get_authed():
+        _mod_auth_deauth()
+    else:
+        _mod_auth_auth()
+
+    return redirect(url_for('.mod_auth'))
+
+
+def _mod_auth_auth():
+    if not check_csrf_referer(request):
+        raise BadRequestError('Bad referer header')
+
+    verify_method()
+
+    username = request.form['username']
+    password = request.form['password']
+
+    if not validation.check_username_validity(username) or not validation.check_password_validity(password):
+        raise BadRequestError('Invalid username or password')
+    else:
+        moderator = moderator_service.find_moderator_username(username)
+        if not moderator:
+            mod_log('log in with invalid username')
+            raise BadRequestError('Invalid username or password')
+        else:
+            try:
+                moderator_service.check_password(moderator, password)
+                set_mod_authed(moderator)
+                flash('Logged in')
+                mod_log('logged in')
+            except ArgumentError:
+                mod_log('log in with invalid password for username {}'.format(moderator.username))
+                raise BadRequestError('Invalid username or password')
+
+
+def _mod_auth_deauth():
+    if request.form.get('deauth') == 'yes':
+        if not check_csrf_token(request.form.get('token')):
+            abort(400)
+
+        mod_log('logged out')
+        unset_mod_authed()
+        session.clear()
+
+        return redirect(url_for('.mod_auth'))
 
 
 @mod.route('/auth/reg', methods=['POST'])
@@ -91,8 +101,7 @@ def mod_reg():
     if not check_csrf_referer(request):
         raise BadRequestError('Bad referer header')
 
-    if not configuration.app.debug:
-        verify_method()
+    verify_method()
 
     username = request.form['username']
     password = request.form['password']

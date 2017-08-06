@@ -25,7 +25,7 @@
                 </label>
                 <br>
 
-                {{ method_html|safe }}<br>
+                {{ method.get_html()|safe }}<br>
 
                 <input type="submit" value="Submit">
             </fieldset>
@@ -52,10 +52,15 @@
                 </label>
                 <br>
 
-                {{ method_html|safe }}<br>
+                {{ method.get_html()|safe }}<br>
 
                 <input type="submit" value="Register">
             </fieldset>
         </form>
     {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ super() }}
+    {{ method.get_javascript()|safe }}
 {% endblock %}

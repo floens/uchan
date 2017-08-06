@@ -11,7 +11,7 @@ from uchan.lib.utils import now
 def banned():
     method = verification_service.get_method()
     if request.method == 'GET':
-        return render_template('banned.html', method_html=method.get_html())
+        return render_template('banned.html', method=method)
     else:
         try:
             method.verify_request(request)

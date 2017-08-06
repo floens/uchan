@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    {%- if method_html -%}
+    {%- if method -%}
         Banned
     {%- elif not bans -%}
         Not banned
@@ -12,13 +12,13 @@
 
 {% block content %}
     <div class="message">
-        {% if method_html %}
+        {% if method %}
             <h2>Verify</h2>
 
             <form action="{{ url_for('.banned') }}" method="post">
                 Please verify first before checking the ban status of this IP.<br>
                 <br>
-                {{ method_html|safe }}
+                {{ method.get_html()|safe }}
                 <br>
                 <input type="submit" value="Verify">
             </form>
@@ -51,4 +51,9 @@
             <h2>You are not banned</h2>
         {% endif %}
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ super() }}
+    {% if method %}{{ method.get_javascript()|safe }}{% endif %}
 {% endblock %}
