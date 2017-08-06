@@ -44,7 +44,6 @@ def create_web_app(configuration: UchanConfiguration, app):
 
     @app.errorhandler(404)
     def server_error_handler(error):
-        logger.exception(error)
         return app.send_static_file('404.html'), 404
 
     def bad_request_message(e):
