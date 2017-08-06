@@ -14,7 +14,7 @@ Any questions or issues can be asked on #uchan @ rizon or by creating an issue h
 
 
 ## Who is µchan for?
-You can use µchan to set up your own message board. See the [setup](SETUP) guide for more info.
+You can use µchan to set up your own message board.
 The goal of µchan is to be the go-to software for messaging board software.
 
 ## What is different about µchan?
