@@ -1,7 +1,6 @@
 config.ini
 /media/
 /upload_queue/
-/uchan/static/robots.txt
 /data
 !/data/.gitignore
 .env
