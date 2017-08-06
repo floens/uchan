@@ -62,5 +62,5 @@
 
 {% block javascripts %}
     {{ super() }}
-    {{ method.get_javascript()|safe }}
+    {% if method %}{{ method.get_javascript()|safe }}{% endif %}
 {% endblock %}

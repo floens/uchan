@@ -36,7 +36,7 @@ def verify_method():
 @mod.route('/auth', methods=['GET', 'POST'])
 def mod_auth():
     if request.method == 'POST':
-        _mod_auth_post()
+        return _mod_auth_post()
     else:
         authed = get_authed()
         moderator = request_moderator() if authed else None
@@ -92,8 +92,6 @@ def _mod_auth_deauth():
         mod_log('logged out')
         unset_mod_authed()
         session.clear()
-
-        return redirect(url_for('.mod_auth'))
 
 
 @mod.route('/auth/reg', methods=['POST'])
