@@ -1,10 +1,11 @@
-import argparse
 import configparser
+import os
 import sys
 
-import os
 from celery import Celery
 from celery.loaders.app import AppLoader
+from flask_assets import Environment
+from webassets import Bundle
 
 app = None
 celery = None
@@ -55,6 +56,19 @@ def init():
     create_web_app(configuration, app)
 
     database.register_teardown(app)
+
+    assets = Environment(app)
+
+    if configuration.app.debug:
+        assets.url_expire = False
+        js_thread = Bundle('js/thread.js', output='js/thread.debug.js')
+        js_extra = Bundle('js/extra.js', output='js/extra.debug.js')
+    else:
+        js_thread = Bundle('js/thread.js', filters='jsmin', output='js/thread.min.js')
+        js_extra = Bundle('js/extra.js', filters='jsmin', output='js/extra.min.js')
+
+    assets.register('js_thread', js_thread)
+    assets.register('js_extra', js_extra)
 
     from uchan.lib.cache import cache
 

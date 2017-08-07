@@ -22,4 +22,6 @@ RUN mkdir -p /opt/app/data/log && chown -R uchan:uchan /opt/app/data/log && \
     mkdir -p /opt/app/data/media && chown -R uchan:uchan /opt/app/data/media && \
     mkdir -p /tmp/uchanmediaqueue && chown -R uchan:uchan /tmp/uchanmediaqueue
 
+RUN FLASK_APP=uchan/__init__.py flask assets build
+
 ENTRYPOINT ["./docker-entrypoint.sh"]

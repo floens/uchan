@@ -51,8 +51,3 @@
         Thread locked, you may not reply at this time.<br>
     {% endif %}
 {% endblock %}
-
-{% block javascripts %}
-    {{ super() }}
-    <script src="{{ url_for('static', filename='js/thread.js' if config.DEBUG else 'js/thread.5.js') }}"></script>
-{% endblock %}

@@ -28,13 +28,21 @@
 
 {% block styles %}
     {{ super() }}
-    <link rel="stylesheet" href="{{ url_for('static', filename='style/extra.css' if config.DEBUG else 'style/extra.6.css') }}">
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style/extra.css' if config.DEBUG else 'style/extra.6.css') }}">
 {% endblock %}
 
 {% block javascripts %}
     <script>
         window.pageDetails = {{ page_details|tojson|safe }};
     </script>
-    <script src="{{ url_for('static', filename='js/extra.js' if config.DEBUG else 'js/extra.11.js') }}"></script>
+
+    {% assets "js_thread" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+    {% assets "js_extra" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
     {{ super() }}
 {% endblock %}

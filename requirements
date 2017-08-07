@@ -1,7 +1,9 @@
 alembic==0.8.8
 bcrypt==3.1.2
 celery==4.1.0
-Flask==0.11.1
+Flask==0.12.2
+Flask-Assets==0.12
+jsmin==2.2.2
 Pillow==4.1.1
 psycopg2==2.6.2
 python-dateutil==2.5.3

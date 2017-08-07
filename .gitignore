@@ -1,3 +1,6 @@
+uchan/view/static/.webassets-cache
+uchan/view/static/js/*.*.js
+
 config.ini
 /media/
 /upload_queue/
