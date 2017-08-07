@@ -64,6 +64,7 @@ def init():
         js_thread = Bundle('js/thread.js', output='js/thread.debug.js')
         js_extra = Bundle('js/extra.js', output='js/extra.debug.js')
     else:
+        assets.auto_build = False
         js_thread = Bundle('js/thread.js', filters='jsmin', output='js/thread.min.js')
         js_extra = Bundle('js/extra.js', filters='jsmin', output='js/extra.min.js')
 
