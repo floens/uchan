@@ -26,6 +26,7 @@ case "$1" in
         /bin/sh
         ;;
     "assets")
+        tsc -p extra
         FLASK_APP=uchan/__init__.py flask assets build
         ;;
     *)

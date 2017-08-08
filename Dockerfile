@@ -17,7 +17,7 @@ ADD requirements /opt/app/requirements
 WORKDIR /opt/app
 RUN pip3 install -r requirements
 
-RUN npm install --no-progress -qpg clean-css@3
+RUN npm install --no-progress -qpg clean-css@3 typescript
 
 RUN addgroup -S uchan && adduser -u 1001 -S uchan uchan && \
     mkdir -p /tmp/uchanmediaqueue && chown -R uchan:uchan /tmp/uchanmediaqueue

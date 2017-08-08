@@ -12,6 +12,7 @@ docker/varnish/uchan_*.vcl
 # js and styles pipeline stuff for each blueprint
 uchan/view/static/.webassets-manifest
 uchan/view/static/.webassets-cache
+uchan/view/static/js/extra.js
 uchan/view/static/js/*.*.js
 uchan/view/static/style/*.*.css
 uchan/view/mod/static/.webassets-cache

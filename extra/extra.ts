@@ -61,7 +61,7 @@ module uchan {
                     callback(e, null);
                 }
             } else {
-                xhr.onerror(event);
+                xhr.onerror(<ErrorEvent> event);
             }
         };
         xhr.onerror = function(event) {
