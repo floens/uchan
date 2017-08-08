@@ -25,6 +25,9 @@ case "$1" in
     "shell")
         /bin/sh
         ;;
+    "assets")
+        FLASK_APP=uchan/__init__.py flask assets build
+        ;;
     *)
         exit 1
         ;;

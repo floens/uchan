@@ -1,9 +1,9 @@
 version: "2.1"
 services:
-  source:
+  # Compiles the assets and provides them as volumes for app and nginx.
+  assets:
     build: .
-    command:
-      - /bin/true
+    command: assets
     volumes:
       - app-static:/opt/app/uchan/view/static
       - mod-static:/opt/app/uchan/view/mod/static
@@ -11,9 +11,18 @@ services:
   app:
     build: .
     volumes:
+      # Map the uwsgi config from the host config
       - ./docker/uwsgi.ini:/etc/uwsgi/uwsgi.ini:ro
-      - ./data/log:/opt/app/data/log
+
+      # We put our local media here
       - ./data/media:/opt/app/data/media
+
+      # Output the logs on a folder in the host machine
+      - ./data/log:/opt/app/data/log
+
+      # We require the compiled assets to know what urls to generate.
+      - app-static:/opt/app/uchan/view/static
+      - mod-static:/opt/app/uchan/view/mod/static
     command: app
   worker:
     build: .
@@ -24,12 +33,18 @@ services:
   nginx:
     image: nginx:1.13-alpine
     volumes:
+      # Map the nginx config from the host config
       - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+
+      # We need to deliver this media
       - ./data/media:/opt/app/data/media:ro
+
+      # We always give the static assets from nginx
       - app-static:/opt/appstatic
       - mod-static:/opt/modstatic
     depends_on:
       - app
+      - assets
 
   varnish:
     build: ./docker/varnish
@@ -48,6 +63,7 @@ services:
       - POSTGRES_USER=uchan
       - POSTGRES_PASSWORD=uchan
     volumes:
+      # We store the database in the data directory of the host
       - ./data/database:/var/lib/postgresql/data
 
   memcached:

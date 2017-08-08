@@ -70,8 +70,8 @@ def init():
         assets.manifest = 'json'
         js_thread = Bundle('js/thread.js', filters='jsmin', output='js/thread.min.js')
         js_extra = Bundle('js/extra.js', filters='jsmin', output='js/extra.min.js')
-        css = Bundle('style/style.css', filters='cssmin', output='style/style.min.css')
-        css_mod = Bundle('mod/style/mod_style.css', filters='cssmin', output='mod/style/mod_style.min.css')
+        css = Bundle('style/style.css', filters='cleancss', output='style/style.min.css')
+        css_mod = Bundle('mod/style/mod_style.css', filters='cleancss', output='mod/style/mod_style.min.css')
 
     assets.register('js_thread', js_thread)
     assets.register('js_extra', js_extra)

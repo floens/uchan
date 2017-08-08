@@ -10,18 +10,18 @@ RUN apk update &&\
             libffi-dev \
             libjpeg-turbo-dev \
             zlib-dev \
-            postgresql-dev postgresql-client
+            postgresql-dev postgresql-client \
+            nodejs nodejs-npm
+
 ADD requirements /opt/app/requirements
 WORKDIR /opt/app
 RUN pip3 install -r requirements
 
-RUN addgroup -S uchan && adduser -u 1001 -S uchan uchan
+RUN npm install --no-progress -qpg clean-css@3
 
-ADD . /opt/app
-RUN mkdir -p /opt/app/data/log && chown -R uchan:uchan /opt/app/data/log && \
-    mkdir -p /opt/app/data/media && chown -R uchan:uchan /opt/app/data/media && \
+RUN addgroup -S uchan && adduser -u 1001 -S uchan uchan && \
     mkdir -p /tmp/uchanmediaqueue && chown -R uchan:uchan /tmp/uchanmediaqueue
 
-RUN FLASK_APP=uchan/__init__.py flask assets build
+ADD . /opt/app
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
