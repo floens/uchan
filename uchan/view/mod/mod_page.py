@@ -8,7 +8,7 @@ from uchan.lib.model import PageModel
 from uchan.lib.service import page_service
 from uchan.view import with_token
 from uchan.view.form import CSRFForm
-from uchan.view.form.validators import PageTitleValidator
+from uchan.view.form.validators import PageTitleValidator, PageLinkValidator
 from uchan.view.mod import mod, mod_role_restrict
 
 
@@ -16,8 +16,8 @@ class AddPageForm(CSRFForm):
     name = 'Add page'
     action = '.mod_pages'
 
-    title = StringField('Title', [DataRequired(), Length(max=validation.TITLE_MAX_LENGTH)])
-    link = StringField('Link name', [DataRequired(), PageTitleValidator()])
+    title = StringField('Title', [DataRequired(), PageTitleValidator(), Length(max=validation.TITLE_MAX_LENGTH)])
+    link = StringField('Link name', [DataRequired(), PageLinkValidator(), Length(max=validation.LINK_NAME_MAX_LENGTH)])
 
     type = SelectField()
 
@@ -27,7 +27,7 @@ class AddPageForm(CSRFForm):
 class ModifyPageForm(CSRFForm):
     name = 'Update page'
 
-    title = StringField('Title', [DataRequired(), Length(max=validation.TITLE_MAX_LENGTH)])
+    title = StringField('Title', [DataRequired(), PageTitleValidator(), Length(max=validation.TITLE_MAX_LENGTH)])
     order = IntegerField('Order', [NumberRange(min=0)], default=0, description='Order of the page, where applicable')
     content = TextAreaField('Content', [Length(max=validation.CONTENT_MAX_LENGTH)], default='',
                             description='Text contents of the page. This supports post-like formatting.',
