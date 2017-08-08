@@ -10,7 +10,7 @@
     <hr class="content-divider">
 
     {% if site_config.motd %}
-        <div class="motd">{{ site_config.motd }}</div>
+        <div class="motd">{{ site_config.motd|page_formatting }}</div>
         <hr class="content-divider">
     {% endif %}
 
