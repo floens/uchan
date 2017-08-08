@@ -26,7 +26,7 @@ services:
     volumes:
       - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./data/media:/opt/app/data/media:ro
-      - app-static:/opt/uchanstatic
+      - app-static:/opt/appstatic
       - mod-static:/opt/modstatic
     depends_on:
       - app
