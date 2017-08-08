@@ -63,14 +63,20 @@ def init():
         assets.url_expire = False
         js_thread = Bundle('js/thread.js', output='js/thread.debug.js')
         js_extra = Bundle('js/extra.js', output='js/extra.debug.js')
+        css = Bundle('style/style.css', output='style/style.debug.css')
+        css_mod = Bundle('mod/style/mod_style.css', output='mod/style/mod_style.debug.css')
     else:
         assets.auto_build = False
         assets.manifest = 'json'
         js_thread = Bundle('js/thread.js', filters='jsmin', output='js/thread.min.js')
         js_extra = Bundle('js/extra.js', filters='jsmin', output='js/extra.min.js')
+        css = Bundle('style/style.css', filters='cssmin', output='style/style.min.css')
+        css_mod = Bundle('mod/style/mod_style.css', filters='cssmin', output='mod/style/mod_style.min.css')
 
     assets.register('js_thread', js_thread)
     assets.register('js_extra', js_extra)
+    assets.register('css', css)
+    assets.register('css_mod', css_mod)
 
     from uchan.lib.cache import cache
 

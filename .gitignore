@@ -1,6 +1,3 @@
-uchan/view/static/.webassets-cache
-uchan/view/static/js/*.*.js
-
 config.ini
 /media/
 /upload_queue/
@@ -11,6 +8,15 @@ config.ini
 config_*.ini
 docker/nginx_*.conf
 docker/varnish/uchan_*.vcl
+
+# js and styles pipeline stuff for each blueprint
+uchan/view/static/.webassets-manifest
+uchan/view/static/.webassets-cache
+uchan/view/static/js/*.*.js
+uchan/view/static/style/*.*.css
+uchan/view/mod/static/.webassets-cache
+uchan/view/mod/static/js/*.*.js
+uchan/view/mod/static/style/*.*.css
 
 .idea
 *.iml

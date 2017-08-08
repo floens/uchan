@@ -28,6 +28,8 @@
 {% block styles %}
     {{ super() }}
     {% if is_authed %}
-    <link rel="stylesheet" type="text/css" href="{{ url_for('.static', filename = 'style/mod_style.css') }}">
+    {% assets "css_mod" %}
+        <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+    {% endassets %}
     {% endif %}
 {% endblock %}
