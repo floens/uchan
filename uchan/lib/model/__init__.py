@@ -1,5 +1,5 @@
 from enum import unique, Enum
-from typing import List, Dict, Tuple
+from typing import List
 
 from uchan.filter.text_parser import parse_text, parse_moderator_code
 from uchan.lib.ormmodel import ModeratorOrmModel, BoardOrmModel, ThreadOrmModel, BoardModeratorOrmModel, ConfigOrmModel, \
@@ -238,12 +238,14 @@ class ThreadStubModel:
         m.sticky = thread.sticky
         m.locked = thread.locked
 
+        snippet_count = 1 if m.sticky else 5
+
         m.original_length = len(thread.posts)
-        m.omitted_count = max(0, m.original_length - 1 - 5)
+        m.omitted_count = max(0, m.original_length - 1 - snippet_count)
 
         if include_snippets:
             m.posts = []
-            for post in [thread.posts[0]] + thread.posts[1:][-5:]:
+            for post in [thread.posts[0]] + thread.posts[1:][-snippet_count:]:
                 copy = post.copy()
                 # TODO: move outside of model logic
                 maxlinestext = '<span class="abbreviated">Comment too long, view thread to read.</span>'
