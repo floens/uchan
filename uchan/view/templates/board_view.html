@@ -28,8 +28,7 @@
 
 {% block styles %}
     {{ super() }}
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style/extra.css' if config.DEBUG else 'style/extra.6.css') }}">
+    {% assets "css_extra" %}<link rel="stylesheet" href="{{ ASSET_URL }}">{% endassets %}
 {% endblock %}
 
 {% block javascripts %}

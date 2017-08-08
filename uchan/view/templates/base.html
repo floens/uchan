@@ -11,9 +11,7 @@
     <link rel="manifest" href="{{ url_for('manifest_json') }}">
 
     {% block styles %}
-        {% assets "css" %}
-            <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
-        {% endassets %}
+        {% assets "css" %}<link rel="stylesheet" href="{{ ASSET_URL }}">{% endassets %}
     {% endblock %}
     <noscript>
         <style>
