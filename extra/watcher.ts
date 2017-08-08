@@ -96,7 +96,7 @@ namespace uchan {
         }
 
         afterPost() {
-            setTimeout(() => this.forceUpdate(), 500);
+            this.forceUpdate()
         }
 
         addUpdateListener(element:Element) {

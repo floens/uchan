@@ -61,7 +61,7 @@ def create_post(board: BoardModel, thread: ThreadModel, post: PostModel, sage: b
         purge_thread_future = document_cache.purge_thread(board, thread)
         # Wait for the thread to be purged, otherwise the chance exists that the client reloads a cached version.
         # This only holds up the posting client, others have the updated memcache available.
-        purge_thread_future.result()
+        if purge_thread_future: purge_thread_future.result()
         # Don't wait for this
         document_cache.purge_board(board)
 

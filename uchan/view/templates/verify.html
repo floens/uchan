@@ -23,10 +23,15 @@
                     {% endif %}
                 </p>
 
-                {{ method.html|safe }}
+                {{ method.get_html()|safe }}
                 <br>
                 <input type="submit" value="Verify">
             </form>
         {% endif %}
     </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ super() }}
+    {% if not verified %}{{ method.get_javascript()|safe }}{% endif %}
 {% endblock %}
