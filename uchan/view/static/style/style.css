@@ -218,19 +218,31 @@ blockquote {
     color: #5a5a5a;
 }
 
+.catalog-container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: center;
+}
+
 .catalog-post {
-    display: inline-block;
-    width: 130px;
+    position: relative;
+    width: 200px;
     vertical-align: top;
-    margin: 0.7em;
+    padding: 8px 8px calc(8px + 2.4em) 8px;
+    margin: 0.2em;
+    background: #dae2ee;
 }
 
-.catalog-post .header {
+.catalog-post {
 
 }
 
-.catalog-post .header .date {
+.catalog-post .date {
     color: #5a5a5a;
+}
+
+.catalog-post .subject {
+    color: #0200ff;
 }
 
 .catalog-post .file {
@@ -238,8 +250,8 @@ blockquote {
 }
 
 .catalog-post .file img {
-    max-width: 130px;
-    max-height: 100px;
+    max-width: 200px;
+    max-height: 160px;
     margin: 0 auto;
     width: auto;
     height: auto;
@@ -247,12 +259,17 @@ blockquote {
 
 .catalog-post .styled-text {
     overflow: hidden;
-    max-height: 100px;
+    max-height: 150px;
     margin: 0 0 0.7em 0;
 }
 
 .catalog-post .stats {
     color: #5a5a5a;
+}
+
+.catalog-post .bottom {
+    position: absolute;
+    bottom: 8px;
 }
 
 .footer {
