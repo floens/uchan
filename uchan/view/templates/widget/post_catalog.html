@@ -13,6 +13,7 @@
             {% endfor %}
         {% endif %}
         {% if post_item.subject %}
+            {% if not post_item.files %}<br>{% endif %}
             <span class="subject">
                 {{ post_item.subject }}
             </span>
