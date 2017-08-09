@@ -3,7 +3,7 @@ from wtforms import StringField, SubmitField, IntegerField, BooleanField, Hidden
 from wtforms.validators import DataRequired, NumberRange, Length
 
 from uchan import configuration
-from uchan.lib import roles
+from uchan.lib import roles, validation
 from uchan.lib.action_authorizer import NoPermissionError
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
@@ -43,12 +43,14 @@ class BoardConfigurationForm(CSRFForm):
     per_page = IntegerField('Per page', [DataRequired(), NumberRange(min=10, max=15)], default=15,
                             description='Number of threads per page.')
     bump_limit = IntegerField('Bump limit', [DataRequired(), NumberRange(min=100, max=500)], default=300,
-                              description='Max count of posts in a thread that will bum')
+                              description='Max count of posts in a thread that will bump.')
     file_posting = BooleanField('File posting', default=True,
                                 description='Toggles file posting. This does not change posts currently '
                                             'up. May be overridden by a site-wide configuration.')
     posting_verification = BooleanField('Posting requires verification', default=False,
                                         description='Require a captcha for posting.')
+    max_files = IntegerField('Max files', [DataRequired(), NumberRange(min=1, max=validation.MAX_FILES)], default=3,
+                             description='Max number of files you can post per post.')
 
     submit = SubmitField('Update')
 
@@ -128,6 +130,7 @@ def mod_board(board_name):
                     board.config.bump_limit = board_configuration_form.bump_limit.data
                     board.config.file_posting = board_configuration_form.file_posting.data
                     board.config.posting_verification_required = board_configuration_form.posting_verification.data
+                    board.config.max_files = board_configuration_form.max_files.data
 
                 moderator_service.user_update_board_config(moderator, board)
         elif action_invite_moderator:
@@ -188,6 +191,7 @@ def mod_board(board_name):
             bump_limit=board.config.bump_limit,
             file_posting=board.config.file_posting,
             posting_verification=board.config.posting_verification_required,
+            max_files=board.config.max_files
         )
 
     if not can_update_advanced_board_configs:
@@ -196,6 +200,7 @@ def mod_board(board_name):
         del board_configuration_form.bump_limit
         del board_configuration_form.file_posting
         del board_configuration_form.posting_verification
+        del board_configuration_form.max_files
 
     if not invite_moderator_form:
         invite_moderator_form = InviteModeratorForm()

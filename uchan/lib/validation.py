@@ -82,3 +82,5 @@ def check_page_content_validity(content):
         return False
 
     return True
+
+MAX_FILES = 20

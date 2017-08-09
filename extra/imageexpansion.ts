@@ -15,7 +15,7 @@ namespace uchan {
             var link = <HTMLAnchorElement>container.querySelector('a');
             var image = <HTMLImageElement>container.querySelector('img');
             image.addEventListener('click', (event) => {
-                if (event.button == 0) {
+                if (event.button == 0 && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
                     event.preventDefault();
 
                     var expanded = link.dataset['expanded'] == 'true';
@@ -38,7 +38,6 @@ namespace uchan {
             var width = parseInt(link.dataset['filewidth']);
             var height = parseInt(link.dataset['fileheight']);
 
-            var bb = container.getBoundingClientRect();
             var availableWidth = document.documentElement.clientWidth;
             var availableHeight = document.documentElement.clientHeight;
 
@@ -48,16 +47,17 @@ namespace uchan {
                 height *= ratio;
             }
 
+            link.dataset['expanded'] = 'true';
+            image.src = link.href;
+            image.width = width;
+            image.height = height;
+
+            var bb = image.getBoundingClientRect();
             var leftMargin = 0;
             if (width > availableWidth - bb.left) {
                 leftMargin = -bb.left;
             }
-
-            link.dataset['expanded'] = 'true';
-            image.src = link.href;
             image.style.marginLeft = (leftMargin) + 'px';
-            image.width = width;
-            image.height = height;
         }
 
         close(container:HTMLElement, link:HTMLAnchorElement, image:HTMLImageElement) {

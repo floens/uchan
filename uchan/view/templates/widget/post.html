@@ -1,10 +1,12 @@
-{% macro render_file(post_item) %}
-    {% if post_item.file %}
-        <div class="file">
-            <a class="file-link" href="{{ post_item.file.location|post_file_uri }}" data-filewidth="{{ post_item.file.width }}" data-fileheight="{{ post_item.file.height }}" data-filename="{{ post_item.file.original_name }}" data-filesize="{{ post_item.file.size }}">
-                <img src="{{ post_item.file.thumbnail_location|post_file_uri }}" width="{{ post_item.file.thumbnail_width }}" height="{{ post_item.file.thumbnail_height }}">
-            </a>
-        </div>
+{% macro render_files(post_item) %}
+    {% if post_item.files %}
+        {% for file in post_item.files %}
+            <div class="file">
+                <a class="file-link" href="{{ file.location|post_file_uri }}" data-filewidth="{{ file.width }}" data-fileheight="{{ file.height }}" data-filename="{{ file.original_name }}" data-filesize="{{ file.size }}">
+                    <img src="{{ file.thumbnail_location|post_file_uri }}" width="{{ file.thumbnail_width }}" height="{{ file.thumbnail_height }}">
+                </a>
+            </div>
+        {% endfor %}
     {% endif %}
 {% endmacro %}
 
@@ -38,13 +40,15 @@
             </span>
             {% endif %}
 
-            {% if post_item.file %}
+            {% if post_item.files %}
                 <br>
-                File: <a href="{{ post_item.file.location|post_file_uri }}">{{ post_item.file.original_name }}</a> {{ '(' ~ post_item.file.size|filesizeformat ~ ', ' ~ post_item.file.width ~ 'x' ~ post_item.file.height ~ ')' }}
+                {% for file in post_item.files %}
+                    File: <a href="{{ file.location|post_file_uri }}">{{ file.original_name }}</a> {{ '(' ~ file.size|filesizeformat ~ ', ' ~ file.width ~ 'x' ~ file.height ~ ')' }}{% if not loop.last %}<br>{% endif %}
+                {% endfor %}
             {% endif %}
         </div>
         {% if file_position == 'top' %}
-            {{ render_file(post_item) }}
+            {{ render_files(post_item) }}
         {% endif %}
         {% if post_item.html or post_item.text %}
             <div class="styled-text">
@@ -57,7 +61,7 @@
             </div>
         {% endif %}
         {% if file_position == 'bottom' %}
-            {{ render_file(post_item) }}
+            {{ render_files(post_item) }}
         {% endif %}
         {% if board_info %}
             <div class="boardinfo">

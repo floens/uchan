@@ -21,6 +21,7 @@ MESSAGE_THREAD_NOT_FOUND = 'Thread not found'
 MESSAGE_MODERATOR_NOT_FOUND = 'Moderator not found'
 MESSAGE_THREAD_LOCKED = 'Thread is locked'
 MESSAGE_FILE_POSTING_DISABLED = 'File posting is disabled'
+MESSAGE_FILES_TOO_MANY = 'Too many files'
 MESSAGE_POST_NO_TEXT = 'No text'
 MESSAGE_POST_TEXT_TOO_LONG = 'Text too long'
 MESSAGE_POST_TEXT_TOO_MANY_LINES = 'Too many lines'
@@ -68,17 +69,21 @@ def create_post(post_details: PostDetails) -> PostResultModel:
     _handle_subject(post, post_details, to_thread)
     _handle_password(post, post_details)
 
-    if post_details.uploaded_file is not None:
-        # TODO
-        post.file = FileModel()
-        post.file.location = post_details.uploaded_file.location
-        post.file.thumbnail_location = post_details.uploaded_file.thumbnail_location
-        post.file.original_name = post_details.uploaded_file.original_name
-        post.file.width = post_details.uploaded_file.width
-        post.file.height = post_details.uploaded_file.height
-        post.file.size = post_details.uploaded_file.size
-        post.file.thumbnail_width = post_details.uploaded_file.thumbnail_width
-        post.file.thumbnail_height = post_details.uploaded_file.thumbnail_height
+    if post_details.uploaded_files is not None:
+        files = []
+        for uploaded_file in post_details.uploaded_files:
+            # TODO
+            file = FileModel()
+            file.location = uploaded_file.location
+            file.thumbnail_location = uploaded_file.thumbnail_location
+            file.original_name = uploaded_file.original_name
+            file.width = uploaded_file.width
+            file.height = uploaded_file.height
+            file.size = uploaded_file.size
+            file.thumbnail_width = uploaded_file.thumbnail_width
+            file.thumbnail_height = uploaded_file.thumbnail_height
+            files.append(file)
+        post.files = files
 
     handle_time = now() - start_time
 
@@ -118,11 +123,14 @@ def _check_post_details(post_details: PostDetails, thread: ThreadModel, board: B
     action_authorizer.authorize_post_action(moderator, PostAction.POST_CREATE, post_details=post_details,
                                             board=board, thread=thread)
 
-    if post_details.has_file and not board.config.file_posting:
+    if post_details.has_files and not board.config.file_posting:
         raise ArgumentError(MESSAGE_FILE_POSTING_DISABLED)
 
+    if post_details.has_files and len(post_details.uploaded_files) > board.config.max_files:
+        raise ArgumentError(MESSAGE_FILES_TOO_MANY)
+
     # Allow no text when an image is attached
-    if (not post_details.text or not post_details.text.strip()) and not post_details.has_file:
+    if (not post_details.text or not post_details.text.strip()) and not post_details.has_files:
         raise ArgumentError(MESSAGE_POST_NO_TEXT)
 
     if post_details.text is not None:

@@ -36,11 +36,12 @@ def create_post(board: BoardModel, thread: ThreadModel, post: PostModel, sage: b
         post_refno = post_orm_model.refno = to_thread_orm_model.refno_counter
         post_id = post_orm_model.id
 
-        # Attach file to the post id
-        if post.file:
-            file_orm_model = post.file.to_orm_model()
-            file_orm_model.post_id = post_id
-            s.add(file_orm_model)
+        # Attach files to the post id
+        if post.files:
+            for file in post.files:
+                file_orm_model = file.to_orm_model()
+                file_orm_model.post_id = post_id
+                s.add(file_orm_model)
 
         if post.moderator:
             post_orm_model.moderator_id = post.moderator.id
@@ -95,11 +96,12 @@ def create_thread(board: BoardModel, post: PostModel) \
         # Set it to the board after the commit to make sure there aren't any duplicates
         thread_refno = thread_orm_model.refno = board_orm_model.refno_counter
 
-        # Attach file to the post id
-        if post.file:
-            file_orm_model = post.file.to_orm_model()
-            file_orm_model.post_id = post_orm_model.id
-            s.add(file_orm_model)
+        # Attach files to the post id
+        if post.files:
+            for file in post.files:
+                file_orm_model = file.to_orm_model()
+                file_orm_model.post_id = post_orm_model.id
+                s.add(file_orm_model)
 
         if post.moderator:
             post_orm_model.moderator_id = post.moderator.id

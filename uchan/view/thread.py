@@ -20,6 +20,7 @@ def get_board_view_params(board_config: BoardConfigModel, mode, board_name, addi
     }
     if file_posting_enabled:
         details['filePostingEnabled'] = file_posting_enabled
+        details['fileMax'] = board_config.max_files
     if additional_page_details:
         details.update(additional_page_details)
 

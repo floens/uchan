@@ -30,10 +30,10 @@
             <br>
             {% if file_field %}
                 <label>
-                    File
+                    Files, max {{ board.config.max_files }}
                     <small>(.jpg .png .gif)</small>
                     <br>
-                    <input type="file" name="file">
+                    <input type="file" name="file" multiple>
                 </label>
                 <br>
             {% endif %}

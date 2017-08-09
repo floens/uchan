@@ -13,13 +13,7 @@
     {% block styles %}
         {% assets "css" %}<link rel="stylesheet" href="{{ ASSET_URL }}">{% endassets %}
     {% endblock %}
-    <noscript>
-        <style>
-            .jsonly {
-                display: none;
-            }
-        </style>
-    </noscript>
+    <noscript><style>.jsonly{display:none;}</style></noscript>
 </head>
 <body>
 
@@ -42,7 +36,7 @@
 
 {% block top_content %}{% endblock %}
 
-<div class="content">
+<div class="base-content">
     {% with messages = get_flashed_messages() %}
         {{ messages_widget.render(messages) }}
     {% endwith %}

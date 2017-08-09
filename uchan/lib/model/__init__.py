@@ -360,6 +360,7 @@ class BoardConfigModel:
         self.bump_limit: int = None
         self.file_posting: bool = None
         self.posting_verification_required: bool = None
+        self.max_files: int = None
 
     @classmethod
     def from_defaults(cls):
@@ -371,6 +372,7 @@ class BoardConfigModel:
         m.bump_limit = 300
         m.file_posting = True
         m.posting_verification_required = False
+        m.max_files = 3
         return m
 
     @classmethod
@@ -394,6 +396,7 @@ class BoardConfigModel:
         m.bump_limit = g('bump_limit', 300)
         m.file_posting = g('file_posting_enabled', True)
         m.posting_verification_required = g('posting_requires_verification', False)
+        m.max_files = g('max_files', 3)
         return m
 
     @classmethod
@@ -407,6 +410,7 @@ class BoardConfigModel:
         m.bump_limit = cache['bump_limit']
         m.file_posting = cache['file_posting']
         m.posting_verification_required = cache['posting_verification_required']
+        m.max_files = cache['max_files'] if 'max_files' in cache else 3
         return m
 
     def to_orm_model(self):
@@ -432,6 +436,7 @@ class BoardConfigModel:
         s('bump_limit', self.bump_limit, int)
         s('file_posting_enabled', self.file_posting, bool)
         s('posting_requires_verification', self.posting_verification_required, bool)
+        s('max_files', self.max_files, int)
 
         orm_model.config = res
         return orm_model
@@ -445,7 +450,8 @@ class BoardConfigModel:
             'description': self.description,
             'bump_limit': self.bump_limit,
             'file_posting': self.file_posting,
-            'posting_verification_required': self.posting_verification_required
+            'posting_verification_required': self.posting_verification_required,
+            'max_files': self.max_files
         }
 
 
@@ -668,7 +674,7 @@ class PostModel:
         self.thread: ThreadModel = None
         self.moderator: ModeratorModel = None
         # self.report: ReportModel = None
-        self.file: FileModel = None
+        self.files: List[FileModel] = None
 
     def copy(self):
         c = PostModel()
@@ -683,8 +689,8 @@ class PostModel:
         c.html_text = self.html_text
         c.mod_code = self.mod_code
 
-        if self.file:
-            c.file = self.file.copy()
+        if self.files:
+            c.files = c._sortfiles(list(map(lambda i: i.copy(), self.files)))
 
         return c
 
@@ -710,8 +716,8 @@ class PostModel:
         if model.moderator is not None:
             m.mod_code = parse_moderator_code(model.moderator)
 
-        if model.file:
-            m.file = FileModel.from_orm_model(model.file)
+        if model.files:
+            m.files = m._sortfiles(list(map(lambda i: FileModel.from_orm_model(i), model.files)))
 
         if include_thread:
             m.thread = ThreadModel.from_orm_model(model.thread, include_board=True)
@@ -733,8 +739,9 @@ class PostModel:
         m.html_text = cache['html_text']
         m.mod_code = cache['mod_code']
 
-        if 'file' in cache:
-            m.file = FileModel.from_cache(cache['file'])
+        if 'files' in cache:
+            m.files = m._sortfiles(list(map(lambda i: FileModel.from_cache(i), cache['files'])))
+
         return m
 
     def to_orm_model(self):
@@ -763,9 +770,14 @@ class PostModel:
             'html_text': self.html_text,
             'mod_code': self.mod_code
         }
-        if self.file:
-            res['file'] = self.file.to_cache()
+
+        if self.files:
+            res['files'] = list(map(lambda i: i.to_cache(), self.files))
+
         return res
+
+    def _sortfiles(self, files: List['FileModel']):
+        return sorted(files, key=lambda i: i.original_name)
 
 
 class FileModel:

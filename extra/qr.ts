@@ -42,7 +42,7 @@ namespace uchan {
                 '        <input class="input" type="text" name="name" placeholder="Name"><br>' +
                 '        <input class="input" type="password" name="password" placeholder="Password (for post deletion)"><br>' +
                 '        <textarea class="input" name="comment" placeholder="Comment" rows="8"></textarea><br>' +
-                '        <input type="file" name="file"><input type="submit" value="Submit"/><br>' +
+                '        <input type="file" name="file" multiple><input type="submit" value="Submit"/><br>' +
                 '        <span class="error-message">Message</span>' +
                 '        <input type="hidden" name="board" value="' + context.boardName + '"/>' +
                 '        <input type="hidden" name="thread" value="' + context.threadRefno + '"/>' +
@@ -62,6 +62,7 @@ namespace uchan {
             this.commentElement = <HTMLInputElement>this.element.querySelector('textarea[name="comment"]');
             this.fileElement = <HTMLInputElement>this.element.querySelector('input[name="file"]');
             this.fileElement.style.display = this.filePostingEnabled ? 'inline-block' : 'none';
+            this.fileElement.addEventListener('change', this.onFileChangeEvent.bind(this));
             this.submitElement = <HTMLInputElement>this.element.querySelector('input[type="submit"]');
             this.errorMessageElement = <HTMLElement>this.element.querySelector('.error-message');
 
@@ -105,6 +106,12 @@ namespace uchan {
             if (event.keyCode == 27) {
                 this.hide();
             }
+        }
+
+        onFileChangeEvent(event) {
+            var overLimit = this.fileElement.files.length > context.fileMax;
+            this.submitElement.disabled = overLimit;
+            this.showErrorMessage(overLimit, 'Too many files selected, max ' + context.fileMax + ' files allowed');
         }
 
         onOpenEvent(event) {

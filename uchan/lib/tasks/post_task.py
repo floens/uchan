@@ -1,3 +1,5 @@
+from typing import List
+
 from uchan import celery, configuration
 from uchan.lib.model import PostResultModel
 from uchan.lib.service import posts_service
@@ -5,7 +7,7 @@ from uchan.lib.service.file_service import UploadedFile
 
 
 class PostDetails:
-    def __init__(self, form, board_name, thread_refno, text, name, subject, password, has_file, ip4, mod_id,
+    def __init__(self, form, board_name, thread_refno, text, name, subject, password, has_files, ip4, mod_id,
                  verification_data):
         self.form = form
         self.board_name = board_name
@@ -14,12 +16,12 @@ class PostDetails:
         self.name = name
         self.subject = subject
         self.password = password
-        self.has_file = has_file
+        self.has_files = has_files
         self.ip4 = ip4
         self.mod_id = mod_id
         self.verification_data = verification_data
 
-        self.uploaded_file: UploadedFile = None
+        self.uploaded_files: List[UploadedFile] = None
 
         self.file_time = 0
 

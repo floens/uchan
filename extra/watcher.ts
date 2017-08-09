@@ -6,22 +6,22 @@ namespace uchan {
         delays = [10, 15, 20, 30, 60, 90, 120, 180, 240, 300, 600];
         endPoint = '/api/thread/';
 
-        boardName:string;
-        threadRefno:number;
-        postsElement:HTMLElement;
-        statusElements:HTMLElement[];
-        imageExpansion:ImageExpansion;
+        boardName: string;
+        threadRefno: number;
+        postsElement: HTMLElement;
+        statusElements: HTMLElement[];
+        imageExpansion: ImageExpansion;
 
-        xhr:XMLHttpRequest = null;
+        xhr: XMLHttpRequest = null;
         error = false;
-        posts:any[] = [];
+        posts: any[] = [];
 
         timeoutId = -1;
         statusTimeoutId = -1;
         currentDelay = 0;
         targetTime = 0;
 
-        documentTitle:string;
+        documentTitle: string;
         totalNewPosts = 0;
 
         constructor(boardName, threadRefno, postsElement, statusElements, imageExpansion) {
@@ -40,7 +40,7 @@ namespace uchan {
             this.updateStatus();
         }
 
-        updateTimerState(delay:number) {
+        updateTimerState(delay: number) {
             if (this.timeoutId >= 0) {
                 clearTimeout(this.timeoutId);
             }
@@ -70,7 +70,7 @@ namespace uchan {
             }
         }
 
-        resetTimer(newPosts:number) {
+        resetTimer(newPosts: number) {
             this.totalNewPosts += newPosts;
             var delay;
             if (newPosts == 0) {
@@ -89,7 +89,7 @@ namespace uchan {
             this.updateTimerState(delay * 1000);
         }
 
-        pageVisibilityChanged(visible:boolean) {
+        pageVisibilityChanged(visible: boolean) {
             if (visible) {
                 this.updateStatus();
             }
@@ -99,14 +99,14 @@ namespace uchan {
             this.forceUpdate()
         }
 
-        addUpdateListener(element:Element) {
-            element.addEventListener('click', (event:Event) => {
+        addUpdateListener(element: Element) {
+            element.addEventListener('click', (event: Event) => {
                 event.preventDefault();
                 this.forceUpdate();
             });
         }
 
-        onScroll(event:Event) {
+        onScroll(event: Event) {
             if (window.innerHeight + window.pageYOffset + 1 > document.documentElement.scrollHeight) {
                 this.totalNewPosts = 0;
                 this.updateStatus();
@@ -149,7 +149,7 @@ namespace uchan {
             }
         }
 
-        xhrDone(error:Error, data:any) {
+        xhrDone(error: Error, data: any) {
             if (error) {
                 console.error('watcher error', error);
                 this.error = true;
@@ -185,14 +185,14 @@ namespace uchan {
             this.updateStatus();
         }
 
-        buildPostElement(postData:any) {
+        buildPostElement(postData: any) {
             var postDiv = document.createElement('div');
             postDiv.className = 'post';
             postDiv.id = 'p#' + postData.refno;
 
             var postHtml = '<div class="header">';
 
-            var file = postData.file;
+            let files = postData.files || [];
 
             if (postData.subject) {
                 postHtml += '<span class="subject">' + escape(postData.subject) + '</span><br>';
@@ -208,9 +208,17 @@ namespace uchan {
             postHtml += '<span class="date">' + this.getPostDateText(postData.date) + '</span> ' +
                 '<span class="manage"><input type="checkbox" name="post_id" value="' + postData.id + '"></span>';
 
-            if (file) {
-                postHtml += '<br>File: <a href="' + escape(file.location) + '">' + escape(file.name) + '</a> ';
+            for (let i = 0; i < files.length; i++) {
+                if (i == 0) {
+                    postHtml += '<br>';
+                }
+
+                let file = files[i];
+                postHtml += 'File: <a href="' + escape(file.location) + '">' + escape(file.name) + '</a> ';
                 postHtml += '(' + this.getPostFileSizeText(file.size) + ', ' + file.width + 'x' + file.height + ')';
+                if (i < files.length - 1) {
+                    postHtml += '<br>';
+                }
             }
 
             postHtml += '</div>\n';
@@ -219,25 +227,29 @@ namespace uchan {
                 postHtml += '<div class="styled-text">' + postData.html + '</div>';
             }
 
-            if (file) {
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i];
                 postHtml += '<div class="file">';
                 postHtml += '<a class="file-link" href="' + escape(file.location) + '" data-filewidth="' + file.width + '" data-fileheight="' + file.height + '" data-filename="' + escape(file.name) + '" data-filesize="' + file.size + '">';
                 postHtml += '<img src="' + escape(file.thumbnailLocation) + '" width="' + file.thumbnailWidth + '" height="' + file.thumbnailHeight + '">';
                 postHtml += '</a>';
-                postHtml += '</div>';
+                postHtml += '</div> ';
             }
 
             postDiv.innerHTML = postHtml;
 
             this.bindRefno(postDiv.querySelector('a.refno'));
-            if (file) {
-                this.imageExpansion.bindImage(<HTMLElement>postDiv.querySelector('.file'));
+            if (files.length > 0) {
+                let fileElements = <NodeListOf<HTMLElement>>postDiv.querySelectorAll('.file');
+                for (let i = 0; i < fileElements.length; i++) {
+                    this.imageExpansion.bindImage(fileElements[i]);
+                }
             }
 
             return postDiv;
         }
 
-        getPostNameHtml(name:string) {
+        getPostNameHtml(name: string) {
             var html = escape(name);
             var i = html.indexOf('!');
             if (i >= 0) {
@@ -246,7 +258,7 @@ namespace uchan {
             return html;
         }
 
-        getPostFileSizeText(bytes:number) {
+        getPostFileSizeText(bytes: number) {
             var prefixes = ['kB', 'MB', 'GB', 'TB'];
             if (bytes == 1) {
                 return '1 Byte'
@@ -262,7 +274,7 @@ namespace uchan {
             }
         }
 
-        getPostDateText(postDate:number) {
+        getPostDateText(postDate: number) {
             var date = new Date(postDate);
 
             // %Y-%m-%d %H:%M:%S
@@ -271,7 +283,7 @@ namespace uchan {
             return output;
         }
 
-        bindPosts(posts:NodeListOf<HTMLElement>) {
+        bindPosts(posts: NodeListOf<HTMLElement>) {
             for (var i = 0; i < posts.length; i++) {
                 var postElement = posts[i];
 

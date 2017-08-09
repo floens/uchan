@@ -1,7 +1,6 @@
 from typing import Tuple
 
 from flask import request, abort, redirect, url_for, render_template, jsonify
-from markupsafe import Markup
 
 from uchan import app, configuration
 from uchan.filter.app_filters import time_remaining, page_formatting
@@ -16,7 +15,7 @@ from uchan.lib.service import file_service, posts_service, verification_service,
 from uchan.lib.tasks.post_task import PostDetails, ManagePostDetails, execute_post_task, \
     execute_manage_post_task
 from uchan.lib.utils import now, valid_id_range
-from uchan.view import check_csrf_referer, render_error
+from uchan.view import check_csrf_referer
 
 MESSAGE_POSTING_DISABLED = 'Posting is disabled'
 MESSAGE_FILE_POSTING_DISABLED = 'File posting is disabled'
@@ -36,11 +35,11 @@ def post():
     if r:
         return r
 
-    upload_queue_files = None
+    upload_queue_files_list = None
     try:
         # If a image was uploaded validate it and save it to the upload queue
-        if post_details.has_file:
-            upload_queue_files = _queue_file(post_details)
+        if post_details.has_files:
+            upload_queue_files_list = _queue_files(post_details)
 
         # Queue the post task that inserts the details in the database
         try:
@@ -49,12 +48,12 @@ def post():
             raise _convert_exception(e)
 
         # If that was successful, upload the file to the cdn from the upload queue
-        if post_details.has_file:
-            _upload_files(upload_queue_files)
+        if post_details.has_files:
+            _upload_files(upload_queue_files_list)
     finally:
         # Clean up the files in the upload queue, if there was an error too
-        if upload_queue_files:
-            _clean_files(upload_queue_files)
+        if upload_queue_files_list:
+            _clean_files(upload_queue_files_list)
 
     return _create_post_response(post_result)
 
@@ -81,8 +80,11 @@ def _check_post_settings(board: BoardModel, post_details):
     if not site_config.posting_enabled:
         raise BadRequestError(MESSAGE_POSTING_DISABLED)
 
-    if post_details.has_file and not site_config.file_posting:
+    if post_details.has_files and not site_config.file_posting:
         raise BadRequestError(MESSAGE_FILE_POSTING_DISABLED)
+
+    if post_details.has_files and len(_get_files_from_request()) > board.config.max_files:
+        raise BadRequestError('No more than {} files are allowed.'.format(board.config.max_files))
 
     if board.config.posting_verification_required and not verification_service.is_verified(request):
         method = verification_service.get_method()
@@ -144,8 +146,8 @@ def _gather_post_params() -> Tuple[BoardModel, PostDetails]:
     if not password:
         password = None
 
-    file = request.files.get('file', None)
-    has_file = file is not None and file.filename is not None and len(file.filename) > 0
+    files = _get_files_from_request()
+    has_files = len(files) > 0
 
     ip4 = get_request_ip4()
 
@@ -156,7 +158,7 @@ def _gather_post_params() -> Tuple[BoardModel, PostDetails]:
         if moderator is not None:
             mod_id = moderator.id
 
-    return board, PostDetails(form, board_name, thread_refno, text, name, subject, password, has_file,
+    return board, PostDetails(form, board_name, thread_refno, text, name, subject, password, has_files,
                               ip4, mod_id, None)
 
 
@@ -175,24 +177,45 @@ def _create_post_response(post_result):
         return redirect(url_for_post(post_result.board_name, post_result.thread_refno, post_result.post_refno))
 
 
-def _queue_file(post_details):
-    file = request.files['file']
+def _queue_files(post_details):
+    files = _get_files_from_request()
+
     start_time = now()
     thumbnail_size = configuration.app.thumbnail_reply if post_details.thread_refno else configuration.app.thumbnail_op
-    try:
-        post_details.uploaded_file, upload_queue_files = file_service.prepare_upload(file, thumbnail_size)
-    except ArgumentError as e:
-        raise BadRequestError(e.message)
+
+    uploaded_files = []
+    upload_queue_files_list = []
+
+    for file in files:
+        try:
+            uploaded_file, upload_queue_files = file_service.prepare_upload(file, thumbnail_size)
+            uploaded_files.append(uploaded_file)
+            upload_queue_files_list.append(upload_queue_files)
+        except ArgumentError as e:
+            raise BadRequestError(e.message)
+
+    post_details.uploaded_files = uploaded_files
     post_details.file_time = now() - start_time
-    return upload_queue_files
+
+    return upload_queue_files_list
 
 
-def _upload_files(upload_queue_files):
-    file_service.do_upload(upload_queue_files)
+def _get_files_from_request():
+    files = []
+    for rec_file in request.files.getlist('file'):
+        if rec_file is not None and rec_file.filename is not None and len(rec_file.filename) > 0:
+            files.append(rec_file)
+    return files
 
 
-def _clean_files(upload_queue_files):
-    file_service.clean_up_queue(upload_queue_files)
+def _upload_files(upload_queue_files_list):
+    for upload_queue_files in upload_queue_files_list:
+        file_service.do_upload(upload_queue_files)
+
+
+def _clean_files(upload_queue_files_list):
+    for upload_queue_files in upload_queue_files_list:
+        file_service.clean_up_queue(upload_queue_files)
 
 
 @app.route('/post_manage', methods=['POST'])

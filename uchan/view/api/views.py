@@ -88,18 +88,21 @@ def build_post_object(post: PostModel):
     if post.mod_code:
         post_obj['modCode'] = post.mod_code
 
-    if post.file:
-        file_obj = {
-            'location': file_service.resolve_to_uri(post.file.location),
-            'thumbnailLocation': file_service.resolve_to_uri(post.file.thumbnail_location),
-            'name': post.file.original_name,
-            'width': post.file.width,
-            'height': post.file.height,
-            'size': post.file.size,
-            'thumbnailWidth': post.file.thumbnail_width,
-            'thumbnailHeight': post.file.thumbnail_height
-        }
+    if post.files:
+        files_obj = []
+        for file in post.files:
+            file_obj = {
+                'location': file_service.resolve_to_uri(file.location),
+                'thumbnailLocation': file_service.resolve_to_uri(file.thumbnail_location),
+                'name': file.original_name,
+                'width': file.width,
+                'height': file.height,
+                'size': file.size,
+                'thumbnailWidth': file.thumbnail_width,
+                'thumbnailHeight': file.thumbnail_height
+            }
+            files_obj.append(file_obj)
 
-        post_obj['file'] = file_obj
+        post_obj['files'] = files_obj
 
     return post_obj

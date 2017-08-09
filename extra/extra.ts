@@ -10,6 +10,7 @@ module uchan {
         boardName: null as string,
         postEndpoint: null as string,
         filePostingEnabled: false,
+        fileMax: null as number,
         threadRefno: null as number,
         locked: false,
         sticky: false,
@@ -79,6 +80,7 @@ module uchan {
             context.boardName = pageDetails.boardName;
             context.postEndpoint = pageDetails.postEndpoint;
             context.filePostingEnabled = pageDetails.filePostingEnabled || false;
+            context.fileMax = pageDetails.fileMax || null;
             context.threadRefno = pageDetails.threadRefno || null;
             context.locked = pageDetails.locked || false;
             context.sticky = pageDetails.sticky || false;

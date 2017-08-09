@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import Column, String, LargeBinary, ForeignKey, Integer, BigInteger, Boolean
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -111,7 +113,7 @@ class PostOrmModel(OrmModelBase):
 
     report = relationship('ReportOrmModel', backref='post', cascade='all, delete-orphan')
 
-    file = relationship('FileOrmModel', backref='post', uselist=False, lazy='joined', cascade='all, delete-orphan')
+    files = relationship('FileOrmModel', backref='post', lazy='joined', cascade='all, delete-orphan')
 
     date = Column(BigInteger(), nullable=False, index=True)
     name = Column(String())

@@ -66,7 +66,7 @@ blockquote {
     line-height: 1.4em;
 }
 
-.content {
+.base-content {
     padding: 20px;
 }
 
@@ -126,6 +126,12 @@ blockquote {
 
 .post.snippet {
     margin-left: 50px;
+}
+
+@media (max-width: 425px) {
+    .post.snippet {
+        margin-left: 20px;
+    }
 }
 
 .post.divider {
@@ -198,6 +204,11 @@ blockquote {
     color: #5a5a5a;
 }
 
+.post .file {
+    display: inline-block;
+    vertical-align: top;
+}
+
 .post .file-link img {
     margin: 15px 0 0 0;
 }
@@ -268,11 +279,4 @@ blockquote {
 }
 
 .page {
-
-}
-
-@media (max-width: 425px) {
-    .post.snippet {
-        margin-left: 20px;
-    }
 }
