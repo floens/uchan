@@ -51,9 +51,10 @@
         }
     };
 
-    bindRefnos();
-
-    highlightHash();
+    if (window.pageDetails['mode'] === 'thread') {
+        bindRefnos();
+        highlightHash();
+    }
 
     if (window.pageDetails['filePostingEnabled']) {
         listenToFileCount();
