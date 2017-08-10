@@ -12,6 +12,8 @@ In addition to the basic features, µchan supports creating boards by everyone, 
 
 Any questions or issues can be asked on #uchan @ rizon or by creating an issue here on GitHub.
 
+We also have a Slack, send an email to [me](https://github.com/Floens) (email listed in bio) for an invite.
+
 
 ## Who is µchan for?
 You can use µchan to set up your own message board.
