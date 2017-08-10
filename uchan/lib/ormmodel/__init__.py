@@ -1,5 +1,3 @@
-from typing import List
-
 from sqlalchemy import Column, String, LargeBinary, ForeignKey, Integer, BigInteger, Boolean
 from sqlalchemy.dialects.postgresql import ARRAY, JSON
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -229,3 +227,11 @@ class ModeratorLogOrmModel(OrmModelBase):
 
     type = Column(Integer(), nullable=False, index=True)
     text = Column(String(), nullable=False)
+
+
+class RegCodeOrmModel(OrmModelBase):
+    __tablename__ = 'regcode'
+
+    id = Column(Integer(), primary_key=True)
+    password = Column(LargeBinary(), nullable=False, index=True)
+    code = Column(String(), nullable=False)

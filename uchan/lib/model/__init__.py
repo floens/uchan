@@ -3,7 +3,8 @@ from typing import List
 
 from uchan.filter.text_parser import parse_text, parse_moderator_code
 from uchan.lib.ormmodel import ModeratorOrmModel, BoardOrmModel, ThreadOrmModel, BoardModeratorOrmModel, ConfigOrmModel, \
-    PageOrmModel, ModeratorLogOrmModel, PostOrmModel, FileOrmModel, BanOrmModel, ReportOrmModel, VerificationOrmModel
+    PageOrmModel, ModeratorLogOrmModel, PostOrmModel, FileOrmModel, BanOrmModel, ReportOrmModel, VerificationOrmModel, \
+    RegCodeOrmModel
 
 """
 Plain models that don't have a connection to the database models or view models.
@@ -1011,6 +1012,31 @@ class PostResultModel:
         m.thread_refno = thread_refno
         m.post_refno = post_refno
         return m
+
+
+class RegCodeModel:
+    def __init__(self):
+        self.password: bytes = None
+        self.code: str = None
+
+    @classmethod
+    def from_code(cls, code: str):
+        m = cls()
+        m.code = code
+        return m
+
+    @classmethod
+    def from_orm_model(cls, model: RegCodeOrmModel):
+        m = cls()
+        m.password = model.password
+        m.code = model.code
+        return m
+
+    def to_orm_model(self):
+        orm_model = RegCodeOrmModel()
+        orm_model.password = self.password
+        orm_model.code = self.code
+        return orm_model
 
 
 @unique

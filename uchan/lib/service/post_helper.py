@@ -1,10 +1,13 @@
+import random
+import string
+
 from uchan.lib import action_authorizer, plugin_manager
 from uchan.lib.action_authorizer import PostAction
 from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
-from uchan.lib.model import BoardModel, ThreadModel, PostModel, PostResultModel, FileModel
-from uchan.lib.repository import posts
+from uchan.lib.model import BoardModel, ThreadModel, PostModel, PostResultModel, FileModel, RegCodeModel
+from uchan.lib.repository import posts, regcode
 from uchan.lib.service import board_service, moderator_service, site_service
 from uchan.lib.tasks.post_task import PostDetails
 from uchan.lib.utils import now, ip4_to_str
@@ -170,21 +173,70 @@ def _handle_subject(post, post_details, to_thread):
 
 def _handle_name(post, post_details, default_name):
     sage = False
-    post.name = default_name
+    result_name = None
+
     if post_details.name is not None:
         stripped_name = post_details.name.strip()
         if stripped_name:
-            if '#' in post_details.name:
-                raw_name, password = stripped_name.split('#', maxsplit=1)
-                raw_name = raw_name.replace('!', '')
-                if raw_name is not None and password:
-                    # Styling is applied later
-                    post.name = raw_name + ' !' + generate_crypt_code(password)
-            elif stripped_name.lower() == 'sage' or stripped_name == '下げ':
-                sage = True
-                post.name = default_name
-            else:
-                name = stripped_name.replace('!', '')
-                if name:
-                    post.name = name
+            sage, result_name = _process_name(stripped_name)
+
+    if result_name:
+        post.name = result_name
+    else:
+        post.name = default_name
+
     return sage
+
+
+def _process_name(name):
+    sage = False
+    result_name = None
+
+    if '##' in name:
+        name, password = _name_password_from_name(name, '##')
+        name = _filter_name(name)
+
+        if password:
+            existing_regcode = regcode.find_for_password(password)
+            if existing_regcode:
+                cap = existing_regcode.code
+            else:
+                new_regcode = RegCodeModel.from_code(_generate_capcode())
+                new_regcode = regcode.create(new_regcode, password)
+                cap = new_regcode.code
+
+            result_name = name + ' !!' + cap
+    elif '#' in name:
+        name, password = _name_password_from_name(name, '#')
+        name = _filter_name(name)
+
+        if password:
+            # Styling is applied later
+            cap = generate_crypt_code(password)
+            result_name = name + ' !' + cap
+    elif name.lower() == 'sage' or name == '下げ':
+        sage = True
+    else:
+        name = _filter_name(name)
+        if name:
+            result_name = name
+
+    return sage, result_name
+
+
+def _name_password_from_name(name, divider):
+    name, password = name.split(divider, maxsplit=1)
+    return name, password
+
+
+def _filter_name(name):
+    return name.replace('!', '')
+
+
+def _generate_capcode():
+    sys_random = random.SystemRandom()
+
+    length = 10
+    alphabet = string.ascii_letters + string.digits + '+.'
+
+    return ''.join(sys_random.choice(alphabet) for _ in range(length))
