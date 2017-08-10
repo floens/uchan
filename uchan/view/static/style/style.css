@@ -233,8 +233,9 @@ blockquote {
     background: #dae2ee;
 }
 
-.catalog-post {
-
+.catalog-post .text-container {
+    max-height: 300px;
+    overflow: hidden;
 }
 
 .catalog-post .date {
@@ -258,8 +259,6 @@ blockquote {
 }
 
 .catalog-post .styled-text {
-    overflow: hidden;
-    max-height: 150px;
     margin: 0 0 0.7em 0;
 }
 
