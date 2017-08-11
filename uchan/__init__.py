@@ -116,11 +116,11 @@ def _setup_assets(app):
         css_mod = Bundle('mod/style/mod_style.css', output='mod_style.css')
     else:
         assets.auto_build = False
-        js_thread = Bundle('js/thread.js', filters='jsmin', output='thread.min.js')
-        js_extra = Bundle('js/extra.js', filters='jsmin', output='extra.min.js')
-        css = Bundle('style/style.css', filters='cleancss', output='style.min.css')
-        css_extra = Bundle('style/extra.css', filters='cleancss', output='extra.min.css')
-        css_mod = Bundle('mod/style/mod_style.css', filters='cleancss', output='mod_style.min.css')
+        js_thread = Bundle('js/thread.js', filters='jsmin', output='thread.%(version)s.js')
+        js_extra = Bundle('js/extra.js', filters='jsmin', output='extra.%(version)s.js')
+        css = Bundle('style/style.css', filters='cleancss', output='style.%(version)s.css')
+        css_extra = Bundle('style/extra.css', filters='cleancss', output='extra.%(version)s.css')
+        css_mod = Bundle('mod/style/mod_style.css', filters='cleancss', output='mod_style.%(version)s.css')
 
     assets.register('js_thread', js_thread)
     assets.register('js_extra', js_extra)
