@@ -5,7 +5,7 @@ services:
     build: .
     command: assets
     volumes:
-      - assets:/opt/app/uchan/assets
+      - assets:/opt/app/assets
 
   app:
     build: .
@@ -20,7 +20,7 @@ services:
       - ./data/log:/opt/app/data/log
 
       # We require the compiled assets to know what urls to generate.
-      - assets:/opt/app/uchan/assets
+      - assets:/opt/app/assets
     command: app
   worker:
     build: .
