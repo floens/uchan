@@ -57,29 +57,7 @@ def init():
 
     database.register_teardown(app)
 
-    assets = Environment(app)
-
-    if configuration.app.debug:
-        assets.url_expire = False
-        js_thread = Bundle('js/thread.js', output='js/thread.debug.js')
-        js_extra = Bundle('js/extra.js', output='js/extra.debug.js')
-        css = Bundle('style/style.css', output='style/style.debug.css')
-        css_extra = Bundle('style/extra.css', output='style/extra.debug.css')
-        css_mod = Bundle('mod/style/mod_style.css', output='mod/style/mod_style.debug.css')
-    else:
-        assets.auto_build = False
-        assets.manifest = 'json'
-        js_thread = Bundle('js/thread.js', filters='jsmin', output='js/thread.min.js')
-        js_extra = Bundle('js/extra.js', filters='jsmin', output='js/extra.min.js')
-        css = Bundle('style/style.css', filters='cleancss', output='style/style.min.css')
-        css_extra = Bundle('style/extra.css', filters='cleancss', output='style/extra.min.css')
-        css_mod = Bundle('mod/style/mod_style.css', filters='cleancss', output='mod/style/mod_style.min.css')
-
-    assets.register('js_thread', js_thread)
-    assets.register('js_extra', js_extra)
-    assets.register('css', css)
-    assets.register('css_mod', css_mod)
-    assets.register('css_extra', css_extra)
+    _setup_assets(app)
 
     from uchan.lib.cache import cache
 
@@ -121,6 +99,34 @@ def init():
     plugin_manager.load_plugins(plugins, config_parser)
 
     # database.metadata_create_all()
+
+
+def _setup_assets(app):
+    assets = Environment(app)
+    assets.directory = './assets/'
+    assets.url = '/assets'
+    assets.manifest = 'json'
+
+    if configuration.app.debug:
+        assets.url_expire = False
+        js_thread = Bundle('js/thread.js', output='thread.js')
+        js_extra = Bundle('js/extra.js', output='extra.js')
+        css = Bundle('style/style.css', output='style.css')
+        css_extra = Bundle('style/extra.css', output='extra.css')
+        css_mod = Bundle('mod/style/mod_style.css', output='mod_style.css')
+    else:
+        assets.auto_build = False
+        js_thread = Bundle('js/thread.js', filters='jsmin', output='thread.min.js')
+        js_extra = Bundle('js/extra.js', filters='jsmin', output='extra.min.js')
+        css = Bundle('style/style.css', filters='cleancss', output='style.min.css')
+        css_extra = Bundle('style/extra.css', filters='cleancss', output='extra.min.css')
+        css_mod = Bundle('mod/style/mod_style.css', filters='cleancss', output='mod_style.min.css')
+
+    assets.register('js_thread', js_thread)
+    assets.register('js_extra', js_extra)
+    assets.register('css', css)
+    assets.register('css_mod', css_mod)
+    assets.register('css_extra', css_extra)
 
 
 def setup_logging():

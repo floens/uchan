@@ -6,7 +6,7 @@ FROM alpine:3.6
 RUN apk update &&\
     apk add python3-dev \
             uwsgi uwsgi-python3 \
-            build-base \
+            build-base bash \
             libffi-dev \
             libjpeg-turbo-dev \
             zlib-dev \

@@ -5,8 +5,7 @@ services:
     build: .
     command: assets
     volumes:
-      - app-static:/opt/app/uchan/view/static
-      - mod-static:/opt/app/uchan/view/mod/static
+      - assets:/opt/app/uchan/assets
 
   app:
     build: .
@@ -21,8 +20,7 @@ services:
       - ./data/log:/opt/app/data/log
 
       # We require the compiled assets to know what urls to generate.
-      - app-static:/opt/app/uchan/view/static
-      - mod-static:/opt/app/uchan/view/mod/static
+      - assets:/opt/app/uchan/assets
     command: app
   worker:
     build: .
@@ -40,8 +38,7 @@ services:
       - ./data/media:/opt/app/data/media:ro
 
       # We always give the static assets from nginx
-      - app-static:/opt/appstatic
-      - mod-static:/opt/modstatic
+      - assets:/opt/appassets
     depends_on:
       - app
       - assets
@@ -73,5 +70,4 @@ services:
     image: rabbitmq:alpine
 
 volumes:
-  app-static:
-  mod-static:
+  assets:
