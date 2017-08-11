@@ -1,6 +1,7 @@
 import time
 
 from markupsafe import Markup, escape
+
 from uchan import app
 from uchan.filter.text_parser import parse_text
 from uchan.lib.utils import now
@@ -80,11 +81,6 @@ def keep_newlines(raw):
 @app.template_filter()
 def page_formatting(text):
     return parse_text(text, linkify=True, bigheaders=True)
-
-
-@app.template_filter()
-def post_text(text):
-    return parse_text(text)
 
 
 @app.template_filter()
