@@ -5,7 +5,6 @@ USERNAME_MAX_LENGTH = 50
 USERNAME_ALLOWED_CHARS = string.ascii_letters + string.digits + '_'
 PASSWORD_MIN_LENGTH = 6
 PASSWORD_MAX_LENGTH = 255
-PASSWORD_ALLOWED_CHARS = string.ascii_letters + string.digits + string.punctuation + '_'
 
 
 def check_username_validity(username):
@@ -20,9 +19,6 @@ def check_username_validity(username):
 
 def check_password_validity(password):
     if password is None or len(password) < PASSWORD_MIN_LENGTH or len(password) >= PASSWORD_MAX_LENGTH:
-        return False
-
-    if not all(c in PASSWORD_ALLOWED_CHARS for c in password):
         return False
 
     return True
