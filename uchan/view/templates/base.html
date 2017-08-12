@@ -17,43 +17,45 @@
 </head>
 <body>
 
-<div class="top-bar link-list">
-    [<a href="{{ url_for('index') }}">index</a>]
-    {% if all_board_names %}
-    [
-    {%- for name in all_board_names -%}
-        <a href="{{ url_for('board', board_name=name) }}">{{ name }}</a>{% if not loop.last %} / {% endif %}
-    {%- endfor -%}
-    ]
-    {% endif %}
-
-    <div class="top-bar-right link-list-right">
-        {%- for header_link in header_links -%}
-            [<a href="{{ header_link[1] }}">{{ header_link[0] }}</a>]
+<div class="top-bar">
+    <div class="link-list">
+        [<a href="{{ url_for('index') }}">index</a>]
+        {% if all_board_names %}
+        [
+        {%- for name in all_board_names -%}
+            <a href="{{ url_for('board', board_name=name) }}">{{ name }}</a>{% if not loop.last %} / {% endif %}
         {%- endfor -%}
+        ]
+        {% endif %}
+
+        <div class="top-bar-right link-list-right">
+            {%- for header_link in header_links -%}
+                [<a href="{{ header_link[1] }}">{{ header_link[0] }}</a>]
+            {%- endfor -%}
+        </div>
     </div>
 </div>
 
-{% block top_content %}{% endblock %}
+<div class="top-content">
+    {% block top_content %}{% endblock %}
 
-<div class="base-content">
-    {% with messages = get_flashed_messages() %}
-        {{ messages_widget.render(messages) }}
-    {% endwith %}
+    <div class="base-content">
+        {% with messages = get_flashed_messages() %}
+            {{ messages_widget.render(messages) }}
+        {% endwith %}
 
-    {% block content %}{% endblock %}
+        {% block content %}{% endblock %}
 
-    <div class="footer">
-        <div class="footer-pages">
-            {% for footer_page in footer_pages %}
-                <a href="{{ url_for('view_page', link_name=footer_page.link_name) }}">{{ footer_page.title }}</a>
-                {% if not loop.last %}
-                    &bull;
-                {% endif %}
-            {% endfor %}
+        <div class="footer">
+            <div class="footer-pages">
+                {% for footer_page in footer_pages %}
+                    <a href="{{ url_for('view_page', link_name=footer_page.link_name) }}">{{ footer_page.title }}</a>
+                    {% if not loop.last %}&bull;{% endif %}
+                {% endfor %}
+            </div>
+            <br>
+            {{ site_config.footer_text|page_formatting }}
         </div>
-        <br>
-        {{ site_config.footer_text|page_formatting }}
     </div>
 </div>
 
