@@ -14,6 +14,7 @@
 }
 
 .mod-tabs {
+    width: calc(100% - 40px);
     margin: 10px 20px 0 20px;
     border-bottom: 1px solid #B1B1B1;
 }
@@ -26,7 +27,7 @@
     text-decoration: none;
     padding: 8px 12px 8px 12px;
     border: 1px solid transparent;
-    /*margin-right: -4px;*/
+    margin-right: -4px;
     color: #666;
     line-height: calc(1em + 2px + 8px * 2);
 }
