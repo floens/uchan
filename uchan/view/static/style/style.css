@@ -39,6 +39,7 @@ blockquote {
 }
 
 .top-bar {
+    z-index: 1;
     position: fixed;
     width: 100%;
     background: #EBF3FF;
