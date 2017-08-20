@@ -1,7 +1,7 @@
 from flask import render_template, abort, request, flash, redirect, url_for
 from markupsafe import Markup
 from wtforms import StringField, IntegerField, SubmitField, TextAreaField
-from wtforms.validators import NumberRange, DataRequired, IPAddress, Optional, Length
+from wtforms.validators import NumberRange, DataRequired, IPAddress, Optional, Length, InputRequired
 
 from uchan.filter.app_filters import formatted_time, time_remaining
 from uchan.lib import roles
@@ -34,7 +34,7 @@ class BanForm(CSRFForm):
                         description='If specified then the ban will be restricted to the given board, '
                                     'otherwise the ban is for all boards.',
                         render_kw={'placeholder': 'a'})
-    duration = IntegerField('Ban duration', [DataRequired(), NumberRange(min=0, max=None)], default=24,
+    duration = IntegerField('Ban duration', [InputRequired(), NumberRange(min=0, max=None)], default=24,
                             description='Ban duration in hours. Use 0 for a permanent ban.',
                             render_kw={'placeholder': '24'})
     reason = TextAreaField('Ban reason', [Length(max=ban_service.MAX_REASON_LENGTH)],
