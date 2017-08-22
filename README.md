@@ -1,5 +1,8 @@
 # µchan - anonymous imageboard software
 
+[![slack](https://slack.plebco.de/badge.svg)](https://slack.plebco.de/)
+[![irc](https://img.shields.io/badge/rizon-%23uchan-blue.svg)](https://qchat.rizon.net/?url=irc:///#uchan)
+
 [*Demo site*](https://uchan.plebco.de/)
 
 µchan is a modern take on internet messaging board software, also known as a *BBS*, *textboard* or *imageboard*.
@@ -11,8 +14,6 @@ In addition to the basic features, µchan supports creating boards by everyone, 
 µchan is super light-weight. It supports users that have JavaScript disabled. You can even browse it with the original Nintento DS!
 
 Any questions or issues can be asked on #uchan @ rizon or by creating an issue here on GitHub.
-
-We also have a Slack, send an email to [me](https://github.com/Floens) (email listed in bio) for an invite.
 
 
 ## Who is µchan for?
