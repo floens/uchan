@@ -72,7 +72,7 @@ namespace uchan {
 
         resetTimer(newPosts: number) {
             this.totalNewPosts += newPosts;
-            var delay;
+            let delay;
             if (newPosts == 0) {
                 delay = this.delays[this.currentDelay];
                 if (this.currentDelay < this.delays.length - 1) {
@@ -114,9 +114,9 @@ namespace uchan {
         }
 
         updateStatus() {
-            var invalidate = false;
+            let invalidate = false;
 
-            var status = '';
+            let status = '';
             if (this.error) {
                 status = 'Error';
             } else if (this.xhr != null) {
@@ -127,7 +127,7 @@ namespace uchan {
                 status = Math.ceil((this.targetTime - Date.now()) / 1000).toString();
                 invalidate = true;
             }
-            for (var i = 0; i < this.statusElements.length; i++) {
+            for (let i = 0; i < this.statusElements.length; i++) {
                 this.statusElements[i].textContent = status;
             }
 
@@ -155,15 +155,15 @@ namespace uchan {
                 this.error = true;
             } else {
                 this.error = false;
-                var previousLength = this.posts.length;
-                var thread = data.thread;
-                var remotePosts = thread.posts;
-                for (var i = 0; i < remotePosts.length; i++) {
-                    var remotePost = remotePosts[i];
+                let previousLength = this.posts.length;
+                let thread = data.thread;
+                let remotePosts = thread.posts;
+                for (let i = 0; i < remotePosts.length; i++) {
+                    let remotePost = remotePosts[i];
 
-                    var has = false;
-                    for (var j = 0; j < this.posts.length; j++) {
-                        var post = this.posts[j];
+                    let has = false;
+                    for (let j = 0; j < this.posts.length; j++) {
+                        let post = this.posts[j];
                         if (post.id == remotePost.id) {
                             has = true;
                             break;
@@ -172,7 +172,7 @@ namespace uchan {
 
                     if (!has) {
                         this.posts.push(remotePost);
-                        var postElement = this.buildPostElement(remotePost);
+                        let postElement = this.buildPostElement(remotePost);
                         this.postsElement.lastElementChild.classList.add('divider');
                         this.postsElement.appendChild(postElement);
                     }
@@ -186,11 +186,11 @@ namespace uchan {
         }
 
         buildPostElement(postData: any) {
-            var postDiv = document.createElement('div');
+            let postDiv = document.createElement('div');
             postDiv.className = 'post';
             postDiv.id = 'p#' + postData.refno;
 
-            var postHtml = '<div class="header">';
+            let postHtml = '<div class="header">';
 
             let files = postData.files || [];
 
@@ -250,8 +250,8 @@ namespace uchan {
         }
 
         getPostNameHtml(name: string) {
-            var html = escape(name);
-            var i = html.indexOf('!');
+            let html = escape(name);
+            let i = html.indexOf('!');
             if (i >= 0) {
                 html = html.substring(0, i) + '<span class="trip">!' + html.substring(i + 1) + '</span>';
             }
@@ -259,14 +259,14 @@ namespace uchan {
         }
 
         getPostFileSizeText(bytes: number) {
-            var prefixes = ['kB', 'MB', 'GB', 'TB'];
+            let prefixes = ['kB', 'MB', 'GB', 'TB'];
             if (bytes == 1) {
                 return '1 Byte'
             } else if (bytes < 1000) {
                 return bytes + ' Bytes';
             } else {
-                for (var i = 0; i < prefixes.length; i++) {
-                    var unit = Math.pow(1000, i + 2);
+                for (let i = 0; i < prefixes.length; i++) {
+                    let unit = Math.pow(1000, i + 2);
                     if (bytes < unit) {
                         return round((1000 * bytes / unit), 1) + ' ' + prefixes[i];
                     }
@@ -275,19 +275,19 @@ namespace uchan {
         }
 
         getPostDateText(postDate: number) {
-            var date = new Date(postDate);
+            let date = new Date(postDate);
 
             // %Y-%m-%d %H:%M:%S
-            var output = date.getUTCFullYear() + '-' + lpad(date.getUTCMonth() + 1, 2, '0') + '-' + lpad(date.getUTCDate(), 2, '0') + ' ';
+            let output = date.getUTCFullYear() + '-' + lpad(date.getUTCMonth() + 1, 2, '0') + '-' + lpad(date.getUTCDate(), 2, '0') + ' ';
             output += lpad(date.getUTCHours(), 2, '0') + ':' + lpad(date.getUTCMinutes(), 2, '0') + ':' + lpad(date.getUTCSeconds(), 2, '0');
             return output;
         }
 
         bindPosts(posts: NodeListOf<HTMLElement>) {
-            for (var i = 0; i < posts.length; i++) {
-                var postElement = posts[i];
+            for (let i = 0; i < posts.length; i++) {
+                let postElement = posts[i];
 
-                var postObj = {
+                let postObj = {
                     id: 0,
                     refno: 0,
                     date: 0,
@@ -298,43 +298,43 @@ namespace uchan {
                     file: null
                 };
 
-                var checkbox = <HTMLInputElement>postElement.querySelector('input[type="checkbox"]');
+                let checkbox = <HTMLInputElement>postElement.querySelector('input[type="checkbox"]');
                 postObj.id = parseInt(checkbox.value);
                 postObj.refno = parseInt(postElement.id.substr(1));
                 postObj.date = parseInt(postElement.dataset['date']);
 
-                var textElement = postElement.querySelector('.styled-text');
+                let textElement = postElement.querySelector('.styled-text');
                 if (textElement) {
-                    var textHtml = textElement.innerHTML.trim();
+                    let textHtml = textElement.innerHTML.trim();
                     if (textHtml) {
                         postObj.html = textHtml;
                     }
                 }
 
-                var nameText = postElement.querySelector('.header .name').textContent.trim();
+                let nameText = postElement.querySelector('.header .name').textContent.trim();
                 if (nameText) {
                     postObj.name = nameText;
                 }
 
-                var modCodeElement = postElement.querySelector('.header .modcode');
+                let modCodeElement = postElement.querySelector('.header .modcode');
                 if (modCodeElement) {
-                    var modCodeText = modCodeElement.textContent;
+                    let modCodeText = modCodeElement.textContent;
                     if (modCodeText) {
                         postObj.modCode = modCodeText;
                     }
                 }
 
-                var subjectElement = postElement.querySelector('.header .subject');
+                let subjectElement = postElement.querySelector('.header .subject');
                 if (subjectElement) {
-                    var subjectText = subjectElement.textContent.trim();
+                    let subjectText = subjectElement.textContent.trim();
                     if (subjectText) {
                         postObj.subject = subjectText;
                     }
                 }
 
-                var fileAnchorElement = <HTMLElement>postElement.querySelector('.file');
+                let fileAnchorElement = <HTMLElement>postElement.querySelector('.file');
                 if (fileAnchorElement) {
-                    var imgElement = <HTMLImageElement>fileAnchorElement.querySelector('img');
+                    let imgElement = <HTMLImageElement>fileAnchorElement.querySelector('img');
                     postObj.file = {
                         'location': fileAnchorElement.getAttribute('href'),
                         'thumbnailLocation': imgElement.src,
@@ -352,9 +352,9 @@ namespace uchan {
         }
 
         bindRefnos() {
-            var refnos = document.querySelectorAll('a.refno');
-            for (var i = 0; i < refnos.length; i++) {
-                var refno = refnos[i];
+            let refnos = document.querySelectorAll('a.refno');
+            for (let i = 0; i < refnos.length; i++) {
+                let refno = refnos[i];
                 this.bindRefno(refno);
             }
         }
@@ -362,8 +362,8 @@ namespace uchan {
         bindRefno(refno) {
             refno.addEventListener('click', function(event) {
                 event.preventDefault();
-                var refnoText = this.textContent;
-                var refnoNumber = parseInt(refnoText.substring(refnoText.indexOf('#') + 1).trim());
+                let refnoText = this.textContent;
+                let refnoNumber = parseInt(refnoText.substring(refnoText.indexOf('#') + 1).trim());
                 context.qr.show();
                 context.qr.addRefno(refnoNumber);
             });

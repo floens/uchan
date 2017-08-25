@@ -58,10 +58,10 @@ namespace uchan {
         }
 
         setPosition(x:number, y:number) {
-            var minX = this.scrollX;
-            var minY = this.scrollY;
-            var maxX = document.documentElement.clientWidth - this.width + this.scrollX;
-            var maxY = document.documentElement.clientHeight - this.height + this.scrollY;
+            let minX = this.scrollX;
+            let minY = this.scrollY;
+            let maxX = document.documentElement.clientWidth - this.width + this.scrollX;
+            let maxY = document.documentElement.clientHeight - this.height + this.scrollY;
 
             x = Math.max(Math.min(x, maxX), minX);
             y = Math.max(Math.min(y, maxY), minY);
@@ -87,11 +87,11 @@ namespace uchan {
         }
 
         handleTouch(event:TouchEvent, type:string) {
-            var touches = event.touches;
+            let touches = event.touches;
 
             if (this.touchId >= 0) {
-                var has = false;
-                for (var i = 0; i < touches.length; i++) {
+                let has = false;
+                for (let i = 0; i < touches.length; i++) {
                     if (touches[i].identifier == this.touchId) {
                         has = true;
                     }
@@ -103,8 +103,8 @@ namespace uchan {
                 this.touchId = touches[0].identifier;
             }
 
-            for (var i = 0; i < touches.length; i++) {
-                var touch = touches[i];
+            for (let i = 0; i < touches.length; i++) {
+                let touch = touches[i];
                 if (touch.identifier == this.touchId) {
                     if (type == 'start') {
                         this.handleDownEvent(touch.clientX, touch.clientY);
@@ -134,7 +134,7 @@ namespace uchan {
         }
 
         handleDownEvent(clientX:number, clientY:number) {
-            var bb = this.element.getBoundingClientRect();
+            let bb = this.element.getBoundingClientRect();
             this.startDragX = clientX - bb.left;
             this.startDragY = clientY - bb.top;
             this.width = bb.width;
@@ -149,8 +149,8 @@ namespace uchan {
                 this.scrollX = this.scrollY = 0;
             }
 
-            var x = clientX - this.startDragX + this.scrollX;
-            var y = clientY - this.startDragY + this.scrollY;
+            let x = clientX - this.startDragX + this.scrollX;
+            let y = clientY - this.startDragY + this.scrollY;
 
             this.setPosition(x, y);
         }

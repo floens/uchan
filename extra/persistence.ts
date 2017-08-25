@@ -23,7 +23,7 @@ namespace uchan {
         }
 
         addCallback(name: string, func: () => void) {
-            var list = this.callbacks[name];
+            let list = this.callbacks[name];
             if (!list) {
                 list = [];
                 this.callbacks[name] = list;
@@ -35,20 +35,17 @@ namespace uchan {
             console.log(event);
         }
 
-        addWatch(board, thread) {
-            this.data['watches'].push({
-                'board': board,
-                'thread': thread
-            });
+        addWatch(watch: Watch) {
+            this.data['watches'].push(watch.toObject());
             this.flush();
             this.notify('watches');
         }
 
-        deleteWatch(item) {
-            var watches = this.data['watches'];
-            for (var i = 0; i < watches.length; i++) {
-                var watch = watches[i];
-                if (watch['board'] == item['board'] && watch['thread'] == item['thread']) {
+        deleteWatch(toDelete: Watch) {
+            let watches = this.data['watches'];
+            for (let i = 0; i < watches.length; i++) {
+                let watch = Watch.fromObject(watches[i]);
+                if (watch.equals(toDelete)) {
                     watches.splice(i, 1);
                     break;
                 }
@@ -58,13 +55,18 @@ namespace uchan {
         }
 
         getWatches() {
-            return this.data['watches'];
+            let res = [];
+            let watches = this.data['watches'];
+            for (let i = 0; i < watches.length; i++) {
+                res.push(Watch.fromObject(watches[i]));
+            }
+            return res;
         }
 
         private notify(name: string) {
             if (name in this.callbacks) {
-                var list = this.callbacks[name];
-                for (var i = 0; i < list.length; i++) {
+                let list = this.callbacks[name];
+                for (let i = 0; i < list.length; i++) {
                     list[i]();
                 }
             }

@@ -4,21 +4,21 @@ namespace uchan {
         }
 
         bindImages() {
-            var images = <NodeListOf<HTMLElement>>document.querySelectorAll('.post .file');
-            for (var i = 0; i < images.length; i++) {
-                var image = images[i];
+            let images = <NodeListOf<HTMLElement>>document.querySelectorAll('.post .file');
+            for (let i = 0; i < images.length; i++) {
+                let image = images[i];
                 this.bindImage(image);
             }
         }
 
         bindImage(container:HTMLElement) {
-            var link = <HTMLAnchorElement>container.querySelector('a');
-            var image = <HTMLImageElement>container.querySelector('img');
+            let link = <HTMLAnchorElement>container.querySelector('a');
+            let image = <HTMLImageElement>container.querySelector('img');
             image.addEventListener('click', (event) => {
                 if (event.button == 0 && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
                     event.preventDefault();
 
-                    var expanded = link.dataset['expanded'] == 'true';
+                    let expanded = link.dataset['expanded'] == 'true';
                     if (expanded) {
                         this.close(container, link, image);
                     } else {
@@ -35,14 +35,14 @@ namespace uchan {
                 link.dataset['thumbnailheight'] = image.height.toString();
             }
 
-            var width = parseInt(link.dataset['filewidth']);
-            var height = parseInt(link.dataset['fileheight']);
+            let width = parseInt(link.dataset['filewidth']);
+            let height = parseInt(link.dataset['fileheight']);
 
-            var availableWidth = document.documentElement.clientWidth;
-            var availableHeight = document.documentElement.clientHeight;
+            let availableWidth = document.documentElement.clientWidth;
+            let availableHeight = document.documentElement.clientHeight;
 
             if (width > availableWidth || height > availableHeight) {
-                var ratio = Math.min(availableWidth / width, availableHeight / height);
+                let ratio = Math.min(availableWidth / width, availableHeight / height);
                 width *= ratio;
                 height *= ratio;
             }
@@ -52,8 +52,8 @@ namespace uchan {
             image.width = width;
             image.height = height;
 
-            var bb = image.getBoundingClientRect();
-            var leftMargin = 0;
+            let bb = image.getBoundingClientRect();
+            let leftMargin = 0;
             if (width > availableWidth - bb.left) {
                 leftMargin = -bb.left;
             }

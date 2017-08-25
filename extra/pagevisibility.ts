@@ -15,8 +15,8 @@ module uchan {
             if (!this.eventListenerRegistered) {
                 this.eventListenerRegistered = true;
                 document.addEventListener('visibilitychange', (e) => {
-                    var visible = this.isVisible();
-                    for (var i = 0; i < this.listeners.length; i++) {
+                    let visible = this.isVisible();
+                    for (let i = 0; i < this.listeners.length; i++) {
                         this.listeners[i](visible);
                     }
                 });
@@ -26,7 +26,7 @@ module uchan {
         }
 
         static removeListener(listener:VisibilityCallback) {
-            var index = this.listeners.indexOf(listener);
+            let index = this.listeners.indexOf(listener);
             if (index >= 0) {
                 PageVisibility.listeners.splice(index, 1);
             }

@@ -1,6 +1,41 @@
+/// <reference path="extra.ts" />
+
 namespace uchan {
+    export class Watch {
+        board: string;
+        thread: number;
+
+        static fromBoardThread(board, thread) {
+            let watch = new Watch();
+            watch.board = board;
+            watch.thread = thread;
+            return watch;
+        }
+
+        static fromObject(obj) {
+            let watch = new Watch();
+            watch.board = obj['board'];
+            watch.thread = obj['thread'];
+            return watch;
+        }
+
+        toObject() {
+            return {
+                'board': this.board,
+                'thread': this.thread
+            }
+        }
+
+        equals(other: Watch) {
+            return this.board === other.board && this.thread === other.thread;
+        }
+    }
+
     export class WatchInterface {
         persistence: Persistence;
+
+        watches: Watch[];
+
         openWatchesElement: HTMLElement;
         shown = false;
 
@@ -16,11 +51,11 @@ namespace uchan {
             this.element.className = 'bookmarks';
             this.element.style.display = 'none';
             this.element.innerHTML = '' +
-                '<div class="bookmarks-title">Bookmarks</div>' +
+                '<div class="bookmarks-title">bookmarks</div>' +
                 '<ul class="bookmarks-list"></ul>';
             this.bookmarksListElement = <HTMLUListElement>this.element.querySelector('.bookmarks-list');
 
-            var linkListRight = document.querySelector('.link-list-right');
+            let linkListRight = document.querySelector('.link-list-right');
             linkListRight.insertBefore(this.element, linkListRight.firstChild);
 
             this.persistence.addCallback('watches', () => {
@@ -35,24 +70,41 @@ namespace uchan {
             this.element.style.display = this.shown ? 'block' : 'none';
         }
 
+        watchThis() {
+            let boardName = uchan.context.boardName;
+            let threadRefno = uchan.context.threadRefno;
+
+            let watch = Watch.fromBoardThread(boardName, threadRefno);
+
+            for (let i = 0; i < this.watches.length; i++) {
+                if (this.watches[i].equals(watch)) {
+                    return;
+                }
+            }
+
+            context.persistence.addWatch(watch);
+        }
+
         private update() {
-            var self = this;
+            let self = this;
             this.bookmarksListElement.innerHTML = '';
-            var frag = document.createDocumentFragment();
-            var watches = this.persistence.getWatches();
-            for (var i = 0; i < watches.length; i++) {
-                var watch = watches[i];
-                var liElement = document.createElement('li');
+            let frag = document.createDocumentFragment();
+            this.watches = this.persistence.getWatches();
+            for (let i = 0; i < this.watches.length; i++) {
+                let watch = this.watches[i];
+                let liElement = document.createElement('li');
                 liElement.innerHTML = '<li><div class="bookmark-delete">&#x2716;</div> <a href="#">foo</a></li>';
-                var del = <HTMLElement>liElement.querySelector('.bookmark-delete');
+                let del = <HTMLElement>liElement.querySelector('.bookmark-delete');
                 (function() {
-                    var i = watch;
+                    let i = watch;
                     del.addEventListener('click', () => {
                         self.deleteClicked(i);
                     });
                 })();
-                var anchor = <HTMLElement>liElement.querySelector('a');
-                anchor.innerText = watch.board + ' - ' + watch.thread;
+                let anchor = <HTMLElement>liElement.querySelector('a');
+
+                let text = '/' + watch.board + '/ \u2013 ' + watch.thread;
+                anchor.innerText = escape(text);
                 frag.appendChild(liElement);
             }
             this.bookmarksListElement.appendChild(frag);

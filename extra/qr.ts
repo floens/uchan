@@ -81,14 +81,14 @@ namespace uchan {
         }
 
         removeStateChangedListener(listener) {
-            var index = this.stateListeners.indexOf(listener);
+            let index = this.stateListeners.indexOf(listener);
             if (index >= 0) {
                 this.stateListeners.splice(index, 1);
             }
         }
 
         callStateChangedListeners(what) {
-            for (var i = 0; i < this.stateListeners.length; i++) {
+            for (let i = 0; i < this.stateListeners.length; i++) {
                 this.stateListeners[i](this, what);
             }
         }
@@ -109,7 +109,7 @@ namespace uchan {
         }
 
         onFileChangeEvent(event) {
-            var overLimit = this.fileElement.files.length > context.fileMax;
+            let overLimit = this.fileElement.files.length > context.fileMax;
             this.submitElement.disabled = overLimit;
             this.showErrorMessage(overLimit, 'Too many files selected, max ' + context.fileMax + ' files allowed');
         }
@@ -130,8 +130,8 @@ namespace uchan {
 
                 this.element.style.display = 'inline-block';
 
-                var bb = this.element.getBoundingClientRect();
-                var x = Math.min(1000, document.documentElement.clientWidth - bb.width - 100);
+                let bb = this.element.getBoundingClientRect();
+                let x = Math.min(1000, document.documentElement.clientWidth - bb.width - 100);
                 this.draggable.setPosition(x, document.documentElement.clientHeight - bb.height - 100);
 
                 this.commentElement.focus();
@@ -151,10 +151,10 @@ namespace uchan {
         }
 
         addRefno(refno) {
-            var toInsert = '>>' + refno + '\n';
+            let toInsert = '>>' + refno + '\n';
 
-            var position = this.commentElement.selectionStart;
-            var value = this.commentElement.value;
+            let position = this.commentElement.selectionStart;
+            let value = this.commentElement.value;
             this.commentElement.value = value.substring(0, position) + toInsert + value.substring(position);
             this.commentElement.selectionStart = this.commentElement.selectionEnd = position + toInsert.length;
 
@@ -169,14 +169,14 @@ namespace uchan {
 
         submit() {
             if (this.submitXhr == null) {
-                var xhr = this.submitXhr = new XMLHttpRequest();
+                let xhr = this.submitXhr = new XMLHttpRequest();
                 xhr.open('POST', this.postEndpoint);
                 xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
                 xhr.onerror = this.submitXhrOnErrorEvent.bind(this);
                 xhr.onload = this.submitXhrOnLoadEvent.bind(this);
                 xhr.upload.onprogress = this.submitXhrOnProgressEvent.bind(this);
 
-                var formData = new FormData(this.formElement);
+                let formData = new FormData(this.formElement);
                 xhr.send(formData);
 
                 this.submitElement.disabled = true;
@@ -190,13 +190,13 @@ namespace uchan {
         }
 
         submitXhrOnErrorEvent(event) {
-            var responseData = null;
+            let responseData = null;
             try {
                 responseData = JSON.parse(this.submitXhr.responseText);
             } catch (e) {
             }
 
-            var responseMessage = 'Error submitting';
+            let responseMessage = 'Error submitting';
             if (responseData && responseData['message']) {
                 responseMessage = 'Error: ' + responseData['message'];
             } else {
