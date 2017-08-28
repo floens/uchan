@@ -93,11 +93,23 @@ namespace uchan {
             for (let i = 0; i < this.watches.length; i++) {
                 let watch = this.watches[i];
                 let liElement = document.createElement('li');
-                liElement.innerHTML = '<li><div class="bookmark-delete">&#x2716;</div> <a href="#">foo</a></li>';
-                let del = <HTMLElement>liElement.querySelector('.bookmark-delete');
-                (function() {
+
+                let bookmarkDeleteElement = document.createElement('div');
+                bookmarkDeleteElement.className = 'bookmark-delete';
+                bookmarkDeleteElement.textContent = '\u2716';
+
+                let spaceElement = document.createTextNode(' ');
+
+                let linkElement = document.createElement('a');
+                linkElement.setAttribute('href', '/' + watch.board + '/read/' + watch.thread);
+
+                liElement.appendChild(bookmarkDeleteElement);
+                liElement.appendChild(spaceElement);
+                liElement.appendChild(linkElement);
+
+                (function () {
                     let i = watch;
-                    del.addEventListener('click', () => {
+                    bookmarkDeleteElement.addEventListener('click', () => {
                         self.deleteClicked(i);
                     });
                 })();
