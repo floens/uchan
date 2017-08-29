@@ -92,7 +92,8 @@ module uchan {
             let openWatches = linkListRight.querySelector('#open-watches');
             let watchInterface = new WatchInterface(context.persistence, openWatches);
 
-            let threadControls = document.querySelectorAll('.thread-controls');
+            let threadControls = document.querySelectorAll('.thread-controls .thread-controls-extra');
+            let threadControlsRight = document.querySelectorAll('.thread-controls .thread-controls-right');
             let openQrControls: HTMLElement[] = [];
             let watchThreadControls: HTMLElement[] = [];
             let watchUpdateControls: HTMLElement[] = [];
@@ -100,12 +101,21 @@ module uchan {
 
             if (context.mode == 'thread') {
                 for (let i = 0; i < threadControls.length; i++) {
+                    let addOpenQr = i == threadControls.length - 1;
+
                     let threadControl = threadControls[i];
-                    threadControl.innerHTML += '[<a class="open-qr" href="javascript:void(0)">Reply</a>]' +
-                        ' [<a class="watch-thread" href="javascript:void(0)">Watch thread</a>]' +
+                    threadControl.innerHTML += ' [<a class="watch-thread" href="javascript:void(0)">Watch thread</a>]' +
                         ' [<a class="watch-update" href="javascript:void(0)">Update</a>] <span class="watch-status"></span>';
 
-                    openQrControls.push(<HTMLElement>threadControl.querySelector('.open-qr'));
+                    let threadControlRight;
+                    if (addOpenQr) {
+                        threadControlRight = threadControlsRight[i];
+                        threadControlRight.innerHTML += '[<a class="open-qr" href="javascript:void(0)">Reply</a>]';
+                    }
+
+                    if (addOpenQr) {
+                        openQrControls.push(<HTMLElement>threadControlRight.querySelector('.open-qr'));
+                    }
                     watchThreadControls.push(<HTMLElement>threadControl.querySelector('.watch-thread'));
                     watchUpdateControls.push(<HTMLElement>threadControl.querySelector('.watch-update'));
                     watchStatusElements.push(<HTMLElement>threadControl.querySelector('.watch-status'));

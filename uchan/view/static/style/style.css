@@ -119,13 +119,31 @@ blockquote {
 }
 
 .post-manage-container {
+    position: relative;
     width: 100%;
 }
 
 .post-manage-container .thread-controls {
+    width: calc(50% + 2em);
     float: left;
     vertical-align: middle;
     line-height: 21px;
+}
+
+.post-manage-container .thread-controls a {
+    white-space: nowrap;
+}
+
+.post-manage-container .thread-controls .watch-status {
+    display: inline-block;
+    width: 2em;
+}
+
+.post-manage-container .thread-controls .thread-controls-right {
+    display: inline-block;
+    width: 4em;
+    text-align: center;
+    float: right;
 }
 
 .post-manage-form-container {
