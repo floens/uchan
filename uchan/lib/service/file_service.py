@@ -56,7 +56,10 @@ class LocalCdn(FileCdn):
     def delete(self, file_name):
         subdir, name = self._folderize(file_name)
 
-        os.remove(os.path.join(self.path, subdir, name))
+        try:
+            os.remove(os.path.join(self.path, subdir, name))
+        except FileNotFoundError:
+            pass
 
     def resolve_to_uri(self, file_name):
         return self.web_path + file_name[:2] + '/' + file_name[2:]
