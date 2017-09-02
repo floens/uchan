@@ -1,35 +1,74 @@
 /// <reference path="extra.ts" />
 /// <reference path="draggable.ts" />
+/// <reference path="persistence.ts" />
 
 namespace uchan {
+    class QRState implements Persistable {
+        x: number = -1;
+        y: number = -1;
+
+        static fromDefaults() {
+            return new QRState();
+        }
+
+        fromObject(obj: any) {
+            this.x = obj['x'];
+            this.y = obj['y'];
+        }
+
+        toObject() {
+            return {
+                'x': this.x,
+                'y': this.y
+            };
+        }
+    }
+
     export class QR {
         watcher: Watcher;
+        persistence: Persistence;
 
-        postEndpoint:string;
-        filePostingEnabled:boolean;
+        postEndpoint: string;
+        filePostingEnabled: boolean;
 
-        element:HTMLDivElement;
+        stateListeners: any[];
+        state: QRState;
+        showing: boolean = false;
+        submitXhr: XMLHttpRequest = null;
 
-        draggable:Draggable;
+        draggable: Draggable;
 
-        formElement:HTMLFormElement;
-        closeElement:HTMLElement;
-        nameElement:HTMLInputElement;
-        passwordElement:HTMLInputElement;
-        commentElement:HTMLInputElement;
-        fileElement:HTMLInputElement;
-        submitElement:HTMLInputElement;
-        errorMessageElement:HTMLElement;
-        stateListeners:any[];
-        showing:boolean = false;
-        submitXhr:XMLHttpRequest = null;
+        element: HTMLDivElement;
+        formElement: HTMLFormElement;
+        closeElement: HTMLElement;
+        nameElement: HTMLInputElement;
+        passwordElement: HTMLInputElement;
+        commentElement: HTMLInputElement;
+        fileElement: HTMLInputElement;
+        submitElement: HTMLInputElement;
+        errorMessageElement: HTMLElement;
 
-        constructor(watcher) {
+        constructor(watcher: Watcher, persistence: Persistence) {
             this.watcher = watcher;
+            this.persistence = persistence;
 
             this.postEndpoint = uchan.context.postEndpoint;
             this.filePostingEnabled = uchan.context.filePostingEnabled;
 
+            this.stateListeners = [];
+
+            this.state = <QRState>persistence.retrieve('qr', QRState);
+            if (this.state == null) {
+                this.state = QRState.fromDefaults();
+                persistence.persist('qr', this.state);
+            }
+
+            persistence.addCallback('qr', () => this.stateChanged());
+
+            this.setupView();
+        }
+
+        private setupView() {
             this.element = document.createElement('div');
             this.element.className = 'qr';
 
@@ -48,10 +87,8 @@ namespace uchan {
                 '        <input type="hidden" name="thread" value="' + context.threadRefno + '"/>' +
                 '    </form>';
 
-            document.body.appendChild(this.element);
-
             this.draggable = new Draggable(this.element, this.element.querySelector('.handle'), false);
-            this.draggable.bind();
+            this.draggable.bind(() => this.onDraggableMoved());
 
             this.formElement = <HTMLFormElement>this.element.querySelector('.qr-form');
             this.closeElement = <HTMLElement>this.element.querySelector('.handle-close');
@@ -69,7 +106,7 @@ namespace uchan {
             this.commentElement.addEventListener('keydown', this.onCommentKeyDownEvent.bind(this));
             this.submitElement.addEventListener('click', this.onSubmitEvent.bind(this));
 
-            this.stateListeners = [];
+            document.body.appendChild(this.element);
         }
 
         insertFormElement(element) {
@@ -124,15 +161,31 @@ namespace uchan {
             this.hide();
         }
 
+        onDraggableMoved() {
+            this.state.x = this.draggable.x;
+            this.state.y = this.draggable.y;
+
+            this.persistence.persist('qr', this.state);
+        }
+
+        stateChanged() {
+            this.state = <QRState>this.persistence.retrieve('qr', QRState);
+
+            this.draggable.setPosition(this.state.x, this.state.y);
+        }
+
         show() {
             if (!this.showing) {
                 this.showing = true;
 
                 this.element.style.display = 'inline-block';
 
-                let bb = this.element.getBoundingClientRect();
-                let x = Math.min(1000, document.documentElement.clientWidth - bb.width - 100);
-                this.draggable.setPosition(x, document.documentElement.clientHeight - bb.height - 100);
+                if (this.state.x == -1 && this.state.y == -1) {
+                    let bb = this.element.getBoundingClientRect();
+                    this.state.x = Math.min(1000, document.documentElement.clientWidth - bb.width - 100);
+                    this.state.y = 100;
+                }
+                this.draggable.setPosition(this.state.x, this.state.y);
 
                 this.commentElement.focus();
 

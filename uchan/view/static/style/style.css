@@ -136,14 +136,24 @@ blockquote {
 
 .post-manage-container .thread-controls .watch-status {
     display: inline-block;
-    width: 2em;
+    width: 7em;
 }
 
-.post-manage-container .thread-controls .thread-controls-right {
+.post-manage-container .thread-controls .thread-controls-center {
     display: inline-block;
     width: 4em;
     text-align: center;
     float: right;
+}
+
+@media (max-width: 600px) {
+    .post-manage-container .thread-controls {
+        width: 100%;
+    }
+
+    .post-manage-container .thread-controls .thread-controls-center {
+        width: 100%;
+    }
 }
 
 .post-manage-form-container {
@@ -152,6 +162,7 @@ blockquote {
 
 .post {
     padding: 12px 10px 12px 10px;
+    background: #EBF3FF;
 }
 
 .post.snippet {

@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "sourceMap": false,
     "outFile": "../uchan/view/static/js/extra.js"
   },
   "files": [

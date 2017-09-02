@@ -1,7 +1,8 @@
 /// <reference path="extra.ts" />
+/// <reference path="persistence.ts" />
 
 namespace uchan {
-    export class Watch {
+    export class Watch implements Persistable {
         board: string;
         thread: number;
 
@@ -12,11 +13,9 @@ namespace uchan {
             return watch;
         }
 
-        static fromObject(obj) {
-            let watch = new Watch();
-            watch.board = obj['board'];
-            watch.thread = obj['thread'];
-            return watch;
+        fromObject(obj) {
+            this.board = obj['board'];
+            this.thread = obj['thread'];
         }
 
         toObject() {
@@ -45,7 +44,6 @@ namespace uchan {
         constructor(persistence, openWatchesElement) {
             this.persistence = persistence;
             this.openWatchesElement = openWatchesElement;
-            this.openWatchesElement.addEventListener('click', (e) => this.openWatches(e));
 
             this.element = document.createElement('div');
             this.element.className = 'bookmarks';
@@ -58,16 +56,15 @@ namespace uchan {
             let linkListRight = document.querySelector('.link-list-right');
             linkListRight.insertBefore(this.element, linkListRight.firstChild);
 
-            this.persistence.addCallback('watches', () => {
-                this.update();
+            this.openWatchesElement.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleOpen()
             });
-            this.update();
-        }
 
-        openWatches(event) {
-            event.preventDefault();
-            this.shown = !this.shown;
-            this.element.style.display = this.shown ? 'block' : 'none';
+            this.load();
+            this.persistence.addCallback('watches', () => {
+                this.load();
+            });
         }
 
         watchThis() {
@@ -82,14 +79,50 @@ namespace uchan {
                 }
             }
 
-            context.persistence.addWatch(watch);
+            this.addWatch(watch);
         }
 
-        private update() {
+        private addWatch(watch: Watch) {
+            this.watches.push(watch);
+            this.save();
+            this.updateView();
+        }
+
+        private removeWatch(watch: Watch) {
+            for (let i = 0; i < this.watches.length; i++) {
+                if (this.watches[i].equals(watch)) {
+                    this.watches.splice(i, 1);
+                    break;
+                }
+            }
+
+            this.save();
+            this.updateView();
+        }
+
+        private load() {
+            this.watches = <Watch[]>this.persistence.retrieveList('watches', Watch);
+            this.updateView();
+        }
+
+        private save() {
+            this.persistence.persistList('watches', this.watches);
+        }
+
+        private toggleOpen() {
+            this.shown = !this.shown;
+            this.element.style.display = this.shown ? 'block' : 'none';
+        }
+
+        private deleteClicked(watch) {
+            this.removeWatch(watch);
+        }
+
+        private updateView() {
             let self = this;
             this.bookmarksListElement.innerHTML = '';
             let frag = document.createDocumentFragment();
-            this.watches = this.persistence.getWatches();
+
             for (let i = 0; i < this.watches.length; i++) {
                 let watch = this.watches[i];
                 let liElement = document.createElement('li');
@@ -102,6 +135,7 @@ namespace uchan {
 
                 let linkElement = document.createElement('a');
                 linkElement.setAttribute('href', '/' + watch.board + '/read/' + watch.thread);
+                linkElement.textContent = '/' + watch.board + '/ \u2013 ' + watch.thread;
 
                 liElement.appendChild(bookmarkDeleteElement);
                 liElement.appendChild(spaceElement);
@@ -113,17 +147,10 @@ namespace uchan {
                         self.deleteClicked(i);
                     });
                 })();
-                let anchor = <HTMLElement>liElement.querySelector('a');
 
-                let text = '/' + watch.board + '/ \u2013 ' + watch.thread;
-                anchor.innerText = escape(text);
                 frag.appendChild(liElement);
             }
             this.bookmarksListElement.appendChild(frag);
-        }
-
-        private deleteClicked(watch) {
-            this.persistence.deleteWatch(watch);
         }
     }
 }

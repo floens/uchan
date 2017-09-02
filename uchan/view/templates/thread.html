@@ -17,7 +17,7 @@
         [<a href="{{ url_for('board', board_name=thread.board.name) }}">Back</a>]
         <span id="top">[<a href="#bottom">Bottom</a>]</span>
         <span class="thread-controls-extra"></span>
-        <span class="thread-controls-right"></span>
+        <span class="thread-controls-center"></span>
     </div>
     <hr class="content-divider">
 {% endblock %}
@@ -39,8 +39,12 @@
             [<a href="{{ url_for('board', board_name=thread.board.name) }}">Back</a>]
             <span id="bottom">[<a href="#top">Top</a>]</span>
             <span class="thread-controls-extra"></span>
-            <span class="thread-controls-right"></span>
+            <span class="thread-controls-center"></span>
         </div>
+        <div class="clear"></div>
+    </div>
+    <hr class="content-divider">
+    <div class="post-manage-container">
         {{ post_manage_widget.render_content(thread, show_moderator_buttons) }}
         <div class="clear"></div>
     </div>

@@ -1,36 +1,32 @@
 namespace uchan {
     export class Draggable {
-        element:HTMLElement;
-        handleElement:HTMLElement;
-        scrollWithPage:boolean;
+        element: HTMLElement;
+        handleElement: HTMLElement;
+        scrollWithPage: boolean;
+        moveCallbacks: (() => void) [] = [];
 
-        startDragX:number;
-        startDragY:number;
-        scrollX:number;
-        scrollY:number;
-        width:number;
-        height:number;
+        x: number = 0;
+        y: number = 0;
+        startDragX: number = 0;
+        startDragY: number = 0;
+        scrollX: number = 0;
+        scrollY: number = 0;
+        width: number = 0;
+        height: number = 0;
 
-        mouseDownBound:any;
-        mouseMoveBound:any;
-        mouseUpBound:any;
-        touchStartBound:any;
-        touchEndBound:any;
-        touchCancelBound:any;
-        touchMoveBound:any;
+        mouseDownBound: any;
+        mouseMoveBound: any;
+        mouseUpBound: any;
+        touchStartBound: any;
+        touchEndBound: any;
+        touchCancelBound: any;
+        touchMoveBound: any;
         touchId = -1;
 
         constructor(element, handleElement, scrollWithPage) {
             this.element = element;
             this.handleElement = handleElement;
             this.scrollWithPage = scrollWithPage;
-
-            this.startDragX = 0;
-            this.startDragY = 0;
-            this.scrollX = 0;
-            this.scrollY = 0;
-            this.width = 0;
-            this.height = 0;
 
             this.mouseDownBound = this.mouseDown.bind(this);
             this.mouseMoveBound = this.mouseMove.bind(this);
@@ -41,23 +37,36 @@ namespace uchan {
             this.touchMoveBound = this.touchMove.bind(this);
         }
 
-        bind() {
+        bind(moveCallback: () => void = null) {
             this.handleElement.addEventListener('mousedown', this.mouseDownBound);
             this.handleElement.addEventListener('touchstart', this.touchStartBound);
             this.handleElement.addEventListener('touchend', this.touchEndBound);
             this.handleElement.addEventListener('touchcancel', this.touchCancelBound);
             this.handleElement.addEventListener('touchmove', this.touchMoveBound);
+
+            if (moveCallback != null) {
+                this.moveCallbacks.push(moveCallback);
+            }
         }
 
-        unbind() {
+        unbind(moveCallback: () => void = null) {
             this.handleElement.removeEventListener('mousedown', this.mouseDownBound);
             this.handleElement.removeEventListener('touchstart', this.touchStartBound);
             this.handleElement.removeEventListener('touchend', this.touchEndBound);
             this.handleElement.removeEventListener('touchcancel', this.touchCancelBound);
             this.handleElement.removeEventListener('touchmove', this.touchMoveBound);
+
+            let i = this.moveCallbacks.indexOf(moveCallback);
+            if (i >= 0) {
+                this.moveCallbacks.splice(i, 1);
+            }
         }
 
-        setPosition(x:number, y:number) {
+        setPosition(x: number, y: number) {
+            let bb = this.element.getBoundingClientRect();
+            this.width = bb.width;
+            this.height = bb.height;
+
             let minX = this.scrollX;
             let minY = this.scrollY;
             let maxX = document.documentElement.clientWidth - this.width + this.scrollX;
@@ -68,25 +77,27 @@ namespace uchan {
 
             this.element.style.left = (x) + 'px';
             this.element.style.top = (y) + 'px';
+            this.x = x;
+            this.y = y;
         }
 
-        touchStart(event:TouchEvent) {
+        touchStart(event: TouchEvent) {
             this.handleTouch(event, 'start');
         }
 
-        touchEnd(event:TouchEvent) {
+        touchEnd(event: TouchEvent) {
             this.handleTouch(event, 'end');
         }
 
-        touchCancel(event:TouchEvent) {
+        touchCancel(event: TouchEvent) {
             this.handleTouch(event, 'cancel');
         }
 
-        touchMove(event:TouchEvent) {
+        touchMove(event: TouchEvent) {
             this.handleTouch(event, 'move');
         }
 
-        handleTouch(event:TouchEvent, type:string) {
+        handleTouch(event: TouchEvent, type: string) {
             let touches = event.touches;
 
             if (this.touchId >= 0) {
@@ -118,22 +129,22 @@ namespace uchan {
             }
         }
 
-        mouseDown(event:MouseEvent) {
+        mouseDown(event: MouseEvent) {
             this.handleDownEvent(event.clientX, event.clientY);
             document.addEventListener('mousemove', this.mouseMoveBound);
             document.addEventListener('mouseup', this.mouseUpBound);
         }
 
-        mouseMove(event:MouseEvent) {
+        mouseMove(event: MouseEvent) {
             this.handleMoveEvent(event.clientX, event.clientY);
         }
 
-        mouseUp(event:MouseEvent) {
+        mouseUp(event: MouseEvent) {
             document.removeEventListener('mousemove', this.mouseMoveBound);
             document.removeEventListener('mouseup', this.mouseUpBound);
         }
 
-        handleDownEvent(clientX:number, clientY:number) {
+        handleDownEvent(clientX: number, clientY: number) {
             let bb = this.element.getBoundingClientRect();
             this.startDragX = clientX - bb.left;
             this.startDragY = clientY - bb.top;
@@ -141,7 +152,7 @@ namespace uchan {
             this.height = bb.height;
         }
 
-        handleMoveEvent(clientX:number, clientY:number) {
+        handleMoveEvent(clientX: number, clientY: number) {
             if (this.scrollWithPage) {
                 this.scrollX = window.pageXOffset;
                 this.scrollY = window.pageYOffset;
@@ -153,6 +164,10 @@ namespace uchan {
             let y = clientY - this.startDragY + this.scrollY;
 
             this.setPosition(x, y);
+
+            for (let i = 0; i < this.moveCallbacks.length; i++) {
+                this.moveCallbacks[i]();
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 /// <reference path="imageexpansion.ts" />
 /// <reference path="pagevisibility.ts" />
+/// <reference path="thread.ts" />
 
 namespace uchan {
     export class Watcher {
@@ -8,13 +9,12 @@ namespace uchan {
 
         boardName: string;
         threadRefno: number;
-        postsElement: HTMLElement;
+        thread: Thread;
+        threadView: ThreadView;
         statusElements: HTMLElement[];
-        imageExpansion: ImageExpansion;
 
         xhr: XMLHttpRequest = null;
         error = false;
-        posts: any[] = [];
 
         timeoutId = -1;
         statusTimeoutId = -1;
@@ -24,18 +24,20 @@ namespace uchan {
         documentTitle: string;
         totalNewPosts = 0;
 
-        constructor(boardName, threadRefno, postsElement, statusElements, imageExpansion) {
+        constructor(boardName, threadRefno, thread: Thread, threadView: ThreadView, statusElements) {
             this.boardName = boardName;
             this.threadRefno = threadRefno;
-            this.postsElement = postsElement;
+            this.thread = thread;
+            this.threadView = threadView;
             this.statusElements = statusElements;
-            this.imageExpansion = imageExpansion;
 
             this.documentTitle = document.title;
 
-            document.addEventListener('scroll', (e) => this.onScroll(e), false);
+            thread.observe(this.threadViewUpdated.bind(this));
 
+            document.addEventListener('scroll', (e) => this.onScroll(e), false);
             PageVisibility.addListener((visible) => this.pageVisibilityChanged(visible));
+
             this.updateTimerState(this.delays[0] * 1000);
             this.updateStatus();
         }
@@ -155,218 +157,19 @@ namespace uchan {
                 this.error = true;
             } else {
                 this.error = false;
-                let previousLength = this.posts.length;
+                let previousLength = this.thread.posts.length;
                 let thread = data.thread;
-                let remotePosts = thread.posts;
-                for (let i = 0; i < remotePosts.length; i++) {
-                    let remotePost = remotePosts[i];
 
-                    let has = false;
-                    for (let j = 0; j < this.posts.length; j++) {
-                        let post = this.posts[j];
-                        if (post.id == remotePost.id) {
-                            has = true;
-                            break;
-                        }
-                    }
+                this.thread.update(thread);
 
-                    if (!has) {
-                        this.posts.push(remotePost);
-                        let postElement = this.buildPostElement(remotePost);
-                        this.postsElement.lastElementChild.classList.add('divider');
-                        this.postsElement.appendChild(postElement);
-                    }
-                }
-
-                this.resetTimer(this.posts.length - previousLength);
+                this.resetTimer(this.thread.posts.length - previousLength);
             }
 
             this.xhr = null;
             this.updateStatus();
         }
 
-        buildPostElement(postData: any) {
-            let postDiv = document.createElement('div');
-            postDiv.className = 'post';
-            postDiv.id = 'p#' + postData.refno;
-
-            let postHtml = '<div class="header">';
-
-            let files = postData.files || [];
-
-            if (postData.subject) {
-                postHtml += '<span class="subject">' + escape(postData.subject) + '</span><br>';
-            }
-
-            postHtml += '<a href="#p' + postData.refno + '" class="refno">#' + postData.refno + '</a> ' +
-                '<span class="name">' + this.getPostNameHtml(postData.name) + '</span> ';
-
-            if (postData.modCode) {
-                postHtml += '<span class="modcode">' + escape(postData.modCode) + '</span> ';
-            }
-
-            postHtml += '<span class="date">' + this.getPostDateText(postData.date) + '</span> ' +
-                '<span class="manage"><input type="checkbox" name="post_id" value="' + postData.id + '"></span>';
-
-            for (let i = 0; i < files.length; i++) {
-                if (i == 0) {
-                    postHtml += '<br>';
-                }
-
-                let file = files[i];
-                postHtml += 'File: <a href="' + escape(file.location) + '">' + escape(file.name) + '</a> ';
-                postHtml += '(' + this.getPostFileSizeText(file.size) + ', ' + file.width + 'x' + file.height + ')';
-                if (i < files.length - 1) {
-                    postHtml += '<br>';
-                }
-            }
-
-            postHtml += '</div>\n';
-
-            if (postData.html) {
-                postHtml += '<div class="styled-text">' + postData.html + '</div>';
-            }
-
-            for (let i = 0; i < files.length; i++) {
-                let file = files[i];
-                postHtml += '<div class="file">';
-                postHtml += '<a class="file-link" href="' + escape(file.location) + '" data-filewidth="' + file.width + '" data-fileheight="' + file.height + '" data-filename="' + escape(file.name) + '" data-filesize="' + file.size + '">';
-                postHtml += '<img src="' + escape(file.thumbnailLocation) + '" width="' + file.thumbnailWidth + '" height="' + file.thumbnailHeight + '">';
-                postHtml += '</a>';
-                postHtml += '</div> ';
-            }
-
-            postDiv.innerHTML = postHtml;
-
-            this.bindRefno(postDiv.querySelector('a.refno'));
-            if (files.length > 0) {
-                let fileElements = <NodeListOf<HTMLElement>>postDiv.querySelectorAll('.file');
-                for (let i = 0; i < fileElements.length; i++) {
-                    this.imageExpansion.bindImage(fileElements[i]);
-                }
-            }
-
-            return postDiv;
-        }
-
-        getPostNameHtml(name: string) {
-            let html = escape(name);
-            let i = html.indexOf('!');
-            if (i >= 0) {
-                html = html.substring(0, i) + '<span class="trip">!' + html.substring(i + 1) + '</span>';
-            }
-            return html;
-        }
-
-        getPostFileSizeText(bytes: number) {
-            let prefixes = ['kB', 'MB', 'GB', 'TB'];
-            if (bytes == 1) {
-                return '1 Byte'
-            } else if (bytes < 1000) {
-                return bytes + ' Bytes';
-            } else {
-                for (let i = 0; i < prefixes.length; i++) {
-                    let unit = Math.pow(1000, i + 2);
-                    if (bytes < unit) {
-                        return round((1000 * bytes / unit), 1) + ' ' + prefixes[i];
-                    }
-                }
-            }
-        }
-
-        getPostDateText(postDate: number) {
-            let date = new Date(postDate);
-
-            // %Y-%m-%d %H:%M:%S
-            let output = date.getUTCFullYear() + '-' + lpad(date.getUTCMonth() + 1, 2, '0') + '-' + lpad(date.getUTCDate(), 2, '0') + ' ';
-            output += lpad(date.getUTCHours(), 2, '0') + ':' + lpad(date.getUTCMinutes(), 2, '0') + ':' + lpad(date.getUTCSeconds(), 2, '0');
-            return output;
-        }
-
-        bindPosts(posts: NodeListOf<HTMLElement>) {
-            for (let i = 0; i < posts.length; i++) {
-                let postElement = posts[i];
-
-                let postObj = {
-                    id: 0,
-                    refno: 0,
-                    date: 0,
-                    html: null,
-                    name: null,
-                    modCode: null,
-                    subject: null,
-                    file: null
-                };
-
-                let checkbox = <HTMLInputElement>postElement.querySelector('input[type="checkbox"]');
-                postObj.id = parseInt(checkbox.value);
-                postObj.refno = parseInt(postElement.id.substr(1));
-                postObj.date = parseInt(postElement.dataset['date']);
-
-                let textElement = postElement.querySelector('.styled-text');
-                if (textElement) {
-                    let textHtml = textElement.innerHTML.trim();
-                    if (textHtml) {
-                        postObj.html = textHtml;
-                    }
-                }
-
-                let nameText = postElement.querySelector('.header .name').textContent.trim();
-                if (nameText) {
-                    postObj.name = nameText;
-                }
-
-                let modCodeElement = postElement.querySelector('.header .modcode');
-                if (modCodeElement) {
-                    let modCodeText = modCodeElement.textContent;
-                    if (modCodeText) {
-                        postObj.modCode = modCodeText;
-                    }
-                }
-
-                let subjectElement = postElement.querySelector('.header .subject');
-                if (subjectElement) {
-                    let subjectText = subjectElement.textContent.trim();
-                    if (subjectText) {
-                        postObj.subject = subjectText;
-                    }
-                }
-
-                let fileAnchorElement = <HTMLElement>postElement.querySelector('.file');
-                if (fileAnchorElement) {
-                    let imgElement = <HTMLImageElement>fileAnchorElement.querySelector('img');
-                    postObj.file = {
-                        'location': fileAnchorElement.getAttribute('href'),
-                        'thumbnailLocation': imgElement.src,
-                        'thumbnailWidth': imgElement.width,
-                        'thumbnailHeight': imgElement.height,
-                        'width': fileAnchorElement.dataset['filewidth'],
-                        'height': fileAnchorElement.dataset['fileheight'],
-                        'size': fileAnchorElement.dataset['filesize'],
-                        'name': fileAnchorElement.dataset['filename']
-                    }
-                }
-
-                this.posts.push(postObj);
-            }
-        }
-
-        bindRefnos() {
-            let refnos = document.querySelectorAll('a.refno');
-            for (let i = 0; i < refnos.length; i++) {
-                let refno = refnos[i];
-                this.bindRefno(refno);
-            }
-        }
-
-        bindRefno(refno) {
-            refno.addEventListener('click', function(event) {
-                event.preventDefault();
-                let refnoText = this.textContent;
-                let refnoNumber = parseInt(refnoText.substring(refnoText.indexOf('#') + 1).trim());
-                context.qr.show();
-                context.qr.addRefno(refnoNumber);
-            });
+        threadViewUpdated(threadView: Thread) {
         }
     }
 }

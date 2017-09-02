@@ -36,7 +36,7 @@
     width: 20px;
     line-height: 20px;
     text-align: center;
-    font-size: 18px;
+    font-size: 15px;
     cursor: pointer;
 }
 
@@ -113,4 +113,10 @@
 .bookmarks .bookmark-delete {
     cursor: pointer;
     display: inline-block;
+}
+
+.post.post-hover {
+    z-index: 1;
+    border: 0.5px solid #B1B1B1;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }

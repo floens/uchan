@@ -3,6 +3,8 @@
 /// <reference path="watcher.ts" />
 /// <reference path="watchinterface.ts" />
 /// <reference path="persistence.ts" />
+/// <reference path="thread.ts" />
+/// <reference path="threadview.ts" />
 
 module uchan {
     export const context = {
@@ -19,7 +21,7 @@ module uchan {
         qr: null as QR
     };
 
-    export const escape = function(text) {
+    export const escape = function (text) {
         text = text.toString();
         text = text.replace('&', '&amp;');
         text = text.replace('>', '&gt;');
@@ -29,7 +31,7 @@ module uchan {
         return text;
     };
 
-    export const lpad = function(str, len, fill) {
+    export const lpad = function (str, len, fill) {
         str = str.toString();
         while (str.length < len) {
             str = fill + str;
@@ -37,16 +39,16 @@ module uchan {
         return str;
     };
 
-    export const round = function(num, digits) {
+    export const round = function (num, digits) {
         let i = Math.pow(10, digits);
         return Math.round(num * i) / i;
     };
 
-    export const xhrJsonGet = function(endpoint: string, callback: (error: Error, data: any) => void) {
+    export const xhrJsonGet = function (endpoint: string, callback: (error: Error, data: any) => void) {
         let xhr = new XMLHttpRequest();
         xhr.open('GET', endpoint);
         xhr.send(null);
-        xhr.onload = function(event) {
+        xhr.onload = function (event) {
             if (xhr.status == 200) {
                 let jsonData = null;
                 let e: Error = null;
@@ -65,13 +67,13 @@ module uchan {
                 xhr.onerror(<ErrorEvent> event);
             }
         };
-        xhr.onerror = function(event) {
+        xhr.onerror = function (event) {
             callback(new Error(event.type), null);
         };
         return xhr;
     };
 
-    const init = function() {
+    const init = function () {
         let pageDetails = window['pageDetails'];
         if (!pageDetails) {
             console.error('window.pageDetails not defined');
@@ -93,7 +95,7 @@ module uchan {
             let watchInterface = new WatchInterface(context.persistence, openWatches);
 
             let threadControls = document.querySelectorAll('.thread-controls .thread-controls-extra');
-            let threadControlsRight = document.querySelectorAll('.thread-controls .thread-controls-right');
+            let threadControlsCenter = document.querySelectorAll('.thread-controls .thread-controls-center');
             let openQrControls: HTMLElement[] = [];
             let watchThreadControls: HTMLElement[] = [];
             let watchUpdateControls: HTMLElement[] = [];
@@ -104,17 +106,18 @@ module uchan {
                     let addOpenQr = i == threadControls.length - 1;
 
                     let threadControl = threadControls[i];
-                    threadControl.innerHTML += ' [<a class="watch-thread" href="javascript:void(0)">Watch thread</a>]' +
-                        ' [<a class="watch-update" href="javascript:void(0)">Update</a>] <span class="watch-status"></span>';
+                    threadControl.innerHTML += ' [<a class="watch-thread" href="javascript:void(0)">Watch thread</a>] ' +
+                        '[<a class="watch-update" href="javascript:void(0)">Update</a>] ' +
+                        '<span class="watch-status"></span>';
 
-                    let threadControlRight;
+                    let threadControlCenter;
                     if (addOpenQr) {
-                        threadControlRight = threadControlsRight[i];
-                        threadControlRight.innerHTML += '[<a class="open-qr" href="javascript:void(0)">Reply</a>]';
+                        threadControlCenter = threadControlsCenter[i];
+                        threadControlCenter.innerHTML += '[<a class="open-qr" href="javascript:void(0)">Reply</a>]';
                     }
 
                     if (addOpenQr) {
-                        openQrControls.push(<HTMLElement>threadControlRight.querySelector('.open-qr'));
+                        openQrControls.push(<HTMLElement>threadControlCenter.querySelector('.open-qr'));
                     }
                     watchThreadControls.push(<HTMLElement>threadControl.querySelector('.watch-thread'));
                     watchUpdateControls.push(<HTMLElement>threadControl.querySelector('.watch-update'));
@@ -123,33 +126,50 @@ module uchan {
 
                 for (let i = 0; i < watchThreadControls.length; i++) {
                     let watchThreadControl = watchThreadControls[i];
-                    watchThreadControl.addEventListener('click', function(e) {
+                    watchThreadControl.addEventListener('click', function (e) {
                         e.preventDefault();
                         watchInterface.watchThis();
                     });
                 }
             }
 
-            let imageExpansion = new ImageExpansion();
-            imageExpansion.bindImages();
+            if (context.mode == 'board') {
+                // imageExpansion = new ImageExpansion();
+                // imageExpansion.bindImages();
+            } else if (context.mode == 'thread') {
+                let postsElement = <HTMLElement> document.querySelector('.posts');
 
-            if (context.mode == 'thread' && !context.locked) {
-                let postForm = <HTMLElement>document.querySelector('.post-form');
-                postForm.style.display = 'none';
+                let thread = new Thread();
+                thread.loadFromPostElements(postsElement);
 
-                let postsElement = document.querySelector('.posts');
-                let watcher = new Watcher(context.boardName, context.threadRefno, postsElement, watchStatusElements, imageExpansion);
-                let posts = <NodeListOf<HTMLElement>>postsElement.querySelectorAll('.post');
-                watcher.bindPosts(posts);
+                class ThreadViewCallback implements uchan.ThreadViewCallback {
+                    onRefnoClicked(post: uchan.Post) {
+                        context.qr.show();
+                        context.qr.addRefno(post.refno);
+                    }
 
-                context.qr = new QR(watcher);
-                for (let i = 0; i < openQrControls.length; i++) {
-                    context.qr.addShowClickListener(openQrControls[i]);
+                    onImageClicked(postView: PostView, file: PostFile, fileContainer: HTMLElement) {
+                        ImageExpansion.onFileClicked(postView, file, fileContainer);
+                    }
                 }
-                for (let i = 0; i < watchUpdateControls.length; i++) {
-                    watcher.addUpdateListener(watchUpdateControls[i]);
+
+                let threadView = new ThreadView(postsElement, thread, new ThreadViewCallback());
+                threadView.bindViews();
+
+                if (!context.locked) {
+                    let postForm = <HTMLElement>document.querySelector('.post-form');
+                    postForm.style.display = 'none';
+
+                    let watcher = new Watcher(context.boardName, context.threadRefno, thread, threadView, watchStatusElements);
+
+                    context.qr = new QR(watcher, context.persistence);
+                    for (let i = 0; i < openQrControls.length; i++) {
+                        context.qr.addShowClickListener(openQrControls[i]);
+                    }
+                    for (let i = 0; i < watchUpdateControls.length; i++) {
+                        watcher.addUpdateListener(watchUpdateControls[i]);
+                    }
                 }
-                watcher.bindRefnos();
             }
         }
     };

@@ -1,34 +1,18 @@
 namespace uchan {
     export class ImageExpansion {
-        constructor() {
-        }
+        static onFileClicked(postView: PostView, file: PostFile, fileContainer: HTMLElement) {
+            let link = <HTMLAnchorElement>fileContainer.querySelector('a');
+            let image = <HTMLImageElement>fileContainer.querySelector('img');
 
-        bindImages() {
-            let images = <NodeListOf<HTMLElement>>document.querySelectorAll('.post .file');
-            for (let i = 0; i < images.length; i++) {
-                let image = images[i];
-                this.bindImage(image);
+            let expanded = link.dataset['expanded'] == 'true';
+            if (expanded) {
+                ImageExpansion.close(fileContainer, link, image);
+            } else {
+                ImageExpansion.expand(fileContainer, link, image);
             }
         }
 
-        bindImage(container:HTMLElement) {
-            let link = <HTMLAnchorElement>container.querySelector('a');
-            let image = <HTMLImageElement>container.querySelector('img');
-            image.addEventListener('click', (event) => {
-                if (event.button == 0 && !event.shiftKey && !event.ctrlKey && !event.metaKey) {
-                    event.preventDefault();
-
-                    let expanded = link.dataset['expanded'] == 'true';
-                    if (expanded) {
-                        this.close(container, link, image);
-                    } else {
-                        this.expand(container, link, image);
-                    }
-                }
-            });
-        }
-
-        expand(container:HTMLElement, link:HTMLAnchorElement, image:HTMLImageElement) {
+        static expand(container: HTMLElement, link: HTMLAnchorElement, image: HTMLImageElement) {
             if (!link.dataset['thumbnail']) {
                 link.dataset['thumbnail'] = image.src;
                 link.dataset['thumbnailwidth'] = image.width.toString();
@@ -60,7 +44,7 @@ namespace uchan {
             image.style.marginLeft = (leftMargin) + 'px';
         }
 
-        close(container:HTMLElement, link:HTMLAnchorElement, image:HTMLImageElement) {
+        static close(container: HTMLElement, link: HTMLAnchorElement, image: HTMLImageElement) {
             image.src = link.dataset['thumbnail'];
             image.width = parseInt(link.dataset['thumbnailwidth']);
             image.height = parseInt(link.dataset['thumbnailheight']);
