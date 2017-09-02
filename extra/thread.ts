@@ -11,11 +11,41 @@ module uchan {
         subject: string;
         files: PostFile[] = [];
 
+        references: number[] = [];
+        referencedBy: number[] = [];
+
         observers: ((post: Post) => void)[] = [];
 
         // This dependency should obviously not exist, but we want to create a map in the PostView to map posts to views,
         // but because there is no way to map objects to objects natively in es5, this is way more efficient than hacking around that.
         views: PostView[] = [];
+
+        resolve() {
+            if (this.html) {
+                // TODO
+                let re = />&gt;&gt;(\d+)</g;
+                let res;
+                while (res = re.exec(this.html)) {
+                    this.references.push(parseInt(res[1]));
+                }
+            }
+        }
+
+        resolveBackrefs(posts: Post[]) {
+            let oldReferencedBy = this.referencedBy;
+
+            this.referencedBy = [];
+            for (let i = 0; i < posts.length; i++) {
+                let post = posts[i];
+                if (post.references.indexOf(this.refno) >= 0) {
+                    this.referencedBy.push(post.refno);
+                }
+            }
+
+            if (!arrayEquals(oldReferencedBy, this.referencedBy)) {
+                this.notify();
+            }
+        }
 
         observe(callback: (post: Post) => void) {
             this.observers.push(callback);
@@ -124,12 +154,17 @@ module uchan {
                             post.files.push(postFile);
                         }
                     }
+                    post.resolve();
 
                     newPosts.push(post);
                 }
             }
 
             this.posts.push(...newPosts);
+
+            for (let i = 0; i < this.posts.length; i++) {
+                this.posts[i].resolveBackrefs(this.posts);
+            }
 
             this.notify();
         }
@@ -197,7 +232,13 @@ module uchan {
                     post.files.push(file);
                 }
 
+                post.resolve();
+
                 this.posts.push(post);
+            }
+
+            for (let i = 0; i < this.posts.length; i++) {
+                this.posts[i].resolveBackrefs(this.posts);
             }
         }
     }

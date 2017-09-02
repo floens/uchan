@@ -67,7 +67,15 @@ module uchan {
             this.callback.onImageClicked(postView, file, fileContainer);
         }
 
-        quoteHover(postView: PostView, quoteElement: HTMLElement, refno: number, mouseIn: boolean) {
+        quoteHover(quoteElement: HTMLElement, refno: number, mouseIn: boolean) {
+            this.highlightOrHoverPostForElement(quoteElement, refno, mouseIn);
+        }
+
+        backrefHover(backrefElement: HTMLElement, refno: number, mouseIn: boolean) {
+            this.highlightOrHoverPostForElement(backrefElement, refno, mouseIn);
+        }
+
+        highlightOrHoverPostForElement(referenceElement: HTMLElement, refno: number, mouseIn: boolean) {
             if (this.hoveringPostView) {
                 this.hoveringPostView.element.parentNode.removeChild(this.hoveringPostView.element);
                 this.hoveringPostView = null;
@@ -105,7 +113,7 @@ module uchan {
 
                         let el = this.hoveringPostView.element;
 
-                        let quoteBB = quoteElement.getBoundingClientRect();
+                        let quoteBB = referenceElement.getBoundingClientRect();
                         let containerBB = this.hoveringPostContainer.getBoundingClientRect();
 
                         el.style.position = 'absolute';
@@ -152,11 +160,14 @@ module uchan {
         refnoElement: HTMLElement;
         fileElements: NodeListOf<HTMLElement>;
         quotes: NodeListOf<HTMLElement>;
+        backrefContainer: HTMLElement;
+        backrefs: HTMLElement[] = [];
 
         boundPostUpdated: (post: Post) => void;
         boundRefnoClicked: (event: Event) => void;
         boundImageClicked: (event: Event) => void;
         boundQuoteEvent: (event: Event) => void;
+        boundBackrefEvent: (event: Event) => void;
 
         bind(threadView: ThreadView, fromPost: Post, element: HTMLElement) {
             this.threadView = threadView;
@@ -164,12 +175,18 @@ module uchan {
             this.element = element;
             this.refnoElement = <HTMLElement> element.querySelector('a.refno');
             this.fileElements = <NodeListOf<HTMLElement>>element.querySelectorAll('.post .file');
-            this.quotes = <NodeListOf<HTMLElement>>element.querySelectorAll('.styled-text a[href^="#p"]');
+            this.quotes = <NodeListOf<HTMLElement>>element.querySelectorAll('.text a.rquote');
+
+            this.backrefContainer = document.createElement('span');
+            this.backrefContainer.classList.add('backref-container');
+            let headerElement = this.element.querySelector('.header');
+            headerElement.insertBefore(this.backrefContainer, headerElement.lastChild);
 
             this.boundPostUpdated = this.postUpdated.bind(this);
             this.boundRefnoClicked = this.refnoClicked.bind(this);
             this.boundImageClicked = this.imageClicked.bind(this);
             this.boundQuoteEvent = this.quoteEvent.bind(this);
+            this.boundBackrefEvent = this.backrefEvent.bind(this);
 
             this.post.observe(this.boundPostUpdated);
             this.postUpdated(this.post);
@@ -177,7 +194,6 @@ module uchan {
 
         postUpdated(post: Post) {
             let refno = this.refnoElement;
-            let refnoNumber = this.post.refno;
 
             refno.removeEventListener('click', this.boundRefnoClicked);
             refno.addEventListener('click', this.boundRefnoClicked);
@@ -198,6 +214,20 @@ module uchan {
                 quote.addEventListener('mouseover', this.boundQuoteEvent);
                 quote.addEventListener('mouseout', this.boundQuoteEvent);
                 quote.addEventListener('click', this.boundQuoteEvent);
+            }
+
+            this.backrefContainer.innerHTML = '';
+            for (let i = 0; i < this.post.referencedBy.length; i++) {
+                let ref = this.post.referencedBy[i];
+                let refElement = document.createElement('a');
+                refElement.classList.add('backref');
+                refElement.textContent = '>>' + ref;
+                refElement.setAttribute('href', '#p' + ref);
+                refElement.addEventListener('mouseover', this.boundBackrefEvent);
+                refElement.addEventListener('mouseout', this.boundBackrefEvent);
+                this.backrefs.push(refElement);
+                this.backrefContainer.appendChild(refElement);
+                this.backrefContainer.appendChild(document.createTextNode(' '));
             }
         }
 
@@ -222,16 +252,25 @@ module uchan {
 
         quoteEvent(event: Event) {
             let quoteElement = <HTMLElement>event.target;
-
             let refno = parseInt(quoteElement.textContent.substr(2));
 
             if (event.type == 'mouseover') {
-                this.threadView.quoteHover(this, quoteElement, refno, true);
+                this.threadView.quoteHover(quoteElement, refno, true);
             } else if (event.type == 'mouseout') {
-                this.threadView.quoteHover(this, quoteElement, refno, false);
+                this.threadView.quoteHover(quoteElement, refno, false);
             } else if (event.type == 'click') {
-                event.preventDefault();
                 this.threadView.quoteClicked(this, quoteElement, refno);
+            }
+        }
+
+        backrefEvent(event: Event) {
+            let backrefElement = <HTMLElement>event.target;
+            let refno = parseInt(backrefElement.textContent.substr(2));
+
+            if (event.type == 'mouseover') {
+                this.threadView.backrefHover(backrefElement, refno, true);
+            } else if (event.type == 'mouseout') {
+                this.threadView.backrefHover(backrefElement, refno, false);
             }
         }
 
@@ -274,7 +313,7 @@ module uchan {
             postHtml += '</div>\n';
 
             if (post.html) {
-                postHtml += '<div class="styled-text">' + post.html + '</div>';
+                postHtml += '<div class="text styled-text">' + post.html + '</div>';
             }
 
             for (let i = 0; i < files.length; i++) {

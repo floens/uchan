@@ -15,24 +15,6 @@
         }
     };
 
-    var highlightHash = function () {
-        var currentlyHighlightedPosts = document.querySelectorAll('.post.highlight');
-        if (currentlyHighlightedPosts) {
-            for (var i = 0; i < currentlyHighlightedPosts.length; i++) {
-                currentlyHighlightedPosts[i].classList.remove('highlight');
-            }
-        }
-
-        var hash = location.hash;
-        var postRefno = parseInt(hash.substring(hash.indexOf('#p') + 2).trim());
-        if (postRefno) {
-            var toHighlight = document.querySelector('#p' + postRefno + '.post');
-            if (toHighlight) {
-                toHighlight.classList.add('highlight');
-            }
-        }
-    };
-
     var listenToFileCount = function () {
         var maxFilesAllowed = window.pageDetails['fileMax'];
 
@@ -53,12 +35,9 @@
 
     if (window.pageDetails['mode'] === 'thread') {
         bindRefnos();
-        highlightHash();
     }
 
     if (window.pageDetails['filePostingEnabled']) {
         listenToFileCount();
     }
-
-    window.addEventListener('hashchange', highlightHash, false);
 })();

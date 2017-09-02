@@ -44,6 +44,16 @@ module uchan {
         return Math.round(num * i) / i;
     };
 
+    export const arrayEquals = function (a, b) {
+        if (a.length != b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+            if (a[i] != b[i]) {
+                return false;
+            }
+        }
+        return true;
+    };
+
     export const xhrJsonGet = function (endpoint: string, callback: (error: Error, data: any) => void) {
         let xhr = new XMLHttpRequest();
         xhr.open('GET', endpoint);

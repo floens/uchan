@@ -94,17 +94,17 @@ def parse_text_line(line, linkify, bigheaders):
         with_break = False
         line = '<h3> ' + line[1:].lstrip() + '</h3>'
 
-    # If the line started with a > wrap the line around a quote span
-    if line.startswith('&gt;'):
-        line = '<span class="quote">' + line + '</span>'
-
-    # Replace any >>123 with <a href="#p123">&gt;&gt;123</a>
-    line = POST_REFNO_PATTERN.sub('<a href="#p\\1">&gt;&gt;\\1</a>', line)
+    # Replace any >>123 with <a class="rquote" href="#p123">&gt;&gt;123</a>
+    line = POST_REFNO_PATTERN.sub('<a class="rquote" href="#p\\1">&gt;&gt;\\1</a>', line)
 
     if linkify:
         # Replace [text](links)
         line = LINK_TARGET_RE.sub('<a href="\\2" target="_blank">\\1</a>', line)
         line = LINK_RE.sub('<a href="\\2">\\1</a>', line)
+
+    # If the line started with a > wrap the line around a quote span
+    if line.startswith('&gt;'):
+        line = '<span class="quote">' + line + '</span>'
 
     if with_break:
         line += '<br>'
