@@ -29,7 +29,7 @@ def purge_board(board: BoardModel):
 def purge_thread(board: BoardModel, thread: ThreadModel, wait=False):
     api_future = _purge(API_THREAD_URL.format(board.name, thread.refno))
     thread_future = _purge(VIEW_THREAD_URL.format(board.name, thread.refno))
-    if wait:
+    if wait and api_future and thread_future:
         futures.wait([api_future, thread_future])
 
 
