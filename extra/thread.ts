@@ -177,8 +177,7 @@ module uchan {
 
                 let post = new Post();
 
-                let checkbox = <HTMLInputElement>postElement.querySelector('input[type="checkbox"]');
-                post.id = parseInt(checkbox.value);
+                post.id = parseInt(postElement.dataset['id']);
                 post.refno = parseInt(postElement.id.substr(1));
                 post.date = parseInt(postElement.dataset['date']);
 

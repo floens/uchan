@@ -144,8 +144,27 @@ module uchan {
             }
 
             if (context.mode == 'board') {
-                // imageExpansion = new ImageExpansion();
-                // imageExpansion.bindImages();
+                let posts = <NodeListOf<HTMLElement>>document.querySelectorAll('.posts');
+
+                for (let i = 0; i < posts.length; i++) {
+                    let postsElement = posts[i];
+
+                    let thread = new Thread();
+                    thread.loadFromPostElements(postsElement);
+
+                    class ThreadViewCallback implements uchan.ThreadViewCallback {
+                        onRefnoClicked(post: uchan.Post) {
+                            return false;
+                        }
+
+                        onImageClicked(postView: PostView, file: PostFile, fileContainer: HTMLElement) {
+                            ImageExpansion.onFileClicked(postView, file, fileContainer);
+                        }
+                    }
+
+                    let threadView = new ThreadView(postsElement, thread, new ThreadViewCallback());
+                    threadView.bindViews();
+                }
             } else if (context.mode == 'thread') {
                 let postsElement = <HTMLElement> document.querySelector('.posts');
 
@@ -156,6 +175,8 @@ module uchan {
                     onRefnoClicked(post: uchan.Post) {
                         context.qr.show();
                         context.qr.addRefno(post.refno);
+
+                        return true;
                     }
 
                     onImageClicked(postView: PostView, file: PostFile, fileContainer: HTMLElement) {

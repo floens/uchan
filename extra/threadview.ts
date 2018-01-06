@@ -1,6 +1,6 @@
 module uchan {
     export interface ThreadViewCallback {
-        onRefnoClicked(post: Post);
+        onRefnoClicked(post: Post): boolean;
 
         onImageClicked(postView: PostView, file: PostFile, fileContainer: HTMLElement);
     }
@@ -59,8 +59,8 @@ module uchan {
             postView.bind(this, post, postElement);
         }
 
-        refnoClicked(postView: PostView) {
-            this.callback.onRefnoClicked(postView.post);
+        refnoClicked(postView: PostView): boolean {
+            return this.callback.onRefnoClicked(postView.post);
         }
 
         imageClicked(postView: PostView, file: PostFile, fileContainer: HTMLElement) {
@@ -232,8 +232,9 @@ module uchan {
         }
 
         refnoClicked(event: Event) {
-            event.preventDefault();
-            this.threadView.refnoClicked(this);
+            if (this.threadView.refnoClicked(this)) {
+                event.preventDefault();
+            }
         }
 
         imageClicked(event: MouseEvent) {
