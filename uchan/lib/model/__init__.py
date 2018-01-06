@@ -465,6 +465,7 @@ class SiteConfigModel:
         self.default_name: str = None
         self.posting_enabled: bool = None
         self.file_posting: bool = None
+        self.header_tags: str = None
 
     def copy(self):
         m = SiteConfigModel()
@@ -475,6 +476,7 @@ class SiteConfigModel:
         m.default_name = self.default_name
         m.posting_enabled = self.posting_enabled
         m.file_posting = self.file_posting
+        m.header_tags = self.header_tags
         return m
 
     @classmethod
@@ -486,6 +488,7 @@ class SiteConfigModel:
         m.default_name = 'Anonymous'
         m.posting_enabled = True
         m.file_posting = True
+        m.header_tags = ''
         return m
 
     @classmethod
@@ -508,6 +511,7 @@ class SiteConfigModel:
         m.default_name = g('default_name', 'Anonymous')
         m.posting_enabled = g('posting_enabled', True)
         m.file_posting = g('file_posting_enabled', True)
+        m.header_tags = g('header_tags', '')
 
         return m
 
@@ -521,6 +525,7 @@ class SiteConfigModel:
         m.default_name = cache['default_name']
         m.posting_enabled = cache['posting_enabled']
         m.file_posting = cache['file_posting']
+        m.header_tags = cache['header_tags'] if 'header_tags' in cache else ''
         return m
 
     def to_orm_model(self):
@@ -545,6 +550,7 @@ class SiteConfigModel:
         s('default_name', self.default_name, str)
         s('posting_enabled', self.posting_enabled, bool)
         s('file_posting_enabled', self.file_posting, bool)
+        s('header_tags', self.header_tags, str)
 
         orm_model.config = res
         return orm_model
@@ -557,7 +563,8 @@ class SiteConfigModel:
             'boards_top': self.boards_top,
             'default_name': self.default_name,
             'posting_enabled': self.posting_enabled,
-            'file_posting': self.file_posting
+            'file_posting': self.file_posting,
+            'header_tags': self.header_tags
         }
 
 

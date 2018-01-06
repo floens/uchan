@@ -31,6 +31,9 @@ class SiteConfigurationForm(CSRFForm):
                                    description='If unchecked, globally disables posting.')
     file_posting_enabled = BooleanField('File posting enabled', default=True,
                                         description='If unchecked, globally disables file posting.')
+    header_tags = TextAreaField('Header tags', [Length(max=10000)], default='',
+                                description='Additional html that is placed in the <head>.',
+                                render_kw={'cols': 60, 'rows': 6})
 
     submit = SubmitField('Update')
 
@@ -51,6 +54,7 @@ def mod_site():
             site_config.default_name = site_configuration_form.default_name.data
             site_config.posting_enabled = site_configuration_form.posting_enabled.data
             site_config.file_posting = site_configuration_form.file_posting_enabled.data
+            site_config.header_tags = site_configuration_form.header_tags.data
 
             site_service.update_site_config(site_config)
 
@@ -61,7 +65,8 @@ def mod_site():
             boards_top=site_config.boards_top,
             default_name=site_config.default_name,
             posting_enabled=site_config.posting_enabled,
-            file_posting_enabled=site_config.file_posting
+            file_posting_enabled=site_config.file_posting,
+            header_tags=site_config.header_tags
         )
 
     current_ip4_str = get_request_ip4_str()

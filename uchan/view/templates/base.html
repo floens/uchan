@@ -10,6 +10,10 @@
     <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}">
     <link rel="manifest" href="{{ url_for('manifest_json') }}">
 
+    {% block additional_header_tags -%}
+        {{- site_config.header_tags|safe -}}
+    {%- endblock %}
+
     {% block styles %}
         {% assets "css" %}<link rel="stylesheet" href="{{ ASSET_URL }}">{% endassets %}
     {% endblock %}
