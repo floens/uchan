@@ -72,19 +72,23 @@ def mod_boards():
     moderator = request_moderator()
     board_moderators = moderator_service.get_all_board_moderators_by_moderator(moderator)
 
-    add_board_form = AddBoardForm(request.form)
-    if request.method == 'POST' and add_board_form.validate():
-        try:
-            board_name = add_board_form.board_name.data
-            moderator_service.user_create_board(moderator, board_name)
-            flash('Board created')
-            return redirect(url_for('.mod_board', board_name=board_name))
-        except ArgumentError as e:
-            flash(e.message)
-            return redirect(url_for('.mod_boards'))
+    show_add_board = moderator_service.can_create_board(moderator)
+
+    add_board_form = None
+    if show_add_board:
+        add_board_form = AddBoardForm(request.form)
+        if request.method == 'POST' and add_board_form.validate():
+            try:
+                board_name = add_board_form.board_name.data
+                moderator_service.user_create_board(moderator, board_name)
+                flash('Board created')
+                return redirect(url_for('.mod_board', board_name=board_name))
+            except ArgumentError as e:
+                flash(e.message)
+                return redirect(url_for('.mod_boards'))
 
     return render_template('mod_boards.html', add_board_form=add_board_form, moderator=moderator,
-                           board_moderators=board_moderators)
+                           board_moderators=board_moderators, show_add_board=show_add_board)
 
 
 @mod.route('/mod_board/<board_name>', methods=['GET', 'POST'])

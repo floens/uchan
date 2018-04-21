@@ -138,6 +138,14 @@ def can_update_advanced_board_configs(moderator: ModeratorModel) -> bool:
     return has_role(moderator, roles.ROLE_ADMIN)
 
 
+def can_create_board(moderator: ModeratorModel) -> bool:
+    try:
+        action_authorizer.authorize_action(moderator, action_authorizer.ModeratorAction.BOARD_CREATE)
+        return True
+    except (ArgumentError, NoPermissionError):
+        return False
+
+
 def can_update_roles(moderator: ModeratorModel, board: BoardModel) -> bool:
     try:
         action_authorizer.authorize_board_action(moderator, board, ModeratorBoardAction.ROLES_UPDATE)
@@ -258,9 +266,11 @@ def user_update_roles(moderator: ModeratorModel, board: BoardModel, username: st
 def user_register(username: str, password: str, password_repeat: str):
     """
     Register a moderator with the given passwords. The created moderator has no roles and no relationships to boards.
+    If user registration was disabled in the site configuration, this methods throws an ArgumentError.
     :param username: username to register with
     :param password: password to register with
     :param password_repeat: repeated version of password, used for the error message.
+    :raises ArgumentError if user registration is disabled.
     :raises ArgumentError if the two passwords don't match.
     :raises ArgumentError any error defined in :meth:`uchan.lib.repository.moderators.create_with_password`
     :return: the created moderator
@@ -268,6 +278,8 @@ def user_register(username: str, password: str, password_repeat: str):
 
     if password != password_repeat:
         raise ArgumentError(MESSAGE_PASSWORD_INCORRECT)
+
+    action_authorizer.authorize_registration()
 
     moderator = ModeratorModel.from_username(username)
     moderator = moderators.create_with_password(moderator, password)

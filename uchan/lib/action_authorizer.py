@@ -5,6 +5,9 @@ from uchan.lib import roles
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.model import ModeratorModel, BoardModel
 
+MESSAGE_REGISTRATION_DISABLED = 'Registration is disabled'
+MESSAGE_BOARD_CREATION_DISABLED = 'Board creation is disabled'
+
 
 class NoPermissionError(Exception):
     def __init__(self, *args):
@@ -56,6 +59,12 @@ class PostAction(Enum):
     THREAD_LOCKED_TOGGLE = 6
 
 
+def authorize_registration():
+    registration = site_service.get_site_config().registration
+    if not registration:
+        raise ArgumentError(MESSAGE_REGISTRATION_DISABLED)
+
+
 def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, post_details=None, board=None,
                           thread=None):
     if actor is not None and has_role(actor, roles.ROLE_ADMIN):
@@ -97,6 +106,10 @@ def authorize_action(actor: ModeratorModel, action: ModeratorAction):
         return
 
     if action is ModeratorAction.BOARD_CREATE:
+        board_creation_enabled = site_service.get_site_config().board_creation
+        if not board_creation_enabled:
+            raise ArgumentError(MESSAGE_BOARD_CREATION_DISABLED)
+
         creator_roles = 0
         for board_moderator in moderator_service.get_all_board_moderators_by_moderator(actor):
             if roles.BOARD_ROLE_CREATOR in board_moderator.roles:
@@ -173,4 +186,4 @@ def has_board_roles(moderator, board, req_roles):
     return moderator_service.has_any_of_board_roles(moderator, board, req_roles)
 
 
-from uchan.lib.service import ban_service, moderator_service
+from uchan.lib.service import ban_service, moderator_service, site_service

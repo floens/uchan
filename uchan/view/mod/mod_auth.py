@@ -1,11 +1,10 @@
 from flask import request, redirect, url_for, render_template, abort, flash, session
 
-from uchan import configuration
 from uchan.lib import validation
 from uchan.lib.exceptions import BadRequestError, ArgumentError
 from uchan.lib.mod_log import mod_log
 from uchan.lib.moderator_request import get_authed, unset_mod_authed, set_mod_authed, request_moderator
-from uchan.lib.service import moderator_service, verification_service
+from uchan.lib.service import moderator_service, verification_service, site_service
 from uchan.view import check_csrf_token, check_csrf_referer
 from uchan.view.mod import mod
 
@@ -45,7 +44,10 @@ def mod_auth():
         if not authed:
             method = verification_service.get_method()
 
-        return render_template('auth.html', authed=authed, moderator=moderator, method=method)
+        show_registration = site_service.get_site_config().registration
+
+        return render_template('auth.html', authed=authed, moderator=moderator, method=method,
+                               show_registration=show_registration)
 
 
 def _mod_auth_post():

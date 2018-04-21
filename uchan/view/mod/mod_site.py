@@ -17,6 +17,11 @@ class SiteConfigurationForm(CSRFForm):
     name = 'Site configuration'
     action = '.mod_site'
 
+    registration = BooleanField('Moderator registration', default=True,
+                                description='Allow registration')
+    board_creation = BooleanField('Board creation', default=True,
+                                  description='Allow creation of boards by moderators. If disabled, only admins can '
+                                              'create new boards.')
     motd = TextAreaField('MOTD', [Length(max=500)], default='',
                          description='The message of the day is displayed at the top of every board page.',
                          render_kw={'cols': 60, 'rows': 6})
@@ -48,6 +53,8 @@ def mod_site():
     if request.method == 'POST':
         site_configuration_form = SiteConfigurationForm(request.form)
         if site_configuration_form.validate():
+            site_config.registration = site_configuration_form.registration.data
+            site_config.board_creation = site_configuration_form.board_creation.data
             site_config.motd = site_configuration_form.motd.data
             site_config.footer_text = site_configuration_form.footer_text.data
             site_config.boards_top = site_configuration_form.boards_top.data
@@ -60,6 +67,8 @@ def mod_site():
 
     if not site_configuration_form:
         site_configuration_form = SiteConfigurationForm(
+            registration=site_config.registration,
+            board_creation=site_config.board_creation,
             motd=site_config.motd,
             footer_text=site_config.footer_text,
             boards_top=site_config.boards_top,

@@ -466,6 +466,8 @@ class SiteConfigModel:
         self.posting_enabled: bool = None
         self.file_posting: bool = None
         self.header_tags: str = None
+        self.registration: bool = None
+        self.board_creation: bool = None
 
     def copy(self):
         m = SiteConfigModel()
@@ -477,6 +479,8 @@ class SiteConfigModel:
         m.posting_enabled = self.posting_enabled
         m.file_posting = self.file_posting
         m.header_tags = self.header_tags
+        m.registration = self.registration
+        m.board_creation = self.board_creation
         return m
 
     @classmethod
@@ -489,6 +493,8 @@ class SiteConfigModel:
         m.posting_enabled = True
         m.file_posting = True
         m.header_tags = ''
+        m.registration = True
+        m.board_creation = True
         return m
 
     @classmethod
@@ -512,6 +518,8 @@ class SiteConfigModel:
         m.posting_enabled = g('posting_enabled', True)
         m.file_posting = g('file_posting_enabled', True)
         m.header_tags = g('header_tags', '')
+        m.registration = g('registration', True)
+        m.board_creation = g('board_creation', True)
 
         return m
 
@@ -526,6 +534,8 @@ class SiteConfigModel:
         m.posting_enabled = cache['posting_enabled']
         m.file_posting = cache['file_posting']
         m.header_tags = cache['header_tags'] if 'header_tags' in cache else ''
+        m.registration = cache['registration'] if 'registration' in cache else True
+        m.board_creation = cache['board_creation'] if 'board_creation' in cache else True
         return m
 
     def to_orm_model(self):
@@ -551,6 +561,8 @@ class SiteConfigModel:
         s('posting_enabled', self.posting_enabled, bool)
         s('file_posting_enabled', self.file_posting, bool)
         s('header_tags', self.header_tags, str)
+        s('registration', self.registration, bool)
+        s('board_creation', self.board_creation, bool)
 
         orm_model.config = res
         return orm_model
@@ -564,7 +576,9 @@ class SiteConfigModel:
             'default_name': self.default_name,
             'posting_enabled': self.posting_enabled,
             'file_posting': self.file_posting,
-            'header_tags': self.header_tags
+            'header_tags': self.header_tags,
+            'registration': self.registration,
+            'board_creation': self.board_creation
         }
 
 

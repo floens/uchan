@@ -5,8 +5,10 @@
 {% block title %}Mod boards{% endblock %}
 {% block mod_title %}Boards{% endblock %}
 {% block mod_content %}
-    {{ form_widget.render(add_board_form) }}
-    <br>
+    {% if show_add_board %}
+        {{ form_widget.render(add_board_form) }}
+        <br>
+    {% endif %}
 
     Boards you're a moderator of:<br>
     <table class="datatable">
