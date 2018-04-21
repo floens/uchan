@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 from flask import send_from_directory, session, request, abort, url_for, render_template, jsonify
 from markupsafe import escape, Markup
 
-from uchan import app, configuration
+from uchan import app, configuration, logger
 from uchan.filter.app_filters import page_formatting
 from uchan.lib import plugin_manager
 from uchan.lib.service import page_service, site_service, board_service
@@ -103,7 +103,13 @@ def check_csrf_referer(request):
     parsed_url = urlparse(referer)
 
     final_url = '{}://{}'.format(parsed_url.scheme, parsed_url.netloc)
-    return final_url == configuration.app.site_url
+
+    valid = final_url == configuration.app.site_url
+    if not valid:
+        logger.warn('Referer not valid: "{}" is different than the configured url "{}"'
+                    .format(final_url, configuration.app.site_url))
+
+    return valid
 
 
 def render_error(user_message, code=400, with_retry=False):
