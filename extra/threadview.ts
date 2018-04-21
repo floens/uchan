@@ -180,7 +180,8 @@ module uchan {
             this.backrefContainer = document.createElement('span');
             this.backrefContainer.classList.add('backref-container');
             let headerElement = this.element.querySelector('.header');
-            headerElement.insertBefore(this.backrefContainer, headerElement.lastChild);
+            let manageElement = this.element.querySelector('.header .manage');
+            headerElement.insertBefore(this.backrefContainer, manageElement.nextSibling);
 
             this.boundPostUpdated = this.postUpdated.bind(this);
             this.boundRefnoClicked = this.refnoClicked.bind(this);
