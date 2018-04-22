@@ -16,6 +16,12 @@
 
     {% block styles %}
         {% assets "css" %}<link rel="stylesheet" href="{{ ASSET_URL }}">{% endassets %}
+
+        {% for theme_name in theme_names %}
+            {% assets 'css_theme_' + theme_name[1] -%}
+                <link rel="{% if not loop.first %}alternate {% endif %}stylesheet" href="{{ ASSET_URL }}" data-name="{{ theme_name[1] }}" title="{{ theme_name[0] }}">
+            {%- endassets %}
+        {% endfor %}
     {% endblock %}
     <noscript><style>.jsonly{display:none;}</style></noscript>
 </head>
@@ -64,6 +70,10 @@
 </div>
 
 {% block javascripts %}
+    {% assets "js_site" %}
+        <script src="{{ ASSET_URL }}"></script>
+    {% endassets %}
+
     {{ extra_javascript.gather()|safe }}
 {% endblock %}
 </body>

@@ -1,0 +1,69 @@
+body {
+    background: #eef2ff;
+}
+
+.top-bar {
+    background-color: #d6daf0;
+}
+
+.post-form {
+    margin: 0 auto;
+}
+
+/* css hackery for the side arrows: */
+
+.posts .post + .post:before {
+    content: '>>';
+    display: inline-block;
+    margin-left: -2em;
+    transform: translate(0, -0.2em);
+    color: #b7c5d9;
+}
+
+.posts .post + .post {
+    margin-left: 0.5em;
+}
+
+.posts .post + .post .header {
+    margin-top: -1.3em;
+}
+
+/* end side arrows css */
+
+.post {
+    display: table;
+    background-color: #eef2ff;
+    margin-bottom: 5px;
+}
+
+.post.divider {
+    border: none;
+}
+
+.posts .post + .post {
+    background-color: #d6daf0;
+    border-right: 1px solid #b7c5d9;
+    border-bottom: 1px solid #b7c5d9;
+}
+
+.post.highlight {
+    background: #d6bad0 !important;
+    border-right: 1px solid #ba9dbf !important;
+    border-bottom: 1px solid #ba9dbf !important;
+}
+
+.posts .post + .post {
+    padding-left: 0.4em;
+    padding-top: 0.4em;
+    padding-bottom: 0.3em;
+}
+
+.posts .post + .post .text {
+    padding-top: 0.6em;
+    padding-bottom: 0.6em;
+    padding-left: 2.5em;
+}
+
+a:hover, .styled-text a {
+    color: #dd0000 !important;
+}

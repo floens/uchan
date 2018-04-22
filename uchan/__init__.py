@@ -4,8 +4,6 @@ import sys
 
 from celery import Celery
 from celery.loaders.app import AppLoader
-from flask_assets import Environment
-from webassets import Bundle
 
 app = None
 celery = None
@@ -57,8 +55,6 @@ def init():
 
     database.register_teardown(app)
 
-    _setup_assets(app)
-
     from uchan.lib.cache import cache
 
     # Setup session handling
@@ -67,6 +63,10 @@ def init():
 
     # Import views
     import uchan.view
+
+    from uchan.view import assets
+
+    assets.setup_assets(app)
 
     # Import jinja filters
     import uchan.filter.app_filters
@@ -99,34 +99,6 @@ def init():
     plugin_manager.load_plugins(plugins, config_parser)
 
     # database.metadata_create_all()
-
-
-def _setup_assets(app):
-    assets = Environment(app)
-    assets.directory = './assets/'
-    assets.url = '/assets'
-    assets.manifest = 'json'
-
-    if configuration.app.debug:
-        assets.url_expire = False
-        js_thread = Bundle('js/thread.js', output='thread.js')
-        js_extra = Bundle('js/extra.js', output='extra.js')
-        css = Bundle('style/style.css', output='style.css')
-        css_extra = Bundle('style/extra.css', output='extra.css')
-        css_mod = Bundle('mod/style/mod_style.css', output='mod_style.css')
-    else:
-        assets.auto_build = False
-        js_thread = Bundle('js/thread.js', filters='jsmin', output='thread.%(version)s.js')
-        js_extra = Bundle('js/extra.js', filters='jsmin', output='extra.%(version)s.js')
-        css = Bundle('style/style.css', filters='cleancss', output='style.%(version)s.css')
-        css_extra = Bundle('style/extra.css', filters='cleancss', output='extra.%(version)s.css')
-        css_mod = Bundle('mod/style/mod_style.css', filters='cleancss', output='mod_style.%(version)s.css')
-
-    assets.register('js_thread', js_thread)
-    assets.register('js_extra', js_extra)
-    assets.register('css', css)
-    assets.register('css_mod', css_mod)
-    assets.register('css_extra', css_extra)
 
 
 def setup_logging():
