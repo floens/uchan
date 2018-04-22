@@ -18,6 +18,8 @@ MIN_PASSWORD_LENGTH = 5
 MAX_PASSWORD_LENGTH = 25
 MAX_TEXT_LENGTH = 2000
 MAX_TEXT_LINES = 25
+MAX_TEXT_LENGTH_OP = 6000
+MAX_TEXT_LINES_OP = 60
 
 MESSAGE_BOARD_NOT_FOUND = 'Board not found'
 MESSAGE_THREAD_NOT_FOUND = 'Thread not found'
@@ -137,10 +139,13 @@ def _check_post_details(post_details: PostDetails, thread: ThreadModel, board: B
         raise ArgumentError(MESSAGE_POST_NO_TEXT)
 
     if post_details.text is not None:
-        if len(post_details.text) > MAX_TEXT_LENGTH:
+        max_length = MAX_TEXT_LENGTH_OP if thread is None else MAX_TEXT_LENGTH
+        max_lines = MAX_TEXT_LINES_OP if thread is None else MAX_TEXT_LINES
+
+        if len(post_details.text) > max_length:
             raise ArgumentError(MESSAGE_POST_TEXT_TOO_LONG)
 
-        if len(post_details.text.splitlines()) > MAX_TEXT_LINES:
+        if len(post_details.text.splitlines()) > max_lines:
             raise ArgumentError(MESSAGE_POST_TEXT_TOO_MANY_LINES)
 
     if post_details.name is not None and len(post_details.name) > MAX_NAME_LENGTH:
