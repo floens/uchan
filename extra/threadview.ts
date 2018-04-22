@@ -181,7 +181,8 @@ module uchan {
             this.backrefContainer.classList.add('backref-container');
             let headerElement = this.element.querySelector('.header');
             let manageElement = this.element.querySelector('.header .manage');
-            headerElement.insertBefore(this.backrefContainer, manageElement.nextSibling);
+            headerElement.insertBefore(this.backrefContainer,
+                manageElement ? manageElement.nextSibling : null);
 
             this.boundPostUpdated = this.postUpdated.bind(this);
             this.boundRefnoClicked = this.refnoClicked.bind(this);
