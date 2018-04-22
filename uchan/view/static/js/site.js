@@ -16,8 +16,6 @@
                 }
             }
         }
-
-        console.log(stylesheets);
     }
 
     function setActiveStylesheet(name) {
