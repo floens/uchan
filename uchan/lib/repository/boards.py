@@ -1,13 +1,14 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
+from sqlalchemy import func
 from sqlalchemy.orm import load_only, joinedload
 
 from uchan.lib import validation
 from uchan.lib.cache import cache, cache_key, LocalCache
 from uchan.lib.database import session
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.model import BoardModel, BoardConfigModel
-from uchan.lib.ormmodel import BoardOrmModel
+from uchan.lib.model import BoardModel, BoardConfigModel, ThreadModel, PostModel
+from uchan.lib.ormmodel import BoardOrmModel, ThreadOrmModel, PostOrmModel
 
 MESSAGE_DUPLICATE_BOARD_NAME = 'Duplicate board name'
 MESSAGE_INVALID_NAME = 'Invalid board name'
@@ -82,6 +83,41 @@ def get_all_board_names() -> List[str]:
         cache.set(cache_key('all_board_names'), res)
 
     local_cache.set('all_board_names', res)
+
+    return res
+
+
+def get_all_boards_with_last_threads(offset_limit) -> List[Tuple[BoardModel, ThreadModel, PostModel]]:
+    with session() as s:
+        q = s.query(BoardOrmModel, ThreadOrmModel, PostOrmModel) \
+            .filter(BoardOrmModel.id == ThreadOrmModel.board_id,
+                    BoardOrmModel.refno_counter == ThreadOrmModel.refno,
+                    ThreadOrmModel.id == PostOrmModel.thread_id,
+                    PostOrmModel.refno == 1) \
+            .order_by(ThreadOrmModel.last_modified.desc())
+
+        if offset_limit:
+            q = q.offset(offset_limit[0]).limit(offset_limit[1])
+
+        b = q.all()
+
+        res = list(map(lambda i: (BoardModel.from_orm_model(i[0]),
+                                  ThreadModel.from_orm_model(i[1]),
+                                  PostModel.from_orm_model(i[2])), b))
+        s.commit()
+        return res
+
+
+def get_board_count() -> int:
+    cached_count = cache.get(cache_key('board_count'))
+    if cached_count:
+        res = cached_count
+    else:
+        with session() as s:
+            res = s.query(BoardOrmModel).count()
+            s.commit()
+
+        cache.set(cache_key('board_count'), res)
 
     return res
 

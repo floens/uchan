@@ -336,3 +336,30 @@ blockquote {
 
 .page {
 }
+
+.page-full {
+    border: 1px solid #B1B1B1;
+}
+
+.page-full .header {
+    background-color: #87a6f7;
+    padding: 5px;
+    border-bottom: 1px solid #b1b1b1;
+}
+
+.page-full .content {
+    background-color: #fff4e2;
+}
+
+.table-styled {
+    width: 100%;
+}
+
+.table-styled th {
+    background-color: #e3d8c6;
+    text-align: left;
+}
+
+.table-styled tr:nth-child(even) {
+    background-color: #f3e8d6;
+}

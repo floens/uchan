@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% import "widget/paged_model.html" as paged_model %}
+
+{% block title %}Boards{% endblock %}
+
+{% block content %}
+    <div class="page-full">
+        <div class="header">Boards</div>
+
+        <div class="content">
+            {% macro headers() %}
+                <tr>
+                    <th style="width: 160px">Board</th>
+                    <th style="width: 120px">Total threads</th>
+                    <th>Last thread</th>
+                    <th style="width: 220px">Last reply</th>
+                </tr>
+            {% endmacro %}
+
+            {% macro row(item) %}
+                {% set board, thread, post = item %}
+                <td>
+                    <a href="{{ url_for('board', board_name=board.name) }}">{{ board|board_code_name }}</a>
+                </td>
+                <td>
+                    {{ board.refno_counter }} {{ board.refno_counter|pluralize('thread', 'threads') }}<br>
+                </td>
+                <td>
+                    <a href="{{ url_for('view_thread', board_name=board.name, thread_refno=thread.refno) }}">
+                        {% if post.text %}
+                            {{ post.text|truncate(180) }}
+                        {% else %}
+                            <i>no text</i>
+                        {% endif %}
+                    </a>
+                </td>
+                <td>
+                    {{ thread.last_modified|time_remaining }}
+                </td>
+            {% endmacro %}
+
+            {{ paged_model.render('boards', paged_boards, 'boards', render_headers=headers, render_row=row,
+                                  table_class='table-styled', pager_position='bottom') }}
+        </div>
+    </div>
+{% endblock %}

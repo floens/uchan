@@ -7,7 +7,7 @@
         {% if page['is_current'] %}
             [{{ page['text'] }}]
         {% else %}
-            [<a href="{{ paged_model.offset_link(name, base_url, page['offset']) }}">{{ page['text'] }}<a>]
+            [<a href="{{ paged_model.offset_link(name, base_url, page['offset']) }}">{{ page['text'] }}</a>]
         {% endif %}
     {% endfor %}
 
@@ -16,27 +16,40 @@
     {% endif %}
 {% endmacro %}
 
-{% macro render(name, paged_model, base_url) %}
-    {{ render_pager(name, paged_model, base_url) }}
+{% macro render(name, paged_model, base_url, render_headers=None, render_row=None, table_class='datatable',
+                pager_position='both') %}
+    {% if pager_position == 'both' or pager_position == 'top' %}
+        {{ render_pager(name, paged_model, base_url) }}
+    {% endif %}
 
-    <table class="datatable">
-    <thead>
-    <tr>
-        {% for header in paged_model.header() %}
-        <th>{{ header }}</th>
-        {% endfor %}
-    </tr>
-    </thead>
+    <table class="{{ table_class }}">
+    {% if render_headers is not none %}
+        {{ render_headers() }}
+    {% else %}
+        <thead>
+        <tr>
+            {% for header in paged_model.header() %}
+            <th>{{ header }}</th>
+            {% endfor %}
+        </tr>
+        </thead>
+    {% endif %}
     <tbody>
     {% for model in paged_model.data(name) %}
         <tr>
-        {% for row in paged_model.row(model) %}
-            <td>{{ row }}</td>
-        {% endfor %}
+        {% if render_row is not none %}
+            {{ render_row(model) }}
+        {% else %}
+            {% for row in paged_model.row(model) %}
+                <td>{{ row }}</td>
+            {% endfor %}
+        {% endif %}
         </tr>
     {% endfor %}
     </tbody>
     </table>
 
-    {{ render_pager(name, paged_model, base_url) }}
+    {% if pager_position == 'both' or pager_position == 'bottom' %}
+        {{ render_pager(name, paged_model, base_url) }}
+    {% endif %}
 {% endmacro %}

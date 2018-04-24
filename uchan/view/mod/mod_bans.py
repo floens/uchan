@@ -17,7 +17,7 @@ from uchan.view import with_token
 from uchan.view.form import CSRFForm
 from uchan.view.form.validators import BoardNameValidator
 from uchan.view.mod import mod, mod_role_restrict
-from uchan.view.mod.paged_model import PagedModel
+from uchan.view.paged_model import PagedModel
 
 
 class BanForm(CSRFForm):
@@ -55,29 +55,6 @@ class PagedBans(PagedModel):
 
     def header(self):
         return 'ip', 'to ip', 'from', 'until', 'board', 'reason', ''
-
-    def row(self, ban: BanOrmModel):
-        if ban.length > 0:
-            expire_time = ban.date + ban.length
-            until = formatted_time(expire_time) + ' - '
-            if expire_time - now() < 0:
-                until += 'Expired, not viewed'
-            else:
-                until += time_remaining(expire_time) + ' remaining'
-        else:
-            until = 'Does not expire'
-
-        delete_button = '<button class="confirm-button" name="ban_id" value="' + str(ban.id) + '">Lift ban</button>'
-
-        return (
-            ip4_to_str(ban.ip4),
-            ip4_to_str(ban.ip4_end) if ban.ip4_end is not None else '',
-            formatted_time(ban.date),
-            until,
-            ban.board or '',
-            ban.reason,
-            Markup(delete_button)
-        )
 
 
 # TODO: add search
@@ -117,7 +94,21 @@ def mod_bans():
                 filled_in_ip4 = ip4_to_str(post.ip4)
         ban_form = BanForm(None, ban_ip4=filled_in_ip4)
 
-    return render_template('mod_bans.html', ban_messages=ban_messages, ban_form=ban_form, paged_bans=PagedBans())
+    def format_ban_until(ban):
+        if ban.length > 0:
+            expire_time = ban.date + ban.length
+            until = formatted_time(expire_time) + ' - '
+            if expire_time - now() < 0:
+                until += 'Expired, not viewed'
+            else:
+                until += time_remaining(expire_time) + ' remaining'
+        else:
+            until = 'Does not expire'
+
+        return until
+
+    return render_template('mod_bans.html', ban_messages=ban_messages, ban_form=ban_form, paged_bans=PagedBans(),
+                           format_ban_until=format_ban_until)
 
 
 @mod.route('/mod_ban/delete', methods=['POST'])

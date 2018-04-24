@@ -99,3 +99,11 @@ def post_file_uri(name):
     # TODO
     from uchan.lib.service import file_service
     return file_service.resolve_to_uri(name)
+
+
+@app.template_filter()
+def board_code_name(board):
+    code = '/' + board.name + '/'
+    full_name = board.config.full_name
+    name = ' - ' + full_name if full_name else ''
+    return code + name

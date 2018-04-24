@@ -8,10 +8,10 @@ class PagedModel:
         self.cached_count: int = None
 
     def header(self):
-        raise NotImplementedError()
+        pass
 
     def row(self, model):
-        raise NotImplementedError()
+        pass
 
     def provide_count(self) -> int:
         raise NotImplementedError()
