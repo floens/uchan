@@ -1,9 +1,10 @@
 alembic==0.8.8
 bcrypt==3.1.2
-celery==4.1.0
+celery==4.1.1
 Flask==0.12.2
 Flask-Assets==0.12
 jsmin==2.2.2
+kombu==4.2.0
 Pillow==4.1.1
 psycopg2==2.7.3.2
 python-dateutil==2.5.3
