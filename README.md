@@ -1,7 +1,6 @@
 # µchan - anonymous imageboard software
 
-[![slack](https://slack.plebco.de/badge.svg)](https://slack.plebco.de/)
-[![irc](https://img.shields.io/badge/rizon-%23uchan-blue.svg)](https://qchat.rizon.net/?url=irc:///#uchan)
+[Slack](https://join.slack.com/t/uchan/shared_invite/enQtMjkyOTM3NDczNTcxLTNkMzljNDUyNjkzNjEwOTNkZTljZWQ3ZDNmNWUyMTY2YTAwNzBhNmI3YTg1YmNjMDQxZTgzMTM2YzE2YzRhMGI) | [IRC](https://qchat.rizon.net/?url=irc:///#uchan)
 
 [*Demo site*](https://uchan.plebco.de/)
 
