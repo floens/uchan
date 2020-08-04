@@ -1,7 +1,7 @@
 alembic==0.8.8
 bcrypt==3.1.2
 celery==4.1.1
-Flask==0.12.2
+Flask==1.1.2
 Flask-Assets==0.12
 jsmin==2.2.2
 kombu==4.2.0
@@ -12,3 +12,4 @@ python3-memcached==1.51
 requests==2.11.1
 SQLAlchemy==1.1.3
 WTForms==2.1
+Werkzeug==0.16.0

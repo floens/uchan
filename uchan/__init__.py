@@ -114,7 +114,7 @@ def setup_logging():
     max_bytes = 5000000
     backup_count = 5
 
-    app.logger.handlers[0].setFormatter(logging.Formatter(log_format))
+    # app.logger.handlers[0].setFormatter(logging.Formatter(log_format))
     log_handler = RotatingFileHandler(app_log_path, maxBytes=max_bytes, backupCount=backup_count)
     log_handler.setFormatter(logging.Formatter(log_format))
 
