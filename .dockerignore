@@ -1,14 +1,13 @@
-.git
-.gitignore
-data/*
-docker
-
-.idea
-*.iml
-
+# build/library files
+node_modules/
+build/
 __pycache__/
 *.py[cod]
 
-env/
-
+# OS files
 .DS_Store
+._*
+
+# config files
+config.ini
+.env
