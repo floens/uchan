@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 
 from flask import Flask, request
-from werkzeug.contrib.fixers import ProxyFix
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from uchan.config import UchanConfiguration
 
