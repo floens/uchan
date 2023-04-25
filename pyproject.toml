@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "uchan"
+version = "0.1.0"
+description = "small footprint imageboard software"
+authors = ["Floens"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+alembic = "^1.10.4"
+bcrypt = "^4.0.1"
+celery = "^5.2.7"
+Flask = "^2.2.3"
+Pillow = "^9.5.0"
+psycopg2 = "^2.9.6"
+requests = "^2.28.2"
+WTForms = "^3.0.1"
+cachelib = "^0.10.2"
+pylibmc = "^1.6.3"
+flask-assets = "^2.0"
+python-dateutil = "^2.8.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
