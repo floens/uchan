@@ -108,6 +108,6 @@ def _gather_memcache_stats():
         s = 'server: ' + stat[0].decode('utf8') + '\n'
         t = []
         for k, v in stat[1].items():
-            t.append((k.decode('utf8'), v.decode('utf8')))
+            t.append((k, v))
         servers.append((s, t))
     return servers
