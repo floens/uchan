@@ -71,7 +71,7 @@ def find_by_moderator(moderator: ModeratorModel, page: int, per_page: int, for_b
 
         q = q.order_by(desc(ReportOrmModel.date))
         q = q.options(
-            joinedload('post').joinedload('thread').joinedload('board')
+            joinedload(ReportOrmModel.post).joinedload(PostOrmModel.thread).joinedload(ThreadOrmModel.board)
         )
         q = q.offset(page * per_page).limit(per_page)
 

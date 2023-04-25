@@ -75,7 +75,7 @@ def get_all_board_names() -> List[str]:
         res = all_board_names_cached
     else:
         with session() as s:
-            q = s.query(BoardOrmModel).options(load_only('name')).order_by(BoardOrmModel.name)
+            q = s.query(BoardOrmModel).options(load_only(BoardOrmModel.name)).order_by(BoardOrmModel.name)
             # No mapping here either
             res = list(map(lambda i: i.name, q.all()))
             s.commit()
@@ -130,7 +130,7 @@ def find_by_name(name: str) -> Optional[BoardModel]:
     if not board_cache:
         with session() as s:
             q = s.query(BoardOrmModel).filter_by(name=name)
-            q = q.options(joinedload('config'))
+            q = q.options(joinedload(BoardOrmModel.config))
             board_orm_model = q.one_or_none()
             if not board_orm_model:
                 return None
@@ -181,5 +181,5 @@ def delete(board: BoardModel):
 
 
 def _set_all_board_names_cache(s):
-    all_board_names_q = s.query(BoardOrmModel).options(load_only('name')).order_by(BoardOrmModel.name)
+    all_board_names_q = s.query(BoardOrmModel).options(load_only(BoardOrmModel.name)).order_by(BoardOrmModel.name)
     cache.set(cache_key('all_board_names'), list(map(lambda i: i.name, all_board_names_q.all())))

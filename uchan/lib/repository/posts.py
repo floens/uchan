@@ -240,7 +240,7 @@ def find_thread_by_board_thread_refno_with_posts(board: BoardModel, thread_refno
     if not thread_cache:
         with session() as s:
             q = s.query(ThreadOrmModel)
-            q = q.options(lazyload('posts'))
+            q = q.options(lazyload(ThreadOrmModel.posts))
             q = q.filter(ThreadOrmModel.refno == thread_refno,
                          ThreadOrmModel.board_id == BoardOrmModel.id,
                          BoardOrmModel.name == board.name)
@@ -346,7 +346,7 @@ def _invalidate_thread_cache(s: Session, old_thread: ThreadModel, board: BoardMo
     # Next, query all the new posts
     q = s.query(ThreadOrmModel)
     q = q.filter_by(id=old_thread.id)
-    q = q.options(lazyload('posts'))
+    q = q.options(lazyload(ThreadOrmModel.posts))
     res = q.one_or_none()
     if not res:
         cache.delete(key)
