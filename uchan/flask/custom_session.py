@@ -41,7 +41,7 @@ class CustomSessionInterface(SessionInterface):
         self.prefix = prefix
 
     def open_session(self, app, request):
-        session_id = request.cookies.get(app.session_cookie_name)
+        session_id = request.cookies.get(app.config["SESSION_COOKIE_NAME"])
 
         expires = int(now() + 1000 * datetime.timedelta(minutes=self.EXPIRES_MINUTES).total_seconds())
         if not session_id:
@@ -118,11 +118,11 @@ class CustomSessionInterface(SessionInterface):
     def store_cookie(self, app, session, response):
         # expire_date = datetime.datetime.now() + datetime.timedelta(minutes=self.EXPIRES_MINUTES)
         expire_date = datetime.datetime.utcfromtimestamp(session.expires / 1000)
-        response.set_cookie(app.session_cookie_name, session.session_id,
+        response.set_cookie(app.config["SESSION_COOKIE_NAME"], session.session_id,
                             expires=expire_date, httponly=True, domain=self.get_cookie_domain(app))
 
     def delete_cookie(self, app, session, response):
-        response.delete_cookie(app.session_cookie_name, domain=self.get_cookie_domain(app))
+        response.delete_cookie(app.config["SESSION_COOKIE_NAME"], domain=self.get_cookie_domain(app))
 
     def store_session_db(self, session):
         session_model = SessionOrmModel(session_id=session.session_id, data=session, expires=session.expires)

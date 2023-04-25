@@ -97,7 +97,7 @@ def _check_post_settings(board: BoardModel, post_details):
         else:
             message = 'Please verify here first before posting.'
 
-            if request.is_xhr:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 xhr_response = {
                     'error': True,
                     'message': page_formatting('[{}](_/verify/)'.format(message))
@@ -167,7 +167,7 @@ def _execute_post(post_details) -> PostResultModel:
 
 
 def _create_post_response(post_result):
-    if request.is_xhr:
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({
             'boardName': post_result.board_name,
             'threadRefno': post_result.thread_refno,

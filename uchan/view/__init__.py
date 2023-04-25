@@ -113,7 +113,7 @@ def check_csrf_referer(request):
 
 
 def render_error(user_message, code=400, with_retry=False):
-    if request.is_xhr:
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         xhr_response = {
             'error': True
         }
