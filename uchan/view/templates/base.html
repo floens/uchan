@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}">
+    <link rel="icon" href="/favicon.ico">
     <link rel="manifest" href="{{ url_for('manifest_json') }}">
 
     {% block additional_header_tags -%}
@@ -15,12 +15,14 @@
     {%- endblock %}
 
     {% block styles %}
-        {% assets "css" %}<link rel="stylesheet" href="{{ ASSET_URL }}">{% endassets %}
+        {% for asset in assets %}
+            {% if asset.type == 'style' %}
+                <link rel="stylesheet" href="{{ asset.url }}">
+            {% endif %}
+        {% endfor %}
 
-        {% for theme_name in theme_names %}
-            {% assets 'css_theme_' + theme_name[1] -%}
-                <link rel="{% if not loop.first %}alternate {% endif %}stylesheet" href="{{ ASSET_URL }}" data-name="{{ theme_name[1] }}" title="{{ theme_name[0] }}">
-            {%- endassets %}
+        {% for asset_theme in assets_themes %}
+            <link rel="{% if not loop.first %}alternate {% endif %}stylesheet" href="{{ asset_theme.asset.url }}" data-theme="{{ asset_theme.name }}" title="{{ asset_theme.name }}">
         {% endfor %}
     {% endblock %}
     <noscript><style>.jsonly{display:none;}</style></noscript>
@@ -71,9 +73,11 @@
 </div>
 
 {% block javascripts %}
-    {% assets "js_site" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {% endassets %}
+    {% for asset in assets %}
+        {% if asset.type == 'script' %}
+            <script src="{{ asset.url }}"></script>
+        {% endif %}
+    {% endfor %}
 
     {{ extra_javascript.gather()|safe }}
 {% endblock %}

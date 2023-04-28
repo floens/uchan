@@ -1,4 +1,4 @@
-from uchan import celery, configuration
+from uchan import celery, config
 
 
 class ManageReportDetails:
@@ -21,7 +21,7 @@ def manage_report_task(manage_report_details):
 
 
 def execute_manage_report_task(manage_report_details: ManageReportDetails):
-    if configuration.app.bypass_worker:
+    if config.bypass_worker:
         return report_service.handle_manage_report(manage_report_details)
     else:
         return manage_report_task.delay(manage_report_details).get()

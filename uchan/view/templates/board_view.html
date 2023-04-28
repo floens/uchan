@@ -26,22 +26,10 @@
 
 {% endblock %}
 
-{% block styles %}
-    {{ super() }}
-    {% assets "css_extra" %}<link rel="stylesheet" href="{{ ASSET_URL }}">{% endassets %}
-{% endblock %}
-
 {% block javascripts %}
     <script>
         window.pageDetails = {{ page_details|tojson|safe }};
     </script>
-
-    {% assets "js_thread" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {% endassets %}
-    {% assets "js_extra" %}
-        <script src="{{ ASSET_URL }}"></script>
-    {% endassets %}
 
     {{ super() }}
 {% endblock %}

@@ -1,0 +1,11 @@
+{
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch"
+  },
+  "dependencies": {
+    "esbuild": "0.17.18",
+    "esbuild-sass-plugin": "^2.9.0",
+    "typescript": "^5.0.4"
+  }
+}

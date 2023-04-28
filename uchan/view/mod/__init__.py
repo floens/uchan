@@ -6,7 +6,7 @@ from uchan.lib import roles
 from uchan.lib.action_authorizer import NoPermissionError
 from uchan.lib.moderator_request import request_has_role, get_authed
 
-mod = Blueprint('mod', __name__, url_prefix='/mod', template_folder='templates', static_folder='static')
+mod = Blueprint('mod', __name__, url_prefix='/mod', template_folder='templates')
 
 
 def mod_role_restrict(role):

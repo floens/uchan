@@ -1,75 +1,59 @@
-from flask_assets import Environment
-from webassets import Bundle
+import json
+import os
+from collections import namedtuple
 
-from uchan import configuration
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+
+from uchan import config, logger
+
+Asset = namedtuple('Asset', ['name', 'type', 'url'])
+
+ThemeAsset = namedtuple('ThemeAsset', ['name', 'title', 'default', 'asset'])
 
 
-def setup_assets(app):
-    assets = Environment(app)
-    assets.directory = './assets/'
-    assets.url = '/assets'
-    assets.manifest = 'json'
+def setup_assets(app, watch_for_changes=False):
+    if watch_for_changes:
+        _start_watchdog_for_metafile(app)
 
-    scripts = [('js_site', 'site', 'js/site'),
-               ('js_thread', 'thread', 'js/thread'),
-               ('js_extra', 'extra', 'js/extra')
-               ]
+    _set_assets_details(app)
 
-    styles = [('css', 'style', 'style/style'),
-              ('css_mod', 'mod_style', 'mod/style/mod_style'),
-              ('css_extra', 'extra', 'style/extra')
-              ]
 
-    themes = [('µchan', 'uchan'),
-              ('Yotsuba', 'yotsuba')
-              ]
+def _start_watchdog_for_metafile(app):
+    class Handler(FileSystemEventHandler):
+        def on_any_event(self, event):
+            if event.event_type == 'modified':
+                _set_assets_details(app)
+                logger.debug('Assets metadata reloaded')
 
-    registered_bundles = []
+    observer = Observer()
+    observer.schedule(Handler(), config.asset_build_meta_file)
+    observer.start()
 
-    theme_bundles = []
 
-    if configuration.app.debug:
-        # On debug, do not add a version code, and build automatically on changes.
-        assets.url_expire = False
-        assets.auto_build = True
+def _set_assets_details(app):
+    with open(config.asset_build_meta_file, 'r') as f:
+        meta_file = json.load(f)
 
-        for script in scripts:
-            bundle = Bundle(script[2] + '.js', output=script[1] + '.js')
-            registered_bundles.append((script[0], bundle))
+    assets = []
+    themes = []
+    for output_path, details in meta_file['output'].items():
+        asset_type = details['type']
+        name = details['name']
+        filename = os.path.basename(output_path)
+        url = _normalize_asset_url(config.asset_url + filename)
 
-        for style in styles:
-            bundle = Bundle(style[2] + '.css', output=style[1] + '.css')
-            registered_bundles.append((style[0], bundle))
+        asset = Asset(name, asset_type, url)
+        assets.append(asset)
 
-        for theme in themes:
-            bundle = Bundle('style/themes/' + theme[1] + '.css',
-                            output=theme[1] + '.css')
-            theme_bundles.append(bundle)
+        if asset_type == 'theme':
+            themes.append(ThemeAsset(name, name, name == 'uchan', asset))
 
-    else:
-        # On release, do add the version code, and don't rebuild automatically.
-        assets.url_expire = True
-        assets.auto_build = False
+    app.jinja_env.globals['assets'] = assets
+    app.jinja_env.globals['assets_themes'] = themes
 
-        for script in scripts:
-            bundle = Bundle(script[2] + '.js', filters='jsmin', output=script[1] + '.%(version)s.js')
-            registered_bundles.append((script[0], bundle))
 
-        for style in styles:
-            bundle = Bundle(style[2] + '.css', filters='cleancss', output=style[1] + '.%(version)s.css')
-            registered_bundles.append((style[0], bundle))
-
-        for theme in themes:
-            bundle = Bundle('style/themes/' + theme[1] + '.css',
-                            filters='cleancss', output=theme[1] + '.%(version)s.css')
-            theme_bundles.append(bundle)
-
-    for registered_bundle in registered_bundles:
-        assets.register(registered_bundle[0], registered_bundle[1])
-
-    theme_names = []
-    for i, theme_bundle in enumerate(theme_bundles):
-        assets.register('css_theme_' + themes[i][1], theme_bundle)
-        theme_names.append(themes[i])
-
-    app.jinja_env.globals['theme_names'] = theme_names
+def _normalize_asset_url(asset_url: str):
+    if asset_url.startswith(config.site_url):
+        return asset_url[len(config.site_url):]
+    return asset_url

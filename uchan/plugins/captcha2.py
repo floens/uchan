@@ -1,3 +1,5 @@
+import os
+
 import dateutil.parser
 import requests
 
@@ -8,16 +10,8 @@ from uchan.lib.utils import now
 
 """
 This plugin adds google reCaptcha v2 as a verification method.
-Add the site key and secret like this in config.py:
-PLUGIN_CONFIG = {
-    'captcha2': {
-        'sitekey': '',
-        'secret': ''
-    }
-}
-
-And add it to the enabled plugins list:
-PLUGINS = ['captcha2']
+Currently the plugin system is in a semi-usable state. 
+We might put this code back into the core logic.
 """
 
 
@@ -101,10 +95,11 @@ class Recaptcha2Method(verification_service.VerificationMethod):
             raise ArgumentError('Captcha invalid')
 
     def verify(self, response):
-        res = requests.post('https://www.google.com/recaptcha/api/siteverify', data={
-            'secret': self.secret,
-            'response': response
-        })
+        res = requests.post('https://www.google.com/recaptcha/api/siteverify',
+                            data={
+                                'secret': self.secret,
+                                'response': response
+                            })
         res_json = res.json()
 
         timestamp_iso = 'challenge_ts' in res_json and res_json['challenge_ts']
@@ -124,14 +119,16 @@ class Recaptcha2Method(verification_service.VerificationMethod):
         return False
 
 
-def on_enable(configuration):
-    if not configuration:
-        raise RuntimeError('sitekey and secret must be set in the [captcha2] section of config.ini')
+def on_enable():
+    sitekey = os.getenv('GOOGLE_CAPTCHA2_SITEKEY',
+                        '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI')
+    secret = os.getenv('GOOGLE_CAPTCHA2_SECRET',
+                       '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe')
 
-    sitekey = configuration.get('sitekey')
-    secret = configuration.get('secret')
     if not sitekey or not secret:
-        raise RuntimeError('"sitekey" or "secret" empty in the [captcha2] section of config.ini')
+        raise RuntimeError(
+            "Required keys not found in the environment. "
+            "Please set the GOOGLE_CAPTCHA2_SITEKEY and GOOGLE_CAPTCHA2_SECRET environment variables.")
 
     method = Recaptcha2Method(sitekey, secret)
     verification_service.add_method(method)

@@ -1,89 +1,91 @@
-import json
+from typing import Any, Literal
+
+from pydantic import BaseSettings, Json, AnyHttpUrl, AnyUrl, PostgresDsn, \
+    AmqpDsn
 
 
-class UchanConfiguration:
-    def __init__(self, parser):
-        self.app = AppConfiguration(parser['app'])
-        self.http = HttpConfiguration(parser['http'])
-        self.file = FileConfiguration(parser['file'])
-        self.celery = CeleryConfiguration(parser['celery'])
-        self.varnish = VarnishConfiguration(parser['varnish'])
-        self.memcache = MemcacheConfiguration(parser['memcache'])
-        self.database = DatabaseConfiguration(parser['database'])
+class UchanConfig(BaseSettings):
+    class Config:
+        env_file = '.env'
 
+    # App name, for logs and the like
+    name: str = 'uchan'
 
-class Configuration:
-    def __init__(self, section):
-        self.section = section
+    # URL where uchan is reachable from. Used for URL generation.
+    site_url: AnyHttpUrl = 'http://localhost'
 
-    def get(self, name, default=None, func=None):
-        if func is None:
-            func = self.section.get
-        value = func(name)
-        if value is None:
-            if default is None:
-                raise Exception(name + ' not present in [' + self.section + ']')
-            else:
-                value = default
-        return value
+    debug: bool = False
 
+    asset_build_directory: str = 'build/static'
+    asset_build_meta_file: str = 'build/static/_meta.json'
+    asset_url: str = 'http://localhost/static/'
+    asset_watch_for_changes: bool = False
 
-class AppConfiguration(Configuration):
-    def __init__(self, section):
-        super().__init__(section)
-        self.name = self.get('name')
-        self.site_url = self.get('site_url')
-        self.debug = self.get('debug', func=section.getboolean, default=False)
-        self.enable_cooldown_checking = self.get('enable_cooldown_checking', func=section.getboolean, default=True)
-        self.bypass_worker = self.get('bypass_worker', func=section.getboolean, default=False)
-        self.manifest = json.loads(self.get('manifest', default='{}'))
-        self.thumbnail_op = self.get('thumbnail_op', 256)
-        self.thumbnail_reply = self.get('thumbnail_reply', 128)
-        self.max_boards_per_moderator = self.get('max_boards_per_moderator', 5)
-        self.app_log_path = self.get('app_log_path', 'data/log/uchan.log')
-        self.mod_log_path = self.get('mod_log_path', 'data/log/mod.log')
+    # Content of the manifest.json file
+    manifest: Json = '{"name": "uchan"}'
 
+    enable_cooldown_checking: bool = True
+    bypass_worker: bool = False
+    thumbnail_op: int = 256
+    thumbnail_reply: int = 128
+    max_boards_per_moderator: int = 5
+    app_log_path: str = 'data/log/uchan.log'
+    mod_log_path: str = 'data/log/mod.log'
 
-class HttpConfiguration(Configuration):
-    def __init__(self, section):
-        super().__init__(section)
-        self.use_proxy_fixer = self.get('use_proxy_fixer', func=section.getboolean)
-        self.proxy_fixer_num_proxies = self.get('proxy_fixer_num_proxies', func=section.getint)
-        self.max_content_length = self.get('max_content_length', func=section.getint)
+    # Enable this when serving behind a proxy (almost always)
+    # Do not use this middleware in non-proxy setups for security reasons.
+    use_proxy_fixer: bool = True
 
+    # The number of proxies this instance is behind
+    # This needs to be set to prevent ip spoofing by malicious clients appending their own forwarded-for header
+    # 2 for a varnish > nginx > uwsgi setup
+    # 3 for a front_end > varnish > nginx > uwsgi setup
+    proxy_fixer_num_proxies: int = 2
 
-class FileConfiguration(Configuration):
-    def __init__(self, section):
-        super().__init__(section)
-        self.file_cdn_type = self.get('file_cdn_type')
-        self.upload_queue_path = self.get('upload_queue_path')
-        self.local_cdn_path = self.get('local_cdn_path')
-        self.local_cdn_web_path = self.get('local_cdn_web_path')
+    # Max POST size to accept.
+    # Keep this the same as your nginx client_max_body_size config.
+    # 5242880 = 5 * 1024 * 1024
+    max_content_length: int = 5242880
 
+    # Which cdn type to use, see file_service for more details
+    # Types available: "local"
+    file_cdn_type: Literal['local'] = "local"
 
-class CeleryConfiguration(Configuration):
-    def __init__(self, section):
-        super().__init__(section)
-        self.broker_url = self.get('broker_url')
+    # The temporary dir in which files are placed that are received from the client.
+    # The temporary files will be deleted after a post unless the python process crashes.
+    upload_queue_path: str = 'mediaqueue'
 
+    # Settings for the local cdn type
+    # Absolute path of where to place the files.
+    local_cdn_path: str = 'media'
 
-class VarnishConfiguration(Configuration):
-    def __init__(self, section):
-        super().__init__(section)
-        self.purging_enabled = self.get('enable_purging', func=section.getboolean, default=True)
-        self.server = self.get('server', 'http://varnish')
+    # Base url of where the client should request the file.
+    local_cdn_web_path: str = '/media/'
 
+    database_connect_string: PostgresDsn = 'postgresql+psycopg2://uchan:uchan@db/uchan'
 
-class MemcacheConfiguration(Configuration):
-    def __init__(self, section):
-        super().__init__(section)
-        self.server = self.get('server')
-        self.max_item_size = self.get('max_item_size', func=section.getint)
+    # Check this with your uwsgi total thread count + worker count and the postgres max_connections
+    database_pool_size: int = 4
+    database_echo_sql: bool = False
 
+    # Celery broker url
+    broker_url: AmqpDsn = 'amqp://queue/'
 
-class DatabaseConfiguration(Configuration):
-    def __init__(self, section):
-        super().__init__(section)
-        self.connect_string = self.get('connect_string')
-        self.pool_size = self.get('pool_size', func=section.getint)
-        self.echo = self.get('echo', default=False, func=section.getboolean)
+    # Enable to purge the varnish cache
+    varnish_enable_purging: bool = False
+    # Address we can reach varnish, to send PURGE requests to.
+    varnish_url: AnyUrl = 'http://varnish'
+
+    # Memcache server address
+    memcache_host: str = 'memcached:11211'
+
+    # The -I flag of memcache, the max size of items
+    # note: "-I 2M" means "2 * 1024 * 1024" here
+    # Memcache defaults to 1M
+    # 1048576 = 1 * 1024 * 1024
+    memcache_max_item_size: int = 1048576
+
+    # Get recaptcha keys for your site here https://www.google.com/recaptcha/intro/index.html
+    # The following keys are test keys, and do not offer any protection.
+    google_captcha2_sitekey: str = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'
+    google_captcha2_secret: str = '6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'

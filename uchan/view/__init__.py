@@ -3,10 +3,11 @@ import string
 from functools import wraps
 from urllib.parse import urlparse
 
-from flask import send_from_directory, session, request, abort, url_for, render_template, jsonify
+from flask import send_from_directory, session, request, abort, url_for, \
+    render_template, jsonify
 from markupsafe import escape, Markup
 
-from uchan import app, configuration, logger
+from uchan import app, config, logger
 from uchan.filter.app_filters import page_formatting
 from uchan.lib import plugin_manager
 from uchan.lib.service import page_service, site_service, board_service
@@ -48,32 +49,45 @@ def inject_variables():
 
 @app.route('/favicon.ico')
 def favicon():
-    return send_from_directory(app.static_folder, 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory('view/static', 'favicon.ico',
+                               mimetype='image/vnd.microsoft.icon')
 
 
 @app.route('/robots.txt')
 def robots():
-    return send_from_directory(app.static_folder, 'robots.txt')
+    return send_from_directory('view/static', 'robots.txt')
 
 
 @app.route('/manifest.json')
 def manifest_json():
-    manifest = configuration.app.manifest
+    manifest = config.manifest
 
     plugin_manager.execute_hook('manifest_json', manifest)
 
     return jsonify(manifest)
 
 
+@app.route('/static/<path:path>')
+def send_static_file(path):
+    return send_from_directory('../' + config.asset_build_directory, path)
+
+
+@app.route('/media/<path:path>')
+def send_media_file(path):
+    return send_from_directory('../' + config.local_cdn_path, path)
+
+
 def generate_csrf_token():
     if '_csrf_token' not in session:
         session['_csrf_token'] = ''.join(
-            random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(32))
+            random.SystemRandom().choice(string.ascii_letters + string.digits)
+            for _ in range(32))
     return session['_csrf_token']
 
 
 def generate_csrf_token_html():
-    return Markup('<input name="token" type="hidden" value="{}">'.format(escape(generate_csrf_token())))
+    return Markup('<input name="token" type="hidden" value="{}">'.format(
+        escape(generate_csrf_token())))
 
 
 def with_token():
@@ -104,10 +118,11 @@ def check_csrf_referer(request):
 
     final_url = '{}://{}'.format(parsed_url.scheme, parsed_url.netloc)
 
-    valid = final_url == configuration.app.site_url
+    valid = final_url == config.site_url
     if not valid:
-        logger.warn('Referer not valid: "{}" is different than the configured url "{}"'
-                    .format(final_url, configuration.app.site_url))
+        logger.warn(
+            'Referer not valid: "{}" is different than the configured url "{}"'
+            .format(final_url, config.site_url))
 
     return valid
 
@@ -123,7 +138,8 @@ def render_error(user_message, code=400, with_retry=False):
 
         return jsonify(xhr_response), code
     else:
-        return render_template('error.html', message=user_message, with_retry=with_retry), code
+        return render_template('error.html', message=user_message,
+                               with_retry=with_retry), code
 
 
 app.jinja_env.globals['csrf_token'] = generate_csrf_token

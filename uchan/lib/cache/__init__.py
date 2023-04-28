@@ -3,7 +3,7 @@ from time import time
 
 from cachelib.memcached import MemcachedCache
 
-from uchan import configuration, logger
+from uchan import config, logger
 from uchan.lib.utils import now
 
 
@@ -111,4 +111,4 @@ class LocalCache:
         return None
 
 
-cache = CacheWrapper(configuration.memcache.server, configuration.memcache.max_item_size)
+cache = CacheWrapper(config.memcache_host, config.memcache_max_item_size)

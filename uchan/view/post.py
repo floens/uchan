@@ -2,7 +2,7 @@ from typing import Tuple
 
 from flask import request, abort, redirect, url_for, render_template, jsonify
 
-from uchan import app, configuration
+from uchan import app, config
 from uchan.filter.app_filters import time_remaining, page_formatting
 from uchan.lib import validation
 from uchan.lib.action_authorizer import RequestBannedException, RequestSuspendedException
@@ -181,7 +181,7 @@ def _queue_files(post_details):
     files = _get_files_from_request()
 
     start_time = now()
-    thumbnail_size = configuration.app.thumbnail_reply if post_details.thread_refno else configuration.app.thumbnail_op
+    thumbnail_size = config.thumbnail_reply if post_details.thread_refno else config.thumbnail_op
 
     uploaded_files = []
     upload_queue_files_list = []

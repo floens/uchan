@@ -1,0 +1,298 @@
+html
+    margin: 0
+    padding: 0
+
+body
+    margin: 0
+    padding: 0
+    background: #EBF3FF
+    font-family: arial, helvetica, sans-serif
+    font-size: 13px
+
+textarea
+    font-family: arial, helvetica, sans-serif
+    font-size: 13px
+
+fieldset
+    border: 1px solid #B1B1B1
+    margin: 0 0 1em 0
+
+blockquote
+    margin: 0
+    padding: 0.2em 0 0.2em 1em
+    border-left: 1px solid #B1B1B1
+
+.generic-form
+    input:not(:last-child), select:not(:last-child)
+        margin-bottom: .8em
+
+    .form-errors
+        margin: 0
+        padding: 0
+        list-style: none
+        color: #ff0000
+
+.clear
+    clear: both
+
+.top-bar
+    z-index: 1
+    position: fixed
+    width: 100%
+    background: #EBF3FF
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1)
+
+.link-list
+    padding: 5px
+
+    /*font-size: 12px;
+
+    a
+        text-decoration: none
+
+        &:hover, &.active
+            text-decoration: underline
+
+    .link-list-right
+        float: right
+        position: static
+
+.flashes
+    margin: 0 0 1em 0
+    padding: 10px 30px
+    border: 1px solid #B1B1B1
+    background-color: #FFC6C6
+    list-style: square
+    line-height: 1.4em
+
+.top-content
+    padding: calc(2em + 2 * 5px) 0 0 0
+
+.base-content
+    padding: 20px
+
+.motd
+    font-weight: bold
+    text-align: center
+
+.board-header
+    h1
+        text-align: center
+        color: #af0a0f
+        font-weight: bold
+        font-size: 2.5em
+
+    .description
+        text-align: center
+
+.content-divider
+    border: none
+    border-top: 1px solid #B1B1B1
+    margin: 0.7em 0 0.7em 0
+
+.post-form
+    max-width: 500px
+
+    legend
+        font-size: 2em
+        font-weight: bold
+
+    [name="comment"]
+        width: 100%
+        padding: 0
+
+.post-manage-container
+    position: relative
+    width: 100%
+
+    .thread-controls
+        width: calc(50% + 2em)
+        float: left
+        vertical-align: middle
+        line-height: 21px
+
+        a
+            white-space: nowrap
+
+        .watch-status
+            display: inline-block
+            width: 7em
+
+        .thread-controls-center
+            display: inline-block
+            width: 4em
+            text-align: center
+            float: right
+
+@media (max-width: 600px)
+    .post-manage-container .thread-controls
+        width: 100%
+
+        .thread-controls-center
+            width: 100%
+
+.post-manage-form-container
+    float: right
+
+.post
+    padding: 12px 10px 12px 10px
+    background: #EBF3FF
+
+    &.snippet
+        margin-left: 50px
+
+    &.divider
+        border-bottom: 1px solid #d4dce8
+
+    &:target, &.highlight
+        background-color: #fff4e2
+
+    .header
+        .subject
+            color: #0200ff
+
+        .refno
+            color: #000
+            text-decoration: none
+
+            &:hover
+                text-decoration: underline
+                color: #ff0000
+
+        .name
+            font-weight: bold
+            color: #018a00
+
+            .trip
+                font-weight: normal
+                font-size: 0.9em
+
+        .modcode
+            color: #ff0000
+
+        .date
+
+@media (max-width: 425px)
+    .post.snippet
+        margin-left: 20px
+
+.styled-text
+    padding: 0.3em 0 0.3em 0
+    word-wrap: break-word
+
+    .quote
+        color: #789922
+
+    .spoiler
+        background-color: black
+        color: #000
+        text-decoration: none
+
+        &:hover
+            color: #fff
+
+    h3, h2, h1
+        margin: 0.5em 0 0.5em 0
+
+    .red
+        color: #ff0000
+
+.post
+    .styled-text .abbreviated
+        color: #5a5a5a
+
+    .file
+        display: inline-block
+        vertical-align: top
+
+    .file-link img
+        margin: 15px 0 0 0
+
+    .boardinfo
+        margin: 20px 0 0 0
+        color: #5a5a5a
+
+.catalog-container
+    display: flex
+    flex-flow: row wrap
+    justify-content: center
+
+.catalog-post
+    position: relative
+    width: 200px
+    vertical-align: top
+    padding: 8px 8px calc(8px + 2.4em) 8px
+    margin: 0.2em
+    background: #dae2ee
+
+    .text-container
+        max-height: 300px
+        overflow: hidden
+
+    .date
+        color: #5a5a5a
+
+    .subject
+        color: #0200ff
+
+    .file
+        text-align: center
+
+        img
+            max-width: 200px
+            max-height: 160px
+            margin: 0 auto
+            width: auto
+            height: auto
+
+    .styled-text
+        margin: 0 0 0.7em 0
+
+    .stats
+        color: #5a5a5a
+
+    .bottom
+        position: absolute
+        bottom: 8px
+
+.footer
+    margin: 3em 0 1em 0
+    text-align: center
+    font-size: 11px
+    color: #5a5a5a
+
+.footer-pages
+    font-size: 13px
+
+.message
+    border: 1px solid #B1B1B1
+    background-color: #fff4e2
+    max-width: 800px
+    margin: 0 auto
+    padding: 20px
+
+    h3, h2, h1
+        margin-top: 0
+
+.page
+
+.page-full
+    border: 1px solid #B1B1B1
+
+    .header
+        background-color: #87a6f7
+        padding: 5px
+        border-bottom: 1px solid #b1b1b1
+
+    .content
+        background-color: #fff4e2
+
+.table-styled
+    width: 100%
+
+    th
+        background-color: #e3d8c6
+        text-align: left
+
+    tr:nth-child(even)
+        background-color: #f3e8d6

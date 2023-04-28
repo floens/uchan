@@ -1,6 +1,6 @@
 from typing import List
 
-from uchan import celery, configuration
+from uchan import celery, config
 from uchan.lib.model import PostResultModel
 from uchan.lib.service import posts_service
 from uchan.lib.service.file_service import UploadedFile
@@ -32,7 +32,7 @@ def post_task(post_details):
 
 
 def execute_post_task(post_details: PostDetails) -> PostResultModel:
-    if configuration.app.bypass_worker:
+    if config.bypass_worker:
         return posts_service.create_post(post_details)
     else:
         return post_task.delay(post_details).get()
@@ -60,7 +60,7 @@ def manage_post_task(manage_post_details):
 
 
 def execute_manage_post_task(manage_post_details: ManagePostDetails):
-    if configuration.app.bypass_worker:
+    if config.bypass_worker:
         return posts_service.handle_manage_post(manage_post_details)
     else:
         return manage_post_task.delay(manage_post_details).get()

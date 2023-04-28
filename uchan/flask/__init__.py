@@ -1,9 +1,9 @@
 from urllib.parse import urlparse
 
-from flask import Flask, request
+from flask import Flask, request, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 
-from uchan.config import UchanConfiguration
+from uchan.config import UchanConfig
 
 
 class CustomFlaskApp(Flask):
@@ -19,13 +19,13 @@ class CustomFlaskApp(Flask):
                 self.session_interface.delete_session(session_item.session_id)
 
 
-def create_web_app(configuration: UchanConfiguration, app):
-    if configuration.http.use_proxy_fixer:
-        app.wsgi_app = ProxyFix(app.wsgi_app, configuration.http.proxy_fixer_num_proxies)
+def create_web_app(config: UchanConfig, app):
+    if config.use_proxy_fixer:
+        app.wsgi_app = ProxyFix(app.wsgi_app, config.proxy_fixer_num_proxies)
 
-    app.config['DEBUG'] = configuration.app.debug
-    app.config['APP_NAME'] = configuration.app.name
-    app.config['MAX_CONTENT_LENGTH'] = configuration.http.max_content_length
+    app.config['DEBUG'] = config.debug
+    app.config['APP_NAME'] = config.name
+    app.config['MAX_CONTENT_LENGTH'] = config.max_content_length
 
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
@@ -40,11 +40,11 @@ def create_web_app(configuration: UchanConfiguration, app):
     @app.errorhandler(500)
     def server_error_handler(error):
         logger.exception(error)
-        return app.send_static_file('500.html'), 500
+        return send_from_directory('view/static', '500.html'), 404
 
     @app.errorhandler(404)
     def server_error_handler(error):
-        return app.send_static_file('404.html'), 404
+        return send_from_directory('view/static', '404.html'), 404
 
     def bad_request_message(e):
         if isinstance(e, BadRequestError):

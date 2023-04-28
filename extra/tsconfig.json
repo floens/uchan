@@ -1,8 +1,0 @@
-{
-  "compilerOptions": {
-    "outFile": "../uchan/view/static/js/extra.js"
-  },
-  "files": [
-    "extra.ts"
-  ]
-}

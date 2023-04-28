@@ -11,3 +11,7 @@ __pycache__/
 # config files
 config.ini
 .env
+
+# local dirs during development
+media
+mediaqueue

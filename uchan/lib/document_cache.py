@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 import requests
 from requests import RequestException
 
-from uchan import logger, configuration
+from uchan import logger, config
 from uchan.lib.model import ThreadModel, BoardModel
 
 # TODO: We can't use url_for outside the flask context, until there's a better way, use this
@@ -37,14 +37,14 @@ _pool = ThreadPoolExecutor(4)
 
 
 def _purge(endpoint):
-    if configuration.varnish.purging_enabled:
-        url = configuration.varnish.server + endpoint
+    if config.varnish_enable_purging:
+        url = config.varnish_url + endpoint
 
         return _pool.submit(_call_purge, url)
 
 
 def _call_purge(url):
-    host = urlparse(configuration.app.site_url).netloc
+    host = urlparse(config.site_url).netloc
 
     try:
         res = requests.request(

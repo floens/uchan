@@ -71,7 +71,7 @@ class LocalCdn(FileCdn):
 
         if make_subdir:
             try:
-                os.mkdir(os.path.join(self.path, subdir))
+                os.makedirs(os.path.join(self.path, subdir), exist_ok=True)
             except OSError:
                 pass
 

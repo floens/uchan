@@ -1,6 +1,6 @@
 from enum import Enum, unique
 
-from uchan import configuration
+from uchan import config
 from uchan.lib import roles
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.model import ModeratorModel, BoardModel
@@ -74,7 +74,7 @@ def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, 
         if ban_service.is_request_banned(post_details.ip4, board):
             raise RequestBannedException()
 
-        if configuration.app.enable_cooldown_checking:
+        if config.enable_cooldown_checking:
             suspended, suspend_time = ban_service.is_request_suspended(post_details.ip4, board, thread)
             if suspended:
                 e = RequestSuspendedException()
@@ -115,7 +115,7 @@ def authorize_action(actor: ModeratorModel, action: ModeratorAction):
             if roles.BOARD_ROLE_CREATOR in board_moderator.roles:
                 creator_roles += 1
 
-        max = configuration.app.max_boards_per_moderator
+        max = config.max_boards_per_moderator
         if creator_roles >= max:
             raise ArgumentError('Max boards limit reached ({})'.format(max))
     elif action is ModeratorAction.BOARD_DELETE:

@@ -2,7 +2,7 @@ from flask import request, redirect, url_for, render_template, abort, flash
 from wtforms import StringField, SubmitField, IntegerField, BooleanField, HiddenField, TextAreaField
 from wtforms.validators import DataRequired, NumberRange, Length
 
-from uchan import configuration
+from uchan import config
 from uchan.lib import roles, validation
 from uchan.lib.action_authorizer import NoPermissionError
 from uchan.lib.exceptions import ArgumentError
@@ -23,7 +23,7 @@ class AddBoardForm(CSRFForm):
     board_name = StringField('Name', [DataRequired(), BoardNameValidator()],
                              description='Name of the board. This name is used in the url and cannot be changed, '
                                          'so choose carefully. You can have a maximum of (' +
-                                         str(configuration.app.max_boards_per_moderator) + ') boards.')
+                                         str(config.max_boards_per_moderator) + ') boards.')
     submit = SubmitField('Create board')
 
 
