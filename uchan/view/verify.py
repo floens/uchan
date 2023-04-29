@@ -1,21 +1,21 @@
 from flask import render_template, request
 
 from uchan import app
-from uchan.lib.exceptions import BadRequestError, ArgumentError
+from uchan.lib.exceptions import ArgumentError, BadRequestError
 from uchan.lib.service import verification_service
 from uchan.view import check_csrf_referer
 
 
 # Do NOT cache this GET endpoint, an exception in the varnish config has been made.
-@app.route('/verify/', methods=['GET', 'POST'])
+@app.route("/verify/", methods=["GET", "POST"])
 def verify():
     method = verification_service.get_method()
     verified = False
     verified_message = None
 
-    if request.method == 'POST':
+    if request.method == "POST":
         if not check_csrf_referer(request):
-            raise BadRequestError('Bad referer header')
+            raise BadRequestError("Bad referer header")
 
         if verification_service.is_verified(request):
             verified = True
@@ -29,4 +29,9 @@ def verify():
     else:
         verified = verification_service.is_verified(request)
 
-    return render_template('verify.html', method=method, verified=verified, verified_message=verified_message)
+    return render_template(
+        "verify.html",
+        method=method,
+        verified=verified,
+        verified_message=verified_message,
+    )

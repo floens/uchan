@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import Any, List
 
 from flask import request, url_for
 
@@ -31,7 +31,7 @@ class PagedModel:
         return self.provide_data(offset, limit)
 
     def offset(self, name):
-        offset_key = name + '_offset'
+        offset_key = name + "_offset"
 
         return max(0, request.args.get(offset_key, type=int, default=0))
 
@@ -49,9 +49,9 @@ class PagedModel:
 
         def p(page):
             return {
-                'text': str(page + 1),
-                'offset': page * limit,
-                'is_current': page == current_page
+                "text": str(page + 1),
+                "offset": page * limit,
+                "is_current": page == current_page,
             }
 
         yield p(0)
@@ -76,5 +76,5 @@ class PagedModel:
     def offset_link(self, name, base_url, offset):
         d = {}
         if offset > 0:
-            d[name + '_offset'] = str(offset)
+            d[name + "_offset"] = str(offset)
         return url_for(base_url, **d)

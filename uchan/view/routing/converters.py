@@ -1,20 +1,20 @@
 from werkzeug.routing import BaseConverter, ValidationError
 
 from uchan.lib import validation
-from uchan.lib.service import moderator_service, board_service, page_service
+from uchan.lib.service import board_service, moderator_service, page_service
 
 
 class ModelIdConverter(BaseConverter):
-    """An url converter that resolves the id to a model and passes the model to the view.
-    """
+    """An url converter that resolves the id to a model and passes the model to the
+    view."""
 
     def __init__(self, url_map):
         super().__init__(url_map)
-        self.regex = '\d+'
+        self.regex = "\\d+"
 
     def to_python(self, value):
         intval = int(value)
-        if not 0 < intval <= 2 ** 32:
+        if not 0 < intval <= 2**32:
             raise ValidationError()
         model = self.resolve_id(intval)
         if not model:
@@ -41,7 +41,7 @@ class PageConverter(ModelIdConverter):
 class BoardConverter(BaseConverter):
     def __init__(self, url_map):
         super().__init__(url_map)
-        self.regex = '[^/]+'
+        self.regex = "[^/]+"
 
     def to_python(self, value):
         if not validation.check_board_name_validity(value):
@@ -56,6 +56,6 @@ class BoardConverter(BaseConverter):
 
 
 def init_converters(app):
-    app.url_map.converters['moderator'] = ModeratorConverter
-    app.url_map.converters['page'] = PageConverter
-    app.url_map.converters['board'] = BoardConverter
+    app.url_map.converters["moderator"] = ModeratorConverter
+    app.url_map.converters["page"] = PageConverter
+    app.url_map.converters["board"] = BoardConverter

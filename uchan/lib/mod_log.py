@@ -15,16 +15,16 @@ def mod_log(what, moderator_name=None, moderator=None, ip4_str=None):
             if moderator is not None:
                 moderator_name = moderator.username
 
-    output = ''
+    output = ""
     if ip4_str is not None:
-        output += '[' + ip4_str + '] '
+        output += "[" + ip4_str + "] "
     if moderator_name is not None:
-        output += '[' + moderator_name + '] '
+        output += "[" + moderator_name + "] "
     output += what
 
     mod_logger.info(output)
 
 
-from uchan import mod_logger
-from uchan.lib.moderator_request import request_moderator, get_authed
-from uchan.lib.proxy_request import get_request_ip4_str
+from uchan import mod_logger  # noqa
+from uchan.lib.moderator_request import request_moderator, get_authed  # noqa
+from uchan.lib.proxy_request import get_request_ip4_str  # noqa

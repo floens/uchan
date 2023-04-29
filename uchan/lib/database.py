@@ -2,7 +2,7 @@ from contextlib import contextmanager
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import scoped_session, sessionmaker
 
 from uchan import config
 
@@ -44,22 +44,24 @@ def register_teardown(flask_app):
 
 # noinspection PyUnresolvedReferences
 def init_db():
-    """Initialize function for the database.
-    """
+    """Initialize function for the database."""
 
     global _scoped_session
     global _session_cls
     global _engine
     global OrmModelBase
 
-    _engine = create_engine(connect_string(), pool_size=config.database_pool_size,
-                            echo=config.database_echo_sql)
+    _engine = create_engine(
+        connect_string(),
+        pool_size=config.database_pool_size,
+        echo=config.database_echo_sql,
+    )
 
     _session_cls = sessionmaker(autocommit=False, autoflush=False, bind=_engine)
 
     _scoped_session = scoped_session(_session_cls)
 
-    import uchan.lib.ormmodel
+    import uchan.lib.ormmodel  # noqa
 
 
 def metadata_create_all():

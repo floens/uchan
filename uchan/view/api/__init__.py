@@ -2,7 +2,7 @@ from functools import wraps
 
 from flask import Blueprint, jsonify
 
-api = Blueprint('api', __name__, url_prefix='/api')
+api = Blueprint("api", __name__, url_prefix="/api")
 
 
 def jsonres():
@@ -17,4 +17,4 @@ def jsonres():
     return decorator
 
 
-import uchan.view.api.views
+import uchan.view.api.views  # noqa

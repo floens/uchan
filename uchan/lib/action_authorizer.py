@@ -3,10 +3,10 @@ from enum import Enum, unique
 from uchan import config
 from uchan.lib import roles
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.model import ModeratorModel, BoardModel
+from uchan.lib.model import BoardModel, ModeratorModel
 
-MESSAGE_REGISTRATION_DISABLED = 'Registration is disabled'
-MESSAGE_BOARD_CREATION_DISABLED = 'Board creation is disabled'
+MESSAGE_REGISTRATION_DISABLED = "Registration is disabled"
+MESSAGE_BOARD_CREATION_DISABLED = "Board creation is disabled"
 
 
 class NoPermissionError(Exception):
@@ -65,8 +65,14 @@ def authorize_registration():
         raise ArgumentError(MESSAGE_REGISTRATION_DISABLED)
 
 
-def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, post_details=None, board=None,
-                          thread=None):
+def authorize_post_action(
+    actor: ModeratorModel,
+    action: PostAction,
+    post=None,
+    post_details=None,
+    board=None,
+    thread=None,
+):
     if actor is not None and has_role(actor, roles.ROLE_ADMIN):
         return
 
@@ -75,7 +81,9 @@ def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, 
             raise RequestBannedException()
 
         if config.enable_cooldown_checking:
-            suspended, suspend_time = ban_service.is_request_suspended(post_details.ip4, board, thread)
+            suspended, suspend_time = ban_service.is_request_suspended(
+                post_details.ip4, board, thread
+            )
             if suspended:
                 e = RequestSuspendedException()
                 e.suspend_time = suspend_time
@@ -86,19 +94,26 @@ def authorize_post_action(actor: ModeratorModel, action: PostAction, post=None, 
         req_roles = [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_JANITOR]
         if actor is not None and has_board_roles(actor, post.thread.board, req_roles):
             can_delete = True
-        elif post_details is not None and post_details.password is not None and post_details.password == post.password:
+        elif (
+            post_details is not None
+            and post_details.password is not None
+            and post_details.password == post.password
+        ):
             can_delete = True
 
         if not can_delete:
             raise NoPermissionError()
     elif action is PostAction.POST_REPORT:
         pass
-    elif action is PostAction.THREAD_STICKY_TOGGLE or action is PostAction.THREAD_LOCKED_TOGGLE:
+    elif (
+        action is PostAction.THREAD_STICKY_TOGGLE
+        or action is PostAction.THREAD_LOCKED_TOGGLE
+    ):
         req_roles = [roles.BOARD_ROLE_FULL_PERMISSION]
         if not moderator_service.has_any_of_board_roles(actor, board, req_roles):
             raise NoPermissionError()
     else:
-        raise Exception('Unknown post action')
+        raise Exception("Unknown post action")
 
 
 def authorize_action(actor: ModeratorModel, action: ModeratorAction):
@@ -111,13 +126,15 @@ def authorize_action(actor: ModeratorModel, action: ModeratorAction):
             raise ArgumentError(MESSAGE_BOARD_CREATION_DISABLED)
 
         creator_roles = 0
-        for board_moderator in moderator_service.get_all_board_moderators_by_moderator(actor):
+        for board_moderator in moderator_service.get_all_board_moderators_by_moderator(
+            actor
+        ):
             if roles.BOARD_ROLE_CREATOR in board_moderator.roles:
                 creator_roles += 1
 
         max = config.max_boards_per_moderator
         if creator_roles >= max:
-            raise ArgumentError('Max boards limit reached ({})'.format(max))
+            raise ArgumentError("Max boards limit reached ({})".format(max))
     elif action is ModeratorAction.BOARD_DELETE:
         # must be admin
         raise NoPermissionError()
@@ -125,10 +142,12 @@ def authorize_action(actor: ModeratorModel, action: ModeratorAction):
         # must be admin
         raise NoPermissionError()
     else:
-        raise Exception('Unknown action')
+        raise Exception("Unknown action")
 
 
-def authorize_board_action(actor: ModeratorModel, board: BoardModel, action: ModeratorBoardAction, data=None):
+def authorize_board_action(
+    actor: ModeratorModel, board: BoardModel, action: ModeratorBoardAction, data=None
+):
     if has_role(actor, roles.ROLE_ADMIN):
         return
 
@@ -160,13 +179,15 @@ def authorize_board_action(actor: ModeratorModel, board: BoardModel, action: Mod
     elif action is ModeratorBoardAction.MODERATOR_REMOVE_SELF:
         pass  # Allow, creator check is done before
     elif action is ModeratorBoardAction.CONFIG_UPDATE:
-        if not has_board_roles(actor, board, [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_CONFIG]):
+        if not has_board_roles(
+            actor, board, [roles.BOARD_ROLE_FULL_PERMISSION, roles.BOARD_ROLE_CONFIG]
+        ):
             raise NoPermissionError()
     elif action is ModeratorBoardAction.VIEW_LOG:
         if not moderator_service.moderates_board(actor, board):
             raise NoPermissionError()
     else:
-        raise Exception('Unknown board action')
+        raise Exception("Unknown board action")
 
 
 def authorize_report_action(actor, board, report, action):
@@ -186,4 +207,4 @@ def has_board_roles(moderator, board, req_roles):
     return moderator_service.has_any_of_board_roles(moderator, board, req_roles)
 
 
-from uchan.lib.service import ban_service, moderator_service, site_service
+from uchan.lib.service import ban_service, moderator_service, site_service  # noqa

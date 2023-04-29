@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple
 
-from uchan.lib.model import BoardModel, ModeratorModel, ThreadModel, PostModel
-from uchan.lib.repository import boards, board_moderators
+from uchan.lib.model import BoardModel, ModeratorModel, PostModel, ThreadModel
+from uchan.lib.repository import board_moderators, boards
 
 
 def get_all_boards() -> List[BoardModel]:
@@ -12,7 +12,9 @@ def get_all_board_names() -> List[str]:
     return boards.get_all_board_names()
 
 
-def get_all_boards_with_last_threads(offset_limit=None) -> List[Tuple[BoardModel, ThreadModel, PostModel]]:
+def get_all_boards_with_last_threads(
+    offset_limit=None,
+) -> List[Tuple[BoardModel, ThreadModel, PostModel]]:
     return boards.get_all_boards_with_last_threads(offset_limit)
 
 

@@ -15,15 +15,22 @@ def create(log: ModeratorLogModel):
         s.commit()
 
 
-def get_all_logs_by_board(board: BoardModel, offset: int, limit: int) -> 'List[ModeratorLogModel]':
+def get_all_logs_by_board(
+    board: BoardModel, offset: int, limit: int
+) -> "List[ModeratorLogModel]":
     with session() as s:
-        ls = s.query(ModeratorLogOrmModel) \
-            .filter_by(board_id=board.id) \
-            .order_by(desc(ModeratorLogOrmModel.date)) \
-            .options(joinedload('moderator')) \
-            .offset(offset).limit(limit) \
+        ls = (
+            s.query(ModeratorLogOrmModel)
+            .filter_by(board_id=board.id)
+            .order_by(desc(ModeratorLogOrmModel.date))
+            .options(joinedload(ModeratorLogOrmModel.moderator))
+            .offset(offset)
+            .limit(limit)
             .all()
+        )
 
-        res = list(map(lambda i: ModeratorLogModel.from_orm_model(i, with_moderator=True), ls))
+        res = list(
+            map(lambda i: ModeratorLogModel.from_orm_model(i, with_moderator=True), ls)
+        )
         s.commit()
         return res

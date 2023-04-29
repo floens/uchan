@@ -5,14 +5,16 @@ from uchan.lib.exceptions import ArgumentError
 from uchan.lib.model import RegCodeModel
 from uchan.lib.ormmodel import RegCodeOrmModel
 
-MESSAGE_DUPLICATE_REG_CODE = 'Duplicate regcode'
+MESSAGE_DUPLICATE_REG_CODE = "Duplicate regcode"
 
 
 def create(reg_code: RegCodeModel, password: str) -> RegCodeModel:
     reg_code.password = _hash(password)
 
     with session() as s:
-        existing = s.query(RegCodeOrmModel).filter_by(password=reg_code.password).one_or_none()
+        existing = (
+            s.query(RegCodeOrmModel).filter_by(password=reg_code.password).one_or_none()
+        )
         if existing:
             raise ArgumentError(MESSAGE_DUPLICATE_REG_CODE)
 
@@ -38,5 +40,5 @@ def find_for_password(password: str) -> RegCodeModel:
 
 def _hash(input: str):
     digest = hashlib.sha3_384()
-    digest.update(input.encode('utf8'))
+    digest.update(input.encode("utf8"))
     return digest.digest()

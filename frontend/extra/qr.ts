@@ -4,8 +4,8 @@ import { Draggable } from "./draggable";
 import { context } from "./extra";
 
 class QRState implements Persistable {
-  x: number = -1;
-  y: number = -1;
+  x = -1;
+  y = -1;
 
   static fromDefaults() {
     return new QRState();
@@ -33,7 +33,7 @@ export class QR {
 
   stateListeners: any[];
   state: QRState;
-  showing: boolean = false;
+  showing = false;
   submitXhr: XMLHttpRequest = null;
 
   draggable: Draggable;
@@ -247,6 +247,7 @@ export class QR {
     try {
       responseData = JSON.parse(this.submitXhr.responseText);
     } catch (e) {
+      console.error('Error parsing response as json');
     }
 
     let responseMessage = 'Error submitting';
@@ -296,4 +297,3 @@ export class QR {
     }
   }
 }
-

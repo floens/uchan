@@ -8,10 +8,10 @@ from uchan.lib.exceptions import ArgumentError
 from uchan.lib.model import ModeratorModel
 from uchan.lib.ormmodel import ModeratorOrmModel
 
-MESSAGE_INVALID_USERNAME = 'Invalid username'
-MESSAGE_INVALID_PASSWORD = 'Invalid password'
-MESSAGE_USERNAME_IN_USE = 'This username is already in use'
-MESSAGE_PASSWORD_INCORRECT = 'Password does not match'
+MESSAGE_INVALID_USERNAME = "Invalid username"
+MESSAGE_INVALID_PASSWORD = "Invalid password"
+MESSAGE_USERNAME_IN_USE = "This username is already in use"
+MESSAGE_PASSWORD_INCORRECT = "Password does not match"
 
 
 def create_with_password(moderator: ModeratorModel, password: str):
@@ -43,13 +43,16 @@ def create_with_password(moderator: ModeratorModel, password: str):
         return moderator
 
 
-def get_all(include_boards=False) -> 'List[ModeratorModel]':
+def get_all(include_boards=False) -> "List[ModeratorModel]":
     with session() as s:
         q = s.query(ModeratorOrmModel)
         # TODO: fix this optimisation, it now requires way too many queries
         # if include_boards:
-        #    q = q.options(joinedload(ModeratorOrmModel.boards.of_type(BoardOrmModel.moderators)))
-        all_moderators = list(map(lambda m: ModeratorModel.from_orm_model(m, include_boards), q.all()))
+        #    q = q.options(joinedload(
+        #      ModeratorOrmModel.boards.of_type(BoardOrmModel.moderators)))
+        all_moderators = list(
+            map(lambda m: ModeratorModel.from_orm_model(m, include_boards), q.all())
+        )
         s.commit()
         return all_moderators
 
@@ -60,7 +63,11 @@ def find_by_username_case_insensitive(username: str) -> ModeratorModel:
 
     with session() as s:
         # Username chars are safe because it is checked above
-        m = s.query(ModeratorOrmModel).filter(ModeratorOrmModel.username.ilike(username)).one_or_none()
+        m = (
+            s.query(ModeratorOrmModel)
+            .filter(ModeratorOrmModel.username.ilike(username))
+            .one_or_none()
+        )
         res = None
         if m:
             res = ModeratorModel.from_orm_model(m)
@@ -83,7 +90,9 @@ def check_password_match(moderator: ModeratorModel, password: str):
         raise ArgumentError(MESSAGE_INVALID_PASSWORD)
 
     with session() as s:
-        moderator_orm_model = s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        moderator_orm_model = (
+            s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        )
         moderator_hashed_password = moderator_orm_model.password
         s.commit()
 
@@ -103,14 +112,18 @@ def update_password(moderator: ModeratorModel, password: str):
         raise ArgumentError(MESSAGE_INVALID_PASSWORD)
 
     with session() as s:
-        moderator_orm_model = s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        moderator_orm_model = (
+            s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        )
         moderator_orm_model.password = _hash_password(password)
         s.commit()
 
 
 def delete(moderator: ModeratorModel):
     with session() as s:
-        moderator_orm_model = s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        moderator_orm_model = (
+            s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        )
         s.delete(moderator_orm_model)
         s.commit()
 
@@ -123,7 +136,9 @@ def has_role(moderator: ModeratorModel, role: str) -> bool:
     _check_roles([role])
 
     with session() as s:
-        moderator_orm_model = s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        moderator_orm_model = (
+            s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        )
         res = role in moderator_orm_model.roles
         s.commit()
         return res
@@ -133,9 +148,11 @@ def add_role(moderator: ModeratorModel, role: str):
     _check_roles([role])
 
     with session() as s:
-        moderator_orm_model = s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        moderator_orm_model = (
+            s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        )
         if role in moderator_orm_model.roles:
-            raise ArgumentError('Role already added')
+            raise ArgumentError("Role already added")
         moderator_orm_model.roles.append(role)
         s.commit()
 
@@ -144,13 +161,15 @@ def remove_role(moderator: ModeratorModel, role: str):
     _check_roles([role])
 
     with session() as s:
-        moderator_orm_model = s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        moderator_orm_model = (
+            s.query(ModeratorOrmModel).filter_by(id=moderator.id).one()
+        )
         if role not in moderator_orm_model.roles:
-            raise ArgumentError('Role not added')
+            raise ArgumentError("Role not added")
         moderator_orm_model.roles.remove(role)
         s.commit()
 
 
-def _check_roles(role_list: 'List[str]'):
+def _check_roles(role_list: "List[str]"):
     if not all(role is not None and role in roles.ALL_ROLES for role in role_list):
-        raise ArgumentError('Invalid role')
+        raise ArgumentError("Invalid role")

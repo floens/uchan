@@ -3,6 +3,8 @@ import re
 # Generic crypt() implementation taken from https://gist.github.com/Cairnarvon/5075687
 # Slightly modified to accept bytes and raise exceptions on invalid input
 
+# fmt: off
+
 # Initial permutation
 IP = (
     58, 50, 42, 34, 26, 18, 10, 2,
@@ -161,7 +163,7 @@ def __setkey(key):
 
     for i in range(16):
         # rotate
-        for k in range(shifts[i]):
+        for _k in range(shifts[i]):
             temp = C[0]
 
             for j in range(27):
@@ -270,7 +272,8 @@ def crypt(pw, salt):
     for i in range(2):
         x = salt[i]
 
-        if not (ord('a') <= x <= ord('z')) and not (ord('A') <= x <= ord('Z')) and not (ord('0') <= x <= ord('9')) and not x == ord('.') and not x == ord('/'):
+        if not (ord('a') <= x <= ord('z')) and not (ord('A') <= x <= ord('Z')) and not (
+                ord('0') <= x <= ord('9')) and not x == ord('.') and not x == ord('/'):
             raise Exception('Salt bytes must be in the set of ascii [a-zA-Z0-9./]')
 
         # store salt at beginning of results
@@ -294,7 +297,7 @@ def crypt(pw, salt):
 
     # call DES encryption 25 times using pw as key and initial data = 0
     block = [0] * 66
-    for i in range(25):
+    for _ in range(25):
         block = __encrypt(block)
 
     # format encrypted block for standard crypt(3) output
@@ -316,7 +319,10 @@ def crypt(pw, salt):
     return ''.join(iobuf)
 
 
-SALT_REGEX = re.compile(br'[^\.-z]')
+# fmt: on
+
+
+SALT_REGEX = re.compile(rb"[^\.-z]")
 
 
 def generate_crypt_code(password):
@@ -326,13 +332,13 @@ def generate_crypt_code(password):
     """
 
     if not password:
-        raise Exception('password must be at least one char')
+        raise Exception("password must be at least one char")
 
     # compatibility
-    password = password.replace('"', '&quot;')
-    password = password.replace("'", '')
-    password = password.replace('<', '&lt;')
-    password = password.replace('>', '&gt;')
+    password = password.replace('"', "&quot;")
+    password = password.replace("'", "")
+    password = password.replace("<", "&lt;")
+    password = password.replace(">", "&gt;")
 
     # Convert to shift_jis bytes
     shift_jis_bytes = password.encode("shift_jis", "ignore")
@@ -340,11 +346,11 @@ def generate_crypt_code(password):
     # replace invalid salt chars
     # note: futuba appends 'H.' to the salt to make it at least 3 bytes
     # I saw other implementations use '...'
-    salt_raw = SALT_REGEX.sub(b'.', (shift_jis_bytes + b'H.')[1:3])
+    salt_raw = SALT_REGEX.sub(b".", (shift_jis_bytes + b"H.")[1:3])
 
-    # since we accept all ascii chars from . to z, and the crypt() salt requires [a-zA-Z0-9./],
-    # replace the invalid salt bytes with some letters
-    salt = salt_raw.translate(bytes.maketrans(b':;<=>?@[\\]^_`', b'ABCDEFGabcdef'))
+    # since we accept all ascii chars from . to z, and the crypt() salt requires
+    # [a-zA-Z0-9./], replace the invalid salt bytes with some letters
+    salt = salt_raw.translate(bytes.maketrans(b":;<=>?@[\\]^_`", b"ABCDEFGabcdef"))
 
     # Get our actual code with crypt()
     code = crypt(shift_jis_bytes, salt)

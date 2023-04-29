@@ -1,6 +1,4 @@
-from urllib.parse import urlparse
-
-from flask import Flask, request, send_from_directory
+from flask import Flask, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 from uchan.config import UchanConfig
@@ -23,14 +21,15 @@ def create_web_app(config: UchanConfig, app):
     if config.use_proxy_fixer:
         app.wsgi_app = ProxyFix(app.wsgi_app, config.proxy_fixer_num_proxies)
 
-    app.config['DEBUG'] = config.debug
-    app.config['APP_NAME'] = config.name
-    app.config['MAX_CONTENT_LENGTH'] = config.max_content_length
+    app.config["DEBUG"] = config.debug
+    app.config["APP_NAME"] = config.name
+    app.config["MAX_CONTENT_LENGTH"] = config.max_content_length
 
     app.jinja_env.trim_blocks = True
     app.jinja_env.lstrip_blocks = True
 
     import uchan.view.routing.converters
+
     uchan.view.routing.converters.init_converters(app)
 
     from uchan import logger
@@ -40,18 +39,18 @@ def create_web_app(config: UchanConfig, app):
     @app.errorhandler(500)
     def server_error_handler(error):
         logger.exception(error)
-        return send_from_directory('view/static', '500.html'), 404
+        return send_from_directory("view/static", "500.html"), 404
 
     @app.errorhandler(404)
-    def server_error_handler(error):
-        return send_from_directory('view/static', '404.html'), 404
+    def not_found_handler(error):
+        return send_from_directory("view/static", "404.html"), 404
 
     def bad_request_message(e):
         if isinstance(e, BadRequestError):
             while isinstance(e, Exception) and len(e.args) > 0:
                 e = e.args[0]
 
-        return e if type(e) is str else ''
+        return e if type(e) is str else ""
 
     from uchan.view import render_error
 
@@ -65,7 +64,7 @@ def create_web_app(config: UchanConfig, app):
 
     @app.errorhandler(NoPermissionError)
     def no_permission_handler(error):
-        return render_error('No permission', 401)
+        return render_error("No permission", 401)
 
     from uchan.lib.service import verification_service
 

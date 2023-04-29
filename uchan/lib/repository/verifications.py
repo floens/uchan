@@ -23,7 +23,9 @@ class VerifyingClient:
 
 def is_verified(verifying_client: VerifyingClient) -> bool:
     verification_model = None
-    verification_model_cache = cache.get(cache_key('verifications', verifying_client.verification_id))
+    verification_model_cache = cache.get(
+        cache_key("verifications", verifying_client.verification_id)
+    )
     if verification_model_cache:
         verification_model = VerificationsModel.from_cache(verification_model_cache)
 
@@ -34,14 +36,22 @@ def is_verified(verifying_client: VerifyingClient) -> bool:
 
             verifications_orm_model = q.one_or_none()
             if verifications_orm_model:
-                verification_model = VerificationsModel.from_orm_model(verifications_orm_model)
+                verification_model = VerificationsModel.from_orm_model(
+                    verifications_orm_model
+                )
 
                 cached = verification_model.to_cache()
                 timeout = max(1, (verification_model.expires - now()) // 1000)
-                cache.set(cache_key('verifications', verification_model.id), cached, timeout=timeout)
+                cache.set(
+                    cache_key("verifications", verification_model.id),
+                    cached,
+                    timeout=timeout,
+                )
             s.commit()
 
-    return verification_model and _is_verifications_valid(verifying_client, verification_model)
+    return verification_model and _is_verifications_valid(
+        verifying_client, verification_model
+    )
 
 
 def set_verified(verifying_client: VerifyingClient) -> VerificationsModel:
@@ -63,7 +73,9 @@ def set_verified(verifying_client: VerifyingClient) -> VerificationsModel:
         return m
 
 
-def _is_verifications_valid(verifying_client: VerifyingClient, verifications: VerificationsModel):
+def _is_verifications_valid(
+    verifying_client: VerifyingClient, verifications: VerificationsModel
+):
     time = now()
 
     ip_correct = verifications.ip4 == verifying_client.ip4

@@ -118,6 +118,7 @@ export class WatchInterface {
   }
 
   private updateView() {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let self = this;
     this.bookmarksListElement.innerHTML = '';
     let frag = document.createDocumentFragment();

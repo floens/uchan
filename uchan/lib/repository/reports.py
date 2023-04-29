@@ -7,9 +7,18 @@ from sqlalchemy.sql.sqltypes import String
 
 from uchan.lib import roles
 from uchan.lib.database import session
-from uchan.lib.model import ModeratorModel, BoardModel, ReportModel, PostModel
-from uchan.lib.ormmodel import PostOrmModel, ThreadOrmModel, BoardOrmModel, BoardModeratorOrmModel, ReportOrmModel
-from uchan.lib.service.moderator_service import required_roles_for_viewing_reports, has_role
+from uchan.lib.model import BoardModel, ModeratorModel, PostModel, ReportModel
+from uchan.lib.ormmodel import (
+    BoardModeratorOrmModel,
+    BoardOrmModel,
+    PostOrmModel,
+    ReportOrmModel,
+    ThreadOrmModel,
+)
+from uchan.lib.service.moderator_service import (
+    has_role,
+    required_roles_for_viewing_reports,
+)
 
 
 def create(report: ReportModel):
@@ -42,28 +51,33 @@ def find_by_post(post: PostModel) -> Optional[ReportModel]:
         return res
 
 
-def find_by_moderator(moderator: ModeratorModel, page: int, per_page: int, for_boards: List[BoardModel]) \
-        -> List[ReportModel]:
+def find_by_moderator(
+    moderator: ModeratorModel, page: int, per_page: int, for_boards: List[BoardModel]
+) -> List[ReportModel]:
     with session() as s:
         q = s.query(ReportOrmModel)
 
         can_see_all_reports = has_role(moderator, roles.ROLE_ADMIN)
 
         if not can_see_all_reports:
-            # Filter that gets all reports for the moderator id, if that moderator also has either
-            # full permission or janitor.
+            # Filter that gets all reports for the moderator id, if that moderator also
+            # has either full permission or janitor.
             q = q.filter(
                 ReportOrmModel.post_id == PostOrmModel.id,
                 PostOrmModel.thread_id == ThreadOrmModel.id,
                 ThreadOrmModel.board_id == BoardOrmModel.id,
                 BoardOrmModel.id == BoardModeratorOrmModel.board_id,
                 BoardModeratorOrmModel.moderator_id == moderator.id,
-                BoardModeratorOrmModel.roles.overlap(cast(required_roles_for_viewing_reports(), ARRAY(String))))
+                BoardModeratorOrmModel.roles.overlap(
+                    cast(required_roles_for_viewing_reports(), ARRAY(String))
+                ),
+            )
         else:
             q = q.filter(
                 ReportOrmModel.post_id == PostOrmModel.id,
                 PostOrmModel.thread_id == ThreadOrmModel.id,
-                ThreadOrmModel.board_id == BoardOrmModel.id)
+                ThreadOrmModel.board_id == BoardOrmModel.id,
+            )
 
         if for_boards:
             board_ids = [board.id for board in for_boards]
@@ -71,7 +85,9 @@ def find_by_moderator(moderator: ModeratorModel, page: int, per_page: int, for_b
 
         q = q.order_by(desc(ReportOrmModel.date))
         q = q.options(
-            joinedload(ReportOrmModel.post).joinedload(PostOrmModel.thread).joinedload(ThreadOrmModel.board)
+            joinedload(ReportOrmModel.post)
+            .joinedload(PostOrmModel.thread)
+            .joinedload(ThreadOrmModel.board)
         )
         q = q.offset(page * per_page).limit(per_page)
 

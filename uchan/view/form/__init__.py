@@ -1,7 +1,7 @@
 from wtforms import Form
 from wtforms.csrf.core import CSRF
 
-from uchan.view import generate_csrf_token, check_csrf_token
+from uchan.view import check_csrf_token, generate_csrf_token
 
 
 class CSRFImpl(CSRF):
@@ -10,11 +10,11 @@ class CSRFImpl(CSRF):
 
     def validate_csrf_token(self, form, field):
         if not check_csrf_token(field.data):
-            raise ValueError('Invalid CSRF token')
+            raise ValueError("Invalid CSRF token")
 
 
 class CSRFForm(Form):
     class Meta:
         csrf = True
         csrf_class = CSRFImpl
-        csrf_field_name = 'token'
+        csrf_field_name = "token"

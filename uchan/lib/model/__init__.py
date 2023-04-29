@@ -1,10 +1,22 @@
-from enum import unique, Enum
+from enum import Enum, unique
 from typing import List
 
-from uchan.filter.text_parser import parse_text, parse_moderator_code
-from uchan.lib.ormmodel import ModeratorOrmModel, BoardOrmModel, ThreadOrmModel, BoardModeratorOrmModel, ConfigOrmModel, \
-    PageOrmModel, ModeratorLogOrmModel, PostOrmModel, FileOrmModel, BanOrmModel, ReportOrmModel, VerificationOrmModel, \
-    RegCodeOrmModel
+from uchan.filter.text_parser import parse_moderator_code, parse_text
+from uchan.lib.ormmodel import (
+    BanOrmModel,
+    BoardModeratorOrmModel,
+    BoardOrmModel,
+    ConfigOrmModel,
+    FileOrmModel,
+    ModeratorLogOrmModel,
+    ModeratorOrmModel,
+    PageOrmModel,
+    PostOrmModel,
+    RegCodeOrmModel,
+    ReportOrmModel,
+    ThreadOrmModel,
+    VerificationOrmModel,
+)
 
 """
 Plain models that don't have a connection to the database models or view models.
@@ -39,7 +51,7 @@ class PageModel:
         page.link_name = link
         page.type = page_type
         page.order = 0
-        page.content = ''
+        page.content = ""
         return page
 
     @classmethod
@@ -56,12 +68,12 @@ class PageModel:
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.id = cache['id']
-        m.title = cache['title']
-        m.link_name = cache['link_name']
-        m.type = cache['type']
-        m.order = cache['order']
-        m.content = cache['content']
+        m.id = cache["id"]
+        m.title = cache["title"]
+        m.link_name = cache["link_name"]
+        m.type = cache["type"]
+        m.order = cache["order"]
+        m.content = cache["content"]
         return m
 
     def to_orm_model(self) -> PageOrmModel:
@@ -76,12 +88,12 @@ class PageModel:
 
     def to_cache(self):
         return {
-            'id': self.id,
-            'title': self.title,
-            'link_name': self.link_name,
-            'type': self.type,
-            'order': self.order,
-            'content': self.content
+            "id": self.id,
+            "title": self.title,
+            "link_name": self.link_name,
+            "type": self.type,
+            "order": self.order,
+            "content": self.content,
         }
 
 
@@ -109,11 +121,17 @@ class ThreadModel:
         self.sticky: bool = None
         self.locked: bool = None
 
-        self.posts: 'List[PostModel]' = None
+        self.posts: "List[PostModel]" = None
         self.board: BoardModel = None
 
     @classmethod
-    def from_orm_model(cls, model: ThreadOrmModel, include_board=False, include_posts=False, cached_thread_posts=None):
+    def from_orm_model(
+        cls,
+        model: ThreadOrmModel,
+        include_board=False,
+        include_posts=False,
+        cached_thread_posts=None,
+    ):
         m = cls()
         m.id = model.id
         m.refno = model.refno
@@ -130,47 +148,53 @@ class ThreadModel:
                     cached_posts_by_id[i.id] = i
 
             m.posts = list(
-                map(lambda i: PostModel.from_orm_model(i, cached_posts_by_id=cached_posts_by_id), model.posts))
+                map(
+                    lambda i: PostModel.from_orm_model(
+                        i, cached_posts_by_id=cached_posts_by_id
+                    ),
+                    model.posts,
+                )
+            )
         return m
 
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.id = cache['id']
-        m.refno = cache['refno']
-        m.last_modified = cache['last_modified']
-        m.refno_counter = cache['refno_counter']
-        m.sticky = cache['sticky']
-        m.locked = cache['locked']
-        if 'board' in cache:
-            m.board = BoardModel.from_cache(cache['board'])
-        if 'posts' in cache:
-            m.posts = list(map(lambda i: PostModel.from_cache(i), cache['posts']))
+        m.id = cache["id"]
+        m.refno = cache["refno"]
+        m.last_modified = cache["last_modified"]
+        m.refno_counter = cache["refno_counter"]
+        m.sticky = cache["sticky"]
+        m.locked = cache["locked"]
+        if "board" in cache:
+            m.board = BoardModel.from_cache(cache["board"])
+        if "posts" in cache:
+            m.posts = list(map(lambda i: PostModel.from_cache(i), cache["posts"]))
         return m
 
     def to_cache(self, include_board=False, include_posts=False):
         res = {
-            'id': self.id,
-            'refno': self.refno,
-            'last_modified': self.last_modified,
-            'refno_counter': self.refno_counter,
-            'sticky': self.sticky,
-            'locked': self.locked
+            "id": self.id,
+            "refno": self.refno,
+            "last_modified": self.last_modified,
+            "refno_counter": self.refno_counter,
+            "sticky": self.sticky,
+            "locked": self.locked,
         }
         if include_board:
-            res['board'] = self.board.to_cache()
+            res["board"] = self.board.to_cache()
         if include_posts:
-            res['posts'] = list(map(lambda i: i.to_cache(), self.posts))
+            res["posts"] = list(map(lambda i: i.to_cache(), self.posts))
         return res
 
 
 class BoardPageModel:
     def __init__(self):
         self.page: int = None
-        self.threads: 'List[ThreadStubModel]' = None
+        self.threads: "List[ThreadStubModel]" = None
 
     @classmethod
-    def from_page_thread_stubs(cls, page: int, thread_stubs: 'List[ThreadStubModel]'):
+    def from_page_thread_stubs(cls, page: int, thread_stubs: "List[ThreadStubModel]"):
         m = cls()
         m.page = page
         m.threads = thread_stubs
@@ -179,14 +203,14 @@ class BoardPageModel:
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.page = cache['page']
-        m.threads = list(map(lambda i: ThreadStubModel.from_cache(i), cache['threads']))
+        m.page = cache["page"]
+        m.threads = list(map(lambda i: ThreadStubModel.from_cache(i), cache["threads"]))
         return m
 
     def to_cache(self):
         return {
-            'page': self.page,
-            'threads': list(map(lambda i: i.to_cache(), self.threads))
+            "page": self.page,
+            "threads": list(map(lambda i: i.to_cache(), self.threads)),
         }
 
 
@@ -194,10 +218,12 @@ class CatalogModel:
     def __init__(self):
         self.id: int = None
 
-        self.threads: 'List[ThreadStubModel]' = None
+        self.threads: "List[ThreadStubModel]" = None
 
     @classmethod
-    def from_board_thread_stubs(cls, board: 'BoardModel', thread_stubs: 'List[ThreadStubModel]'):
+    def from_board_thread_stubs(
+        cls, board: "BoardModel", thread_stubs: "List[ThreadStubModel]"
+    ):
         m = cls()
         m.id = board.id
 
@@ -208,14 +234,14 @@ class CatalogModel:
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.id = cache['id']
-        m.threads = list(map(lambda i: ThreadStubModel.from_cache(i), cache['threads']))
+        m.id = cache["id"]
+        m.threads = list(map(lambda i: ThreadStubModel.from_cache(i), cache["threads"]))
         return m
 
     def to_cache(self):
         return {
-            'id': self.id,
-            'threads': list(map(lambda i: i.to_cache(), self.threads))
+            "id": self.id,
+            "threads": list(map(lambda i: i.to_cache(), self.threads)),
         }
 
 
@@ -229,7 +255,7 @@ class ThreadStubModel:
         self.original_length: int = None
         self.omitted_count: int = None
 
-        self.posts: 'List[PostModel]' = None
+        self.posts: "List[PostModel]" = None
 
     @classmethod
     def from_thread(cls, thread: ThreadModel, include_snippets=False, include_op=False):
@@ -249,8 +275,13 @@ class ThreadStubModel:
             for post in [thread.posts[0]] + thread.posts[1:][-snippet_count:]:
                 copy = post.copy()
                 # TODO: move outside of model logic
-                maxlinestext = '<span class="abbreviated">Comment too long, view thread to read.</span>'
-                copy.html_text = parse_text(copy.text, maxlines=12, maxlinestext=maxlinestext)
+                maxlinestext = (
+                    '<span class="abbreviated">'
+                    "Comment too long, view thread to read.</span>"
+                )
+                copy.html_text = parse_text(
+                    copy.text, maxlines=12, maxlinestext=maxlinestext
+                )
                 m.posts.append(copy)
         if include_op:
             m.posts = [thread.posts[0]]
@@ -259,27 +290,27 @@ class ThreadStubModel:
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.refno = cache['refno']
-        m.last_modified = cache['last_modified']
-        m.sticky = cache['sticky']
-        m.locked = cache['locked']
-        m.original_length = cache['original_length']
-        m.omitted_count = cache['omitted_count']
-        if 'posts' in cache:
-            m.posts = list(map(lambda i: PostModel.from_cache(i), cache['posts']))
+        m.refno = cache["refno"]
+        m.last_modified = cache["last_modified"]
+        m.sticky = cache["sticky"]
+        m.locked = cache["locked"]
+        m.original_length = cache["original_length"]
+        m.omitted_count = cache["omitted_count"]
+        if "posts" in cache:
+            m.posts = list(map(lambda i: PostModel.from_cache(i), cache["posts"]))
         return m
 
     def to_cache(self):
         r = {
-            'refno': self.refno,
-            'last_modified': self.last_modified,
-            'sticky': self.sticky,
-            'locked': self.locked,
-            'original_length': self.original_length,
-            'omitted_count': self.omitted_count
+            "refno": self.refno,
+            "last_modified": self.last_modified,
+            "sticky": self.sticky,
+            "locked": self.locked,
+            "original_length": self.original_length,
+            "omitted_count": self.omitted_count,
         }
         if self.posts:
-            r['posts'] = list(map(lambda i: i.to_cache(), self.posts))
+            r["posts"] = list(map(lambda i: i.to_cache(), self.posts))
         return r
 
     def to_op_only(self):
@@ -324,12 +355,12 @@ class BoardModel:
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.id = cache['id']
-        m.name = cache['name']
-        m.refno_counter = cache['refno_counter']
+        m.id = cache["id"]
+        m.name = cache["name"]
+        m.refno_counter = cache["refno_counter"]
 
-        if 'config' in cache:
-            m.config = BoardConfigModel.from_cache(cache['config'])
+        if "config" in cache:
+            m.config = BoardConfigModel.from_cache(cache["config"])
 
         return m
 
@@ -341,13 +372,9 @@ class BoardModel:
         return orm_model
 
     def to_cache(self):
-        res = {
-            'id': self.id,
-            'name': self.name,
-            'refno_counter': self.refno_counter
-        }
+        res = {"id": self.id, "name": self.name, "refno_counter": self.refno_counter}
         if self.config:
-            res['config'] = self.config.to_cache()
+            res["config"] = self.config.to_cache()
         return res
 
 
@@ -368,8 +395,8 @@ class BoardConfigModel:
         m = cls()
         m.pages = 10
         m.per_page = 15
-        m.full_name = ''
-        m.description = ''
+        m.full_name = ""
+        m.description = ""
         m.bump_limit = 300
         m.file_posting = True
         m.posting_verification_required = False
@@ -378,81 +405,80 @@ class BoardConfigModel:
 
     @classmethod
     def from_orm_model(cls, model: ConfigOrmModel):
-        if model.type != 'board_config':
-            raise Exception('Config type incorrect')
+        if model.type != "board_config":
+            raise Exception("Config type incorrect")
 
         m = cls()
         m.id = model.id
 
         def g(key, default):
             for item in model.config:
-                if item['name'] == key:
-                    return item['value']
+                if item["name"] == key:
+                    return item["value"]
             return default
 
-        m.pages = g('pages', 10)
-        m.per_page = g('per_page', 15)
-        m.full_name = g('full_name', '')
-        m.description = g('description', '')
-        m.bump_limit = g('bump_limit', 300)
-        m.file_posting = g('file_posting_enabled', True)
-        m.posting_verification_required = g('posting_requires_verification', False)
-        m.max_files = g('max_files', 3)
+        m.pages = g("pages", 10)
+        m.per_page = g("per_page", 15)
+        m.full_name = g("full_name", "")
+        m.description = g("description", "")
+        m.bump_limit = g("bump_limit", 300)
+        m.file_posting = g("file_posting_enabled", True)
+        m.posting_verification_required = g("posting_requires_verification", False)
+        m.max_files = g("max_files", 3)
         return m
 
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.id = cache['id']
-        m.pages = cache['pages']
-        m.per_page = cache['per_page']
-        m.full_name = cache['full_name']
-        m.description = cache['description']
-        m.bump_limit = cache['bump_limit']
-        m.file_posting = cache['file_posting']
-        m.posting_verification_required = cache['posting_verification_required']
-        m.max_files = cache['max_files'] if 'max_files' in cache else 3
+        m.id = cache["id"]
+        m.pages = cache["pages"]
+        m.per_page = cache["per_page"]
+        m.full_name = cache["full_name"]
+        m.description = cache["description"]
+        m.bump_limit = cache["bump_limit"]
+        m.file_posting = cache["file_posting"]
+        m.posting_verification_required = cache["posting_verification_required"]
+        m.max_files = cache["max_files"] if "max_files" in cache else 3
         return m
 
     def to_orm_model(self):
         orm_model = ConfigOrmModel()
         orm_model.id = self.id
-        orm_model.type = 'board_config'
+        orm_model.type = "board_config"
         res = []
 
         def s(key, value, value_type):
             if type(value) != value_type:
-                raise Exception('Incorrect value for board config, '
-                                'expected {} for {}, got {}'.format(value_type, key, type(value)))
+                raise Exception(
+                    "Incorrect value for board config, "
+                    "expected {} for {}, got {}".format(value_type, key, type(value))
+                )
 
-            res.append({
-                'name': key,
-                'value': value
-            })
+            res.append({"name": key, "value": value})
 
-        s('pages', self.pages, int)
-        s('per_page', self.per_page, int)
-        s('full_name', self.full_name, str)
-        s('description', self.description, str)
-        s('bump_limit', self.bump_limit, int)
-        s('file_posting_enabled', self.file_posting, bool)
-        s('posting_requires_verification', self.posting_verification_required, bool)
-        s('max_files', self.max_files, int)
+        s("pages", self.pages, int)
+        s("per_page", self.per_page, int)
+        s("full_name", self.full_name, str)
+        s("description", self.description, str)
+        s("bump_limit", self.bump_limit, int)
+        s("file_posting_enabled", self.file_posting, bool)
+        s("posting_requires_verification", self.posting_verification_required, bool)
+        s("max_files", self.max_files, int)
 
         orm_model.config = res
         return orm_model
 
     def to_cache(self):
         return {
-            'id': self.id,
-            'pages': self.pages,
-            'per_page': self.per_page,
-            'full_name': self.full_name,
-            'description': self.description,
-            'bump_limit': self.bump_limit,
-            'file_posting': self.file_posting,
-            'posting_verification_required': self.posting_verification_required,
-            'max_files': self.max_files
+            "id": self.id,
+            "pages": self.pages,
+            "per_page": self.per_page,
+            "full_name": self.full_name,
+            "description": self.description,
+            "bump_limit": self.bump_limit,
+            "file_posting": self.file_posting,
+            "posting_verification_required": self.posting_verification_required,
+            "max_files": self.max_files,
         }
 
 
@@ -486,99 +512,100 @@ class SiteConfigModel:
     @classmethod
     def from_defaults(cls):
         m = cls()
-        m.motd = ''
-        m.footer_text = 'Page served by [µchan](https://github.com/Floens/uchan)'
+        m.motd = ""
+        m.footer_text = "Page served by [µchan](https://github.com/Floens/uchan)"
         m.boards_top = True
-        m.default_name = 'Anonymous'
+        m.default_name = "Anonymous"
         m.posting_enabled = True
         m.file_posting = True
-        m.header_tags = ''
+        m.header_tags = ""
         m.registration = True
         m.board_creation = True
         return m
 
     @classmethod
     def from_orm_model(cls, model: ConfigOrmModel):
-        if model.type != 'site':
-            raise Exception('Config type incorrect')
+        if model.type != "site":
+            raise Exception("Config type incorrect")
 
         m = cls()
         m.id = model.id
 
         def g(key, default):
             for item in model.config:
-                if item['name'] == key:
-                    return item['value']
+                if item["name"] == key:
+                    return item["value"]
             return default
 
-        m.motd = g('motd', '')
-        m.footer_text = g('footer_text', '')
-        m.boards_top = g('boards_top', '')
-        m.default_name = g('default_name', 'Anonymous')
-        m.posting_enabled = g('posting_enabled', True)
-        m.file_posting = g('file_posting_enabled', True)
-        m.header_tags = g('header_tags', '')
-        m.registration = g('registration', True)
-        m.board_creation = g('board_creation', True)
+        m.motd = g("motd", "")
+        m.footer_text = g("footer_text", "")
+        m.boards_top = g("boards_top", "")
+        m.default_name = g("default_name", "Anonymous")
+        m.posting_enabled = g("posting_enabled", True)
+        m.file_posting = g("file_posting_enabled", True)
+        m.header_tags = g("header_tags", "")
+        m.registration = g("registration", True)
+        m.board_creation = g("board_creation", True)
 
         return m
 
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.id = cache['id']
-        m.motd = cache['motd']
-        m.footer_text = cache['footer_text']
-        m.boards_top = cache['boards_top']
-        m.default_name = cache['default_name']
-        m.posting_enabled = cache['posting_enabled']
-        m.file_posting = cache['file_posting']
-        m.header_tags = cache['header_tags'] if 'header_tags' in cache else ''
-        m.registration = cache['registration'] if 'registration' in cache else True
-        m.board_creation = cache['board_creation'] if 'board_creation' in cache else True
+        m.id = cache["id"]
+        m.motd = cache["motd"]
+        m.footer_text = cache["footer_text"]
+        m.boards_top = cache["boards_top"]
+        m.default_name = cache["default_name"]
+        m.posting_enabled = cache["posting_enabled"]
+        m.file_posting = cache["file_posting"]
+        m.header_tags = cache["header_tags"] if "header_tags" in cache else ""
+        m.registration = cache["registration"] if "registration" in cache else True
+        m.board_creation = (
+            cache["board_creation"] if "board_creation" in cache else True
+        )
         return m
 
     def to_orm_model(self):
         orm_model = ConfigOrmModel()
         orm_model.id = self.id
-        orm_model.type = 'site'
+        orm_model.type = "site"
         res = []
 
         def s(key, value, value_type):
             if type(value) != value_type:
-                raise Exception('Incorrect value for site config, '
-                                'expected {} for {}, got {}'.format(value_type, key, type(value)))
+                raise Exception(
+                    "Incorrect value for site config, "
+                    "expected {} for {}, got {}".format(value_type, key, type(value))
+                )
 
-            res.append({
-                'name': key,
-                'value': value
-            })
+            res.append({"name": key, "value": value})
 
-        s('motd', self.motd, str)
-        s('footer_text', self.footer_text, str)
-        s('boards_top', self.boards_top, bool)
-        s('default_name', self.default_name, str)
-        s('posting_enabled', self.posting_enabled, bool)
-        s('file_posting_enabled', self.file_posting, bool)
-        s('header_tags', self.header_tags, str)
-        s('registration', self.registration, bool)
-        s('board_creation', self.board_creation, bool)
+        s("motd", self.motd, str)
+        s("footer_text", self.footer_text, str)
+        s("boards_top", self.boards_top, bool)
+        s("default_name", self.default_name, str)
+        s("posting_enabled", self.posting_enabled, bool)
+        s("file_posting_enabled", self.file_posting, bool)
+        s("header_tags", self.header_tags, str)
+        s("registration", self.registration, bool)
+        s("board_creation", self.board_creation, bool)
 
         orm_model.config = res
         return orm_model
 
     def to_cache(self):
         return {
-            'id': self.id,
-            'motd': self.motd,
-            'footer_text': self.footer_text,
-            'boards_top': self.boards_top,
-            'default_name': self.default_name,
-            'posting_enabled': self.posting_enabled,
-            'file_posting': self.file_posting,
-            'header_tags': self.header_tags,
-            'registration': self.registration,
-            'board_creation': self.board_creation
+            "id": self.id,
+            "motd": self.motd,
+            "footer_text": self.footer_text,
+            "boards_top": self.boards_top,
+            "default_name": self.default_name,
+            "posting_enabled": self.posting_enabled,
+            "file_posting": self.file_posting,
+            "header_tags": self.header_tags,
+            "registration": self.registration,
+            "board_creation": self.board_creation,
         }
 
 
@@ -586,7 +613,7 @@ class ModeratorModel:
     def __init__(self):
         self.id: int = None
         self.username: str = None
-        self.roles: 'List[str]' = []
+        self.roles: "List[str]" = []
 
         self.boards = None
 
@@ -615,7 +642,7 @@ class ModeratorModel:
 
 class BoardModeratorModel:
     def __init__(self):
-        self.roles: 'List[str]' = None
+        self.roles: "List[str]" = None
         self.board: BoardModel = None
         self.moderator: ModeratorModel = None
 
@@ -639,8 +666,14 @@ class ModeratorLogModel:
         self.board: BoardModel = None
 
     @classmethod
-    def from_date_type_text_moderator_board(cls, date: int, type: int, text: str, moderator: ModeratorModel,
-                                            board: BoardModel):
+    def from_date_type_text_moderator_board(
+        cls,
+        date: int,
+        type: int,
+        text: str,
+        moderator: ModeratorModel,
+        board: BoardModel,
+    ):
         m = cls()
         m.date = date
         m.type = type
@@ -652,7 +685,9 @@ class ModeratorLogModel:
         return m
 
     @classmethod
-    def from_orm_model(cls, model: ModeratorLogOrmModel, with_moderator=False, with_board=False):
+    def from_orm_model(
+        cls, model: ModeratorLogOrmModel, with_moderator=False, with_board=False
+    ):
         m = cls()
         m.id = model.id
         m.date = model.date
@@ -717,7 +752,9 @@ class PostModel:
         return c
 
     @classmethod
-    def from_orm_model(cls, model: PostOrmModel, include_thread=False, cached_posts_by_id=None):
+    def from_orm_model(
+        cls, model: PostOrmModel, include_thread=False, cached_posts_by_id=None
+    ):
         m = cls()
         m.id = model.id
         m.date = model.date
@@ -739,7 +776,9 @@ class PostModel:
             m.mod_code = parse_moderator_code(model.moderator)
 
         if model.files:
-            m.files = m._sortfiles(list(map(lambda i: FileModel.from_orm_model(i), model.files)))
+            m.files = m._sortfiles(
+                list(map(lambda i: FileModel.from_orm_model(i), model.files))
+            )
 
         if include_thread:
             m.thread = ThreadModel.from_orm_model(model.thread, include_board=True)
@@ -749,20 +788,22 @@ class PostModel:
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.id = cache['id']
-        m.date = cache['date']
-        m.name = cache['name']
-        m.subject = cache['subject']
-        m.text = cache['text']
-        m.refno = cache['refno']
-        m.password = cache['password']
-        m.ip4 = cache['ip4']
+        m.id = cache["id"]
+        m.date = cache["date"]
+        m.name = cache["name"]
+        m.subject = cache["subject"]
+        m.text = cache["text"]
+        m.refno = cache["refno"]
+        m.password = cache["password"]
+        m.ip4 = cache["ip4"]
 
-        m.html_text = cache['html_text']
-        m.mod_code = cache['mod_code']
+        m.html_text = cache["html_text"]
+        m.mod_code = cache["mod_code"]
 
-        if 'files' in cache:
-            m.files = m._sortfiles(list(map(lambda i: FileModel.from_cache(i), cache['files'])))
+        if "files" in cache:
+            m.files = m._sortfiles(
+                list(map(lambda i: FileModel.from_cache(i), cache["files"]))
+            )
 
         return m
 
@@ -781,24 +822,24 @@ class PostModel:
 
     def to_cache(self):
         res = {
-            'id': self.id,
-            'date': self.date,
-            'name': self.name,
-            'subject': self.subject,
-            'text': self.text,
-            'refno': self.refno,
-            'password': self.password,
-            'ip4': self.ip4,
-            'html_text': self.html_text,
-            'mod_code': self.mod_code
+            "id": self.id,
+            "date": self.date,
+            "name": self.name,
+            "subject": self.subject,
+            "text": self.text,
+            "refno": self.refno,
+            "password": self.password,
+            "ip4": self.ip4,
+            "html_text": self.html_text,
+            "mod_code": self.mod_code,
         }
 
         if self.files:
-            res['files'] = list(map(lambda i: i.to_cache(), self.files))
+            res["files"] = list(map(lambda i: i.to_cache(), self.files))
 
         return res
 
-    def _sortfiles(self, files: List['FileModel']):
+    def _sortfiles(self, files: List["FileModel"]):
         return sorted(files, key=lambda i: i.original_name)
 
 
@@ -844,15 +885,15 @@ class FileModel:
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.id = cache['id']
-        m.location = cache['location']
-        m.thumbnail_location = cache['thumbnail_location']
-        m.original_name = cache['original_name']
-        m.width = cache['width']
-        m.height = cache['height']
-        m.size = cache['size']
-        m.thumbnail_width = cache['thumbnail_width']
-        m.thumbnail_height = cache['thumbnail_height']
+        m.id = cache["id"]
+        m.location = cache["location"]
+        m.thumbnail_location = cache["thumbnail_location"]
+        m.original_name = cache["original_name"]
+        m.width = cache["width"]
+        m.height = cache["height"]
+        m.size = cache["size"]
+        m.thumbnail_width = cache["thumbnail_width"]
+        m.thumbnail_height = cache["thumbnail_height"]
         return m
 
     def to_orm_model(self):
@@ -870,15 +911,15 @@ class FileModel:
 
     def to_cache(self):
         return {
-            'id': self.id,
-            'location': self.location,
-            'thumbnail_location': self.thumbnail_location,
-            'original_name': self.original_name,
-            'width': self.width,
-            'height': self.height,
-            'size': self.size,
-            'thumbnail_width': self.thumbnail_width,
-            'thumbnail_height': self.thumbnail_height
+            "id": self.id,
+            "location": self.location,
+            "thumbnail_location": self.thumbnail_location,
+            "original_name": self.original_name,
+            "width": self.width,
+            "height": self.height,
+            "size": self.size,
+            "thumbnail_width": self.thumbnail_width,
+            "thumbnail_height": self.thumbnail_height,
         }
 
 
@@ -896,7 +937,9 @@ class BanModel:
         self.moderator: ModeratorModel = None
 
     @classmethod
-    def from_orm_model(cls, ban: BanOrmModel, include_post=False, include_moderator=False):
+    def from_orm_model(
+        cls, ban: BanOrmModel, include_post=False, include_moderator=False
+    ):
         m = cls()
         m.id = ban.id
         m.ip4 = ban.ip4
@@ -910,7 +953,9 @@ class BanModel:
             m.post = PostModel.from_orm_model(ban.post) if ban.post else None
 
         if include_moderator:
-            m.moderator = ModeratorModel.from_orm_model(ban.moderator) if ban.moderator else None
+            m.moderator = (
+                ModeratorModel.from_orm_model(ban.moderator) if ban.moderator else None
+            )
 
         return m
 
@@ -999,9 +1044,9 @@ class VerificationsModel:
     @classmethod
     def from_cache(cls, cache: dict):
         m = cls()
-        m.id = cache['id']
-        m.ip4 = cache['ip4']
-        m.expires = cache['expires']
+        m.id = cache["id"]
+        m.ip4 = cache["ip4"]
+        m.expires = cache["expires"]
 
     def to_orm_model(self):
         orm_model = VerificationOrmModel()
@@ -1013,11 +1058,7 @@ class VerificationsModel:
         return orm_model
 
     def to_cache(self):
-        return {
-            'id': self.id,
-            'ip4': self.ip4,
-            'expires': self.expires
-        }
+        return {"id": self.id, "ip4": self.ip4, "expires": self.expires}
 
 
 class PostResultModel:
@@ -1027,7 +1068,9 @@ class PostResultModel:
         self.post_refno: int = None
 
     @classmethod
-    def from_board_name_thread_refno_post_refno(cls, board_name: str, thread_refno: int, post_refno: int):
+    def from_board_name_thread_refno_post_refno(
+        cls, board_name: str, thread_refno: int, post_refno: int
+    ):
         m = cls()
         m.board_name = board_name
         m.thread_refno = thread_refno

@@ -6,24 +6,24 @@ import string
 from PIL import Image
 from sqlalchemy.event import listen
 
+from uchan import logger
+from uchan.lib.exceptions import ArgumentError
+from uchan.lib.ormmodel import FileOrmModel
+
 # Extensions that will be converted
-CONVERT_EXTENSIONS = [('jpeg', 'jpg')]
+CONVERT_EXTENSIONS = [("jpeg", "jpg")]
 
 # Extensions that are allowed
-ALLOWED_EXTENSIONS = ['jpg', 'png', 'gif']
+ALLOWED_EXTENSIONS = ["jpg", "png", "gif"]
 
 # Actual file types that are allowed, should correspond to allowed extensions
-ALLOWED_FORMATS = ['JPEG', 'PNG', 'GIF']
+ALLOWED_FORMATS = ["JPEG", "PNG", "GIF"]
 
 GENERATED_FILE_NAME_LENGTH = 16
 MAX_FILE_NAME_LENGTH = 50
 MAX_IMAGE_WIDTH = 10000
 MAX_IMAGE_HEIGHT = 10000
-THUMBNAIL_POSTFIX = '_t'
-
-from uchan import logger
-from uchan.lib.exceptions import ArgumentError
-from uchan.lib.ormmodel import FileOrmModel
+THUMBNAIL_POSTFIX = "_t"
 
 
 class FileCdn:
@@ -62,10 +62,11 @@ class LocalCdn(FileCdn):
             pass
 
     def resolve_to_uri(self, file_name):
-        return self.web_path + file_name[:2] + '/' + file_name[2:]
+        return self.web_path + file_name[:2] + "/" + file_name[2:]
 
     def _folderize(self, file_name, make_subdir=False):
-        # Make the first two chars of the random name a folder, this is efficient for most file systems
+        # Make the first two chars of the random name a folder, this is efficient for
+        # most file systems
 
         subdir = file_name[:2]
 
@@ -79,8 +80,17 @@ class LocalCdn(FileCdn):
 
 
 class UploadedFile:
-    def __init__(self, location, thumbnail_location, original_name, width, height, size, thumbnail_width,
-                 thumbnail_height):
+    def __init__(
+        self,
+        location,
+        thumbnail_location,
+        original_name,
+        width,
+        height,
+        size,
+        thumbnail_width,
+        thumbnail_height,
+    ):
         self.location = location
         self.thumbnail_location = thumbnail_location
         self.original_name = original_name
@@ -109,7 +119,7 @@ def init(_upload_queue_path, _cdn):
     cdn = _cdn
 
     # Register on the event when a post row is deleted to also remove it from the cdn
-    listen(FileOrmModel, 'after_delete', _on_file_deleted)
+    listen(FileOrmModel, "after_delete", _on_file_deleted)
 
 
 def resolve_to_uri(name):
@@ -119,19 +129,19 @@ def resolve_to_uri(name):
 def prepare_upload(file, thumbnail_size):
     user_file_name = file.filename
     if not user_file_name:
-        raise ArgumentError('Invalid file name')
+        raise ArgumentError("Invalid file name")
 
     extension = _get_extension(user_file_name)
     if not extension:
-        raise ArgumentError('Invalid file format')
+        raise ArgumentError("Invalid file format")
 
     # truncate filename if too long
     user_file_name = user_file_name[:MAX_FILE_NAME_LENGTH]
 
     filename, extension = _get_filename(extension)
 
-    image_name = filename + '.' + extension
-    thumbnail_name = filename + THUMBNAIL_POSTFIX + '.jpg'
+    image_name = filename + "." + extension
+    thumbnail_name = filename + THUMBNAIL_POSTFIX + ".jpg"
 
     image_output = os.path.join(upload_queue_path, image_name)
     thumbnail_output = os.path.join(upload_queue_path, thumbnail_name)
@@ -142,13 +152,28 @@ def prepare_upload(file, thumbnail_size):
     file.save(image_output)
 
     # Get image params and generate thumbnail
-    width, height, size, thumbnail_width, thumbnail_height = \
-        process_and_generate_thumbnail(image_output, thumbnail_output, thumbnail_size)
+    (
+        width,
+        height,
+        size,
+        thumbnail_width,
+        thumbnail_height,
+    ) = process_and_generate_thumbnail(image_output, thumbnail_output, thumbnail_size)
 
     # Ready to be send to the worker to be inserted into the db
-    uploaded_file = UploadedFile(image_name, thumbnail_name, user_file_name, width, height, size, thumbnail_width,
-                                 thumbnail_height)
-    upload_queue_files = UploadQueueFiles(image_output, image_name, thumbnail_output, thumbnail_name)
+    uploaded_file = UploadedFile(
+        image_name,
+        thumbnail_name,
+        user_file_name,
+        width,
+        height,
+        size,
+        thumbnail_width,
+        thumbnail_height,
+    )
+    upload_queue_files = UploadQueueFiles(
+        image_output, image_name, thumbnail_output, thumbnail_name
+    )
     return uploaded_file, upload_queue_files
 
 
@@ -162,12 +187,12 @@ def clean_up_queue(upload_queue_files):
     try:
         os.remove(upload_queue_files.image_output)
     except OSError:
-        logger.exception('Error removing upload queue image')
+        logger.exception("Error removing upload queue image")
 
     try:
         os.remove(upload_queue_files.thumbnail_output)
     except OSError:
-        logger.exception('Error removing upload queue thumbnail')
+        logger.exception("Error removing upload queue thumbnail")
 
 
 def process_and_generate_thumbnail(local_path, thumbnail_path, thumbnail_size):
@@ -175,24 +200,24 @@ def process_and_generate_thumbnail(local_path, thumbnail_path, thumbnail_size):
         file_size = os.stat(local_path).st_size
         image = Image.open(local_path)
         if image.format not in ALLOWED_FORMATS:
-            raise ArgumentError('Invalid file format')
+            raise ArgumentError("Invalid file format")
 
         width, height = image.size
 
         if width > MAX_IMAGE_WIDTH or height > MAX_IMAGE_HEIGHT:
-            raise ArgumentError('Image size too big')
+            raise ArgumentError("Image size too big")
 
         image.thumbnail((thumbnail_size, thumbnail_size))
         thumbnail_width, thumbnail_height = image.size
 
-        if image.mode != 'RGB':
-            image = image.convert('RGB')
+        if image.mode != "RGB":
+            image = image.convert("RGB")
 
-        image.save(thumbnail_path, 'JPEG')
+        image.save(thumbnail_path, "JPEG")
         return width, height, file_size, thumbnail_width, thumbnail_height
-    except (IOError, OSError):
-        logger.exception('Error processing image')
-        raise ArgumentError('Invalid file')
+    except (IOError, OSError) as e:
+        logger.exception("Error processing image")
+        raise ArgumentError("Invalid file") from e
 
 
 def _on_file_deleted(mapper, connection, target):
@@ -201,13 +226,18 @@ def _on_file_deleted(mapper, connection, target):
 
 
 def _get_filename(extension):
-    return ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in
-                   range(GENERATED_FILE_NAME_LENGTH)), extension
+    return (
+        "".join(
+            random.choice(string.ascii_lowercase + string.digits)
+            for _ in range(GENERATED_FILE_NAME_LENGTH)
+        ),
+        extension,
+    )
 
 
 def _get_extension(filename):
-    if '.' in filename:
-        ext = filename.rsplit('.', 1)[1]
+    if "." in filename:
+        ext = filename.rsplit(".", 1)[1]
 
         for k, v in CONVERT_EXTENSIONS:
             if ext == k:

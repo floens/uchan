@@ -8,7 +8,7 @@ from uchan.lib.utils import now
 
 
 @app.template_filter()
-def pluralize(number, singular='', plural='s'):
+def pluralize(number, singular="", plural="s"):
     if number == 1:
         return singular
     else:
@@ -17,12 +17,12 @@ def pluralize(number, singular='', plural='s'):
 
 @app.template_filter()
 def post_time(t):
-    return time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(t / 1000))
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(t / 1000))
 
 
 @app.template_filter()
 def formatted_time(t):
-    return time.strftime('%Y-%m-%d %H:%M', time.gmtime(t / 1000))
+    return time.strftime("%Y-%m-%d %H:%M", time.gmtime(t / 1000))
 
 
 @app.template_filter()
@@ -49,22 +49,22 @@ def time_remaining(t):
     seconds = int(remaining // ms_in_second)
     remaining -= seconds * ms_in_second
 
-    text = ''
+    text = ""
     if not days and not hours and not minutes:
-        text += '{} second{}'.format(seconds, '' if seconds == 1 else 's')
+        text += "{} second{}".format(seconds, "" if seconds == 1 else "s")
     else:
         if days > 0:
-            text += '{} day{}'.format(days, '' if days == 1 else 's')
+            text += "{} day{}".format(days, "" if days == 1 else "s")
             if hours > 0:
-                text += ', '
+                text += ", "
             else:
-                text += ' and '
+                text += " and "
         if hours > 0:
-            text += '{} hour{} and '.format(hours, '' if hours == 1 else 's')
-        text += '{} minute{}'.format(minutes, '' if minutes == 1 else 's')
+            text += "{} hour{} and ".format(hours, "" if hours == 1 else "s")
+        text += "{} minute{}".format(minutes, "" if minutes == 1 else "s")
 
     if past:
-        text += ' ago'
+        text += " ago"
 
     return text
 
@@ -73,7 +73,7 @@ def time_remaining(t):
 def keep_newlines(raw):
     value = str(escape(raw))
 
-    value = value.replace('\n', '<br>\n')
+    value = value.replace("\n", "<br>\n")
 
     return Markup(value)
 
@@ -87,9 +87,9 @@ def page_formatting(text):
 def post_name(name):
     value = str(escape(name))
 
-    if '!' in value:
-        one, two = value.split('!', maxsplit=1)
-        value = one + '<span class="trip">!' + two + '</span>'
+    if "!" in value:
+        one, two = value.split("!", maxsplit=1)
+        value = one + '<span class="trip">!' + two + "</span>"
 
     return Markup(value)
 
@@ -98,12 +98,13 @@ def post_name(name):
 def post_file_uri(name):
     # TODO
     from uchan.lib.service import file_service
+
     return file_service.resolve_to_uri(name)
 
 
 @app.template_filter()
 def board_code_name(board):
-    code = '/' + board.name + '/'
+    code = "/" + board.name + "/"
     full_name = board.config.full_name
-    name = ' - ' + full_name if full_name else ''
+    name = " - " + full_name if full_name else ""
     return code + name

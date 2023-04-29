@@ -63,4 +63,3 @@ sub vcl_recv {
 sub vcl_backend_response {
   set beresp.grace = 10m;
 }
-

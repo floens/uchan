@@ -1,0 +1,43 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+exclude: >
+  (?x)^(
+      migrations/.*|
+      charts/.*
+  )$
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: 'v0.0.263'
+    hooks:
+      - id: ruff
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: "v2.1.2"
+    hooks:
+      - id: prettier
+        types_or: [ css, javascript ]
+        files: frontend/.*|
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.39.0
+    hooks:
+      - id: eslint
+        args: [ "--quiet" ]
+        types: [ ]
+        files: frontend/.*\.([jt]s)$
+        verbose: true
+        additional_dependencies:
+          - "eslint@8.39.0"
+          - "@typescript-eslint/eslint-plugin@5.59.1"
+          - "@typescript-eslint/parser@5.59.1"
+          - "typescript@5.0.4"
