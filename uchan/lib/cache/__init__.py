@@ -27,20 +27,27 @@ class CacheWrapper(MemcachedCache):
     def set(self, key, value, **kwargs):
         # g.logger.debug('set {} {}'.format(key, value))
 
-        json_data = json.dumps(value, separators=(',', ':'))
+        json_data = json.dumps(value, separators=(",", ":"))
 
         if len(json_data) > self.max_length:
-            logger.error('cache value exceeds max length ({} > {})'.format(len(json_data), self.max_length))
+            logger.error(
+                "cache value exceeds max length ({} > {})".format(
+                    len(json_data), self.max_length
+                )
+            )
             return False
 
         percentage = len(json_data) / self.max_length
         if percentage > 0.5:
             logger.warning(
-                'key {0} exceeds 50% of the total storage available ({1:.2f}%)'.format(key, percentage * 100))
+                "key {0} exceeds 50% of the total storage available ({1:.2f}%)".format(
+                    key, percentage * 100
+                )
+            )
 
         ret = super().set(key, json_data, **kwargs)
         if not ret:
-            logger.error('cache set failed {}'.format(ret))
+            logger.error("cache set failed {}".format(ret))
         return bool(ret)
 
     def get(self, key, convert=False):
@@ -70,7 +77,7 @@ class CacheWrapper(MemcachedCache):
 
 def cache_key(*args):
     # TODO: should we throw an exception on invalid params, to avoid duplicates?
-    return ':'.join(map(lambda i: str(i).replace(':', '_'), args))
+    return ":".join(map(lambda i: str(i).replace(":", "_"), args))
 
 
 class CacheDict(dict):

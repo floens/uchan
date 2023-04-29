@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from sqlalchemy import desc
 
@@ -10,8 +10,6 @@ from uchan.lib.ormmodel import BanOrmModel
 # TODO: avoid duplicates
 def create_ban(ban: BanModel) -> BanModel:
     with session() as s:
-        eq = s.query(BanOrmModel)
-
         m = ban.to_orm_model()
         s.add(m)
         s.commit()
@@ -27,7 +25,12 @@ def count():
 
 def get_all(offset: int, limit: int):
     with session() as s:
-        q = s.query(BanOrmModel).order_by(desc(BanOrmModel.date)).limit(limit).offset(offset)
+        q = (
+            s.query(BanOrmModel)
+            .order_by(desc(BanOrmModel.date))
+            .limit(limit)
+            .offset(offset)
+        )
         r = list(map(lambda i: BanModel.from_orm_model(i), q.all()))
         s.commit()
         return r
@@ -46,10 +49,16 @@ def find_by_id(ban_id: int) -> Optional[BanModel]:
 def find_by_ip4(ip4: int, for_board: BoardModel = None) -> List[BanModel]:
     with session() as s:
         q = s.query(BanOrmModel)
-        q = q.filter((BanOrmModel.ip4 == ip4) | ((BanOrmModel.ip4 <= ip4) & (BanOrmModel.ip4_end >= ip4)))
+        q = q.filter(
+            (BanOrmModel.ip4 == ip4)
+            | ((BanOrmModel.ip4 <= ip4) & (BanOrmModel.ip4_end >= ip4))
+        )
 
         if for_board:
-            q = q.filter((BanOrmModel.board == None) | (BanOrmModel.board == for_board.name))
+            q = q.filter(
+                (BanOrmModel.board == None)  # noqa
+                | (BanOrmModel.board == for_board.name)
+            )
 
         q = q.order_by(desc(BanOrmModel.date))
 

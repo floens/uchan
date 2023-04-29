@@ -12,7 +12,7 @@ class ManageReportDetails:
         self.mode = mode
 
 
-from uchan.lib.service import report_service
+from uchan.lib.service import report_service  # noqa
 
 
 @celery.task

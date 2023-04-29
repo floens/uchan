@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, List
+from typing import List, Optional, Tuple
 
 from sqlalchemy import desc
 from sqlalchemy.orm import Session, lazyload
@@ -7,16 +7,24 @@ from uchan.lib import document_cache
 from uchan.lib.cache import cache, cache_key
 from uchan.lib.database import session
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.model import PostModel, PostResultModel, BoardModel, ThreadModel, ThreadStubModel, \
-    BoardPageModel, CatalogModel
-from uchan.lib.ormmodel import ThreadOrmModel, BoardOrmModel, PostOrmModel, FileOrmModel
+from uchan.lib.model import (
+    BoardModel,
+    BoardPageModel,
+    CatalogModel,
+    PostModel,
+    PostResultModel,
+    ThreadModel,
+    ThreadStubModel,
+)
+from uchan.lib.ormmodel import BoardOrmModel, FileOrmModel, PostOrmModel, ThreadOrmModel
 from uchan.lib.utils import now
 
-MESSAGE_POST_HAS_NO_FILE = 'Post has no file'
+MESSAGE_POST_HAS_NO_FILE = "Post has no file"
 
 
-def create_post(board: BoardModel, thread: ThreadModel, post: PostModel, sage: bool) \
-        -> Tuple[PostResultModel, int, int]:
+def create_post(
+    board: BoardModel, thread: ThreadModel, post: PostModel, sage: bool
+) -> Tuple[PostResultModel, int, int]:
     start_time = now()
     with session() as s:
         post_orm_model = post.to_orm_model()
@@ -59,20 +67,24 @@ def create_post(board: BoardModel, thread: ThreadModel, post: PostModel, sage: b
         _invalidate_thread_cache(s, thread, board)
         _invalidate_board_pages_catalog_cache(s, board)
 
-        # Wait for the thread to be purged, otherwise the chance exists that the client reloads a cached version.
-        # This only holds up the posting client, others have the updated memcache available.
+        # Wait for the thread to be purged, otherwise the chance exists that the client
+        # reloads a cached version. This only holds up the posting client, others have
+        # the updated memcache available.
         document_cache.purge_thread(board, thread, True)
         # Don't wait for this
         document_cache.purge_board(board)
 
         cache_time = now() - start_time
 
-        res = PostResultModel.from_board_name_thread_refno_post_refno(board.name, thread.refno, post_refno)
+        res = PostResultModel.from_board_name_thread_refno_post_refno(
+            board.name, thread.refno, post_refno
+        )
         return res, insert_time, cache_time
 
 
-def create_thread(board: BoardModel, post: PostModel) \
-        -> Tuple[PostResultModel, int, int]:
+def create_thread(
+    board: BoardModel, post: PostModel
+) -> Tuple[PostResultModel, int, int]:
     start_time = now()
     with session() as s:
         board_orm_model = s.query(BoardOrmModel).filter_by(id=board.id).one()
@@ -106,15 +118,17 @@ def create_thread(board: BoardModel, post: PostModel) \
             post_orm_model.moderator_id = post.moderator.id
 
         # Purge overflowed threads
-        threads_refnos_to_purge = _purge_threads(s, board, board.config.pages, board.config.per_page)
+        threads_refnos_to_purge = _purge_threads(
+            s, board, board.config.pages, board.config.per_page
+        )
         s.commit()
 
         insert_time = now() - start_time
         start_time = now()
 
         for purging_refno in threads_refnos_to_purge:
-            cache.delete(cache_key('thread', board.name, purging_refno))
-            cache.delete(cache_key('thread_stub', board.name, purging_refno))
+            cache.delete(cache_key("thread", board.name, purging_refno))
+            cache.delete(cache_key("thread_stub", board.name, purging_refno))
 
         thread = ThreadModel.from_orm_model(thread_orm_model)
         _invalidate_thread_cache(s, thread, board)
@@ -124,7 +138,9 @@ def create_thread(board: BoardModel, post: PostModel) \
 
         cache_time = now() - start_time
 
-        res = PostResultModel.from_board_name_thread_refno_post_refno(board.name, thread_refno, 1)
+        res = PostResultModel.from_board_name_thread_refno_post_refno(
+            board.name, thread_refno, 1
+        )
         return res, insert_time, cache_time
 
 
@@ -213,14 +229,18 @@ def find_post_by_id(post_id: int, include_thread=False) -> Optional[PostModel]:
 
 
 # TODO: merge these two
-def find_thread_by_board_name_thread_refno(board_name: str, thread_refno: int) -> Optional[ThreadModel]:
-    thread_cache = cache.get(cache_key('thread', board_name, thread_refno))
+def find_thread_by_board_name_thread_refno(
+    board_name: str, thread_refno: int
+) -> Optional[ThreadModel]:
+    thread_cache = cache.get(cache_key("thread", board_name, thread_refno))
     if not thread_cache:
         with session() as s:
             q = s.query(ThreadOrmModel)
-            q = q.filter(ThreadOrmModel.refno == thread_refno,
-                         ThreadOrmModel.board_id == BoardOrmModel.id,
-                         BoardOrmModel.name == board_name)
+            q = q.filter(
+                ThreadOrmModel.refno == thread_refno,
+                ThreadOrmModel.board_id == BoardOrmModel.id,
+                BoardOrmModel.name == board_name,
+            )
             thread_orm_model = q.one_or_none()
 
             if not thread_orm_model:
@@ -235,24 +255,34 @@ def find_thread_by_board_name_thread_refno(board_name: str, thread_refno: int) -
     return None
 
 
-def find_thread_by_board_thread_refno_with_posts(board: BoardModel, thread_refno: int) -> Optional[ThreadModel]:
-    thread_cache = cache.get(cache_key('thread', board.name, thread_refno))
+def find_thread_by_board_thread_refno_with_posts(
+    board: BoardModel, thread_refno: int
+) -> Optional[ThreadModel]:
+    thread_cache = cache.get(cache_key("thread", board.name, thread_refno))
     if not thread_cache:
         with session() as s:
             q = s.query(ThreadOrmModel)
             q = q.options(lazyload(ThreadOrmModel.posts))
-            q = q.filter(ThreadOrmModel.refno == thread_refno,
-                         ThreadOrmModel.board_id == BoardOrmModel.id,
-                         BoardOrmModel.name == board.name)
+            q = q.filter(
+                ThreadOrmModel.refno == thread_refno,
+                ThreadOrmModel.board_id == BoardOrmModel.id,
+                BoardOrmModel.name == board.name,
+            )
             thread_orm_model = q.one_or_none()
 
             if not thread_orm_model or not thread_orm_model.posts:
                 return None
 
             # TODO: also load board in q above
-            thread = ThreadModel.from_orm_model(thread_orm_model, include_board=True, include_posts=True)
+            thread = ThreadModel.from_orm_model(
+                thread_orm_model, include_board=True, include_posts=True
+            )
             thread_cache = thread.to_cache(include_board=True, include_posts=True)
-            cache.set(cache_key('thread', thread.board.name, thread.refno), thread_cache, timeout=0)
+            cache.set(
+                cache_key("thread", thread.board.name, thread.refno),
+                thread_cache,
+                timeout=0,
+            )
             return thread
 
     if thread_cache:
@@ -260,7 +290,9 @@ def find_thread_by_board_thread_refno_with_posts(board: BoardModel, thread_refno
     return None
 
 
-def find_posts_by_ip4_from_time(ip4: int, from_time: int, by_thread: ThreadModel = None) -> List[PostModel]:
+def find_posts_by_ip4_from_time(
+    ip4: int, from_time: int, by_thread: ThreadModel = None
+) -> List[PostModel]:
     with session() as s:
         q = s.query(PostOrmModel)
         q = q.filter((PostOrmModel.ip4 == ip4) & (PostOrmModel.date >= from_time))
@@ -278,7 +310,7 @@ def find_posts_by_ip4_from_time(ip4: int, from_time: int, by_thread: ThreadModel
 
 
 def get_board_page(board: BoardModel, page: int) -> BoardPageModel:
-    board_page_cache = cache.get(cache_key('board', board.name, page))
+    board_page_cache = cache.get(cache_key("board", board.name, page))
     if not board_page_cache:
         with session() as s:
             catalog, board_pages = _invalidate_board_pages_catalog_cache(s, board)
@@ -288,7 +320,7 @@ def get_board_page(board: BoardModel, page: int) -> BoardPageModel:
 
 
 def get_catalog(board: BoardModel) -> CatalogModel:
-    catalog_cache = cache.get(cache_key('board', board.name))
+    catalog_cache = cache.get(cache_key("board", board.name))
     if not catalog_cache:
         with session() as s:
             catalog, board_pages = _invalidate_board_pages_catalog_cache(s, board)
@@ -316,12 +348,12 @@ def _purge_threads(s: Session, board: BoardModel, pages: int, per_page: int):
 
 def _gather_statistics(insert_time, cache_time, post_details):
     total = insert_time + cache_time
-    file_time = ''
+    file_time = ""
     if post_details.has_file:
         total += post_details.file_time
-        file_time = 'file: {}ms, '.format(post_details.file_time)
+        file_time = "file: {}ms, ".format(post_details.file_time)
 
-    s = '{}db: {}ms, caches: {}ms, total: {}ms'
+    s = "{}db: {}ms, caches: {}ms, total: {}ms"
     return s.format(file_time, insert_time, cache_time, total)
 
 
@@ -331,11 +363,11 @@ BOARD_SNIPPET_MAX_LINES = 12
 
 def _invalidate_thread_cache(s: Session, old_thread: ThreadModel, board: BoardModel):
     """
-    Update the memcache version of the specified thread. This will update the thread cache,
-    and the thread stub cache.
+    Update the memcache version of the specified thread. This will update the thread
+    cache, and the thread stub cache.
     """
-    key = cache_key('thread', board.name, old_thread.refno)
-    stub_key = cache_key('thread_stub', board.name, old_thread.refno)
+    key = cache_key("thread", board.name, old_thread.refno)
+    stub_key = cache_key("thread_stub", board.name, old_thread.refno)
 
     # Reuse the parsed html from the old cache.
     old_thread_posts_cache = cache.get(key)
@@ -353,8 +385,12 @@ def _invalidate_thread_cache(s: Session, old_thread: ThreadModel, board: BoardMo
         cache.delete(stub_key)
         return
 
-    thread = ThreadModel.from_orm_model(res, include_board=True, include_posts=True,
-                                        cached_thread_posts=old_thread_posts)
+    thread = ThreadModel.from_orm_model(
+        res,
+        include_board=True,
+        include_posts=True,
+        cached_thread_posts=old_thread_posts,
+    )
 
     thread_cache = thread.to_cache(include_board=True, include_posts=True)
     cache.set(key, thread_cache, timeout=0)
@@ -369,21 +405,31 @@ def _invalidate_thread_cache(s: Session, old_thread: ThreadModel, board: BoardMo
 def _invalidate_board_pages_catalog_cache(s: Session, board: BoardModel):
     """
     Update the memcache version of the specified board.
-    This will update the board pages from the already cached thread stubs, and create a new catalog cache.
+    This will update the board pages from the already cached thread stubs, and create a
+    new catalog cache.
     """
 
     q = s.query(ThreadOrmModel)
     q = q.filter(ThreadOrmModel.board_id == board.id)
     threads_orm = q.all()
-    thread_models = list(map(lambda j: ThreadModel.from_orm_model(j, ), threads_orm))
+    thread_models = list(
+        map(
+            lambda j: ThreadModel.from_orm_model(
+                j,
+            ),
+            threads_orm,
+        )
+    )
 
-    # This builds the board index, stickies first, oldest first, then normal posts, newest first.
-    # The pages are split accordingly to the board config,
-    # and the catalog is build from only the ops.
+    # This builds the board index, stickies first, oldest first, then normal posts,
+    # newest first. The pages are split accordingly to the board config, and the catalog
+    # is build from only the ops.
     stickies = []
     threads = []
     for thread in thread_models:
-        thread_stub_cache = cache.get(cache_key('thread_stub', board.name, thread.refno))
+        thread_stub_cache = cache.get(
+            cache_key("thread_stub", board.name, thread.refno)
+        )
         if not thread_stub_cache:
             thread, thread_stub = _invalidate_thread_cache(s, thread, board)
             # The board and thread selects are done separately and there is thus the
@@ -393,7 +439,9 @@ def _invalidate_board_pages_catalog_cache(s: Session, board: BoardModel):
         else:
             thread_stub = ThreadStubModel.from_cache(thread_stub_cache)
 
-        stickies.append(thread_stub) if thread_stub.sticky else threads.append(thread_stub)
+        stickies.append(thread_stub) if thread_stub.sticky else threads.append(
+            thread_stub
+        )
 
     stickies = sorted(stickies, key=lambda t: t.last_modified, reverse=False)
     threads = sorted(threads, key=lambda t: t.last_modified, reverse=True)
@@ -402,7 +450,7 @@ def _invalidate_board_pages_catalog_cache(s: Session, board: BoardModel):
     # The catalog is a CatalogModel with ThreadStubs with only OP's
     catalog = CatalogModel.from_board_thread_stubs(board, all_thread_stubs)
     catalog_cache = catalog.to_cache()
-    cache.set(cache_key('board', board.name), catalog_cache, timeout=0)
+    cache.set(cache_key("board", board.name), catalog_cache, timeout=0)
 
     # All threads with stubs, divided per page
     # note: there is the possibility that concurrent processes updating this cache
@@ -414,10 +462,12 @@ def _invalidate_board_pages_catalog_cache(s: Session, board: BoardModel):
         from_index = i * board.config.per_page
         to_index = (i + 1) * board.config.per_page
 
-        board_page = BoardPageModel.from_page_thread_stubs(i, all_thread_stubs[from_index:to_index])
+        board_page = BoardPageModel.from_page_thread_stubs(
+            i, all_thread_stubs[from_index:to_index]
+        )
         board_pages.append(board_page)
 
         board_page_cache = board_page.to_cache()
-        cache.set(cache_key('board', board.name, i), board_page_cache, timeout=0)
+        cache.set(cache_key("board", board.name, i), board_page_cache, timeout=0)
 
     return catalog, board_pages

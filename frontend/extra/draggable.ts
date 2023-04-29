@@ -4,14 +4,14 @@ export class Draggable {
   scrollWithPage: boolean;
   moveCallbacks: (() => void) [] = [];
 
-  x: number = 0;
-  y: number = 0;
-  startDragX: number = 0;
-  startDragY: number = 0;
-  scrollX: number = 0;
-  scrollY: number = 0;
-  width: number = 0;
-  height: number = 0;
+  x = 0;
+  y = 0;
+  startDragX = 0;
+  startDragY = 0;
+  scrollX = 0;
+  scrollY = 0;
+  width = 0;
+  height = 0;
 
   mouseDownBound: any;
   mouseMoveBound: any;
@@ -121,8 +121,7 @@ export class Draggable {
         } else if (type == 'move') {
           event.preventDefault();
           this.handleMoveEvent(touch.clientX, touch.clientY);
-        } else if (type == 'end' || type == 'cancel') {
-        }
+        }/* else if (type == 'end' || type == 'cancel') {}*/
         break;
       }
     }

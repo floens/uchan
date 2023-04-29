@@ -7,8 +7,20 @@ from uchan.lib.service.file_service import UploadedFile
 
 
 class PostDetails:
-    def __init__(self, form, board_name, thread_refno, text, name, subject, password, has_files, ip4, mod_id,
-                 verification_data):
+    def __init__(
+        self,
+        form,
+        board_name,
+        thread_refno,
+        text,
+        name,
+        subject,
+        password,
+        has_files,
+        ip4,
+        mod_id,
+        verification_data,
+    ):
         self.form = form
         self.board_name = board_name
         self.thread_refno = thread_refno

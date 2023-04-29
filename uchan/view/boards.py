@@ -16,8 +16,8 @@ class PagedBoards(PagedModel):
         return 50
 
 
-@app.route('/boards')
+@app.route("/boards")
 def boards():
     paged_boards = PagedBoards()
 
-    return render_template('boards.html', paged_boards=paged_boards)
+    return render_template("boards.html", paged_boards=paged_boards)

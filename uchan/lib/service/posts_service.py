@@ -1,6 +1,13 @@
 from typing import Optional
 
-from uchan.lib.model import BoardModel, ThreadModel, PostResultModel, BoardPageModel, CatalogModel, PostModel
+from uchan.lib.model import (
+    BoardModel,
+    BoardPageModel,
+    CatalogModel,
+    PostModel,
+    PostResultModel,
+    ThreadModel,
+)
 from uchan.lib.repository import posts
 from uchan.lib.service import post_helper, post_manage_helper
 from uchan.lib.tasks.post_task import ManagePostDetails, PostDetails
@@ -14,7 +21,9 @@ def handle_manage_post(details: ManagePostDetails):
     return post_manage_helper.handle_manage_post(details)
 
 
-def find_thread_by_board_thread_refno_with_posts(board: BoardModel, thread_refno: int) -> 'Optional[ThreadModel]':
+def find_thread_by_board_thread_refno_with_posts(
+    board: BoardModel, thread_refno: int
+) -> "Optional[ThreadModel]":
     return posts.find_thread_by_board_thread_refno_with_posts(board, thread_refno)
 
 

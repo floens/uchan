@@ -36,15 +36,15 @@ def find_page_for_link_name(link_name) -> PageModel:
 
 def create_page(page: PageModel) -> PageModel:
     r = pages.create(page)
-    mod_log('page {} created'.format(page.link_name))
+    mod_log("page {} created".format(page.link_name))
     return r
 
 
 def delete_page(page: PageModel):
     pages.delete(page)
-    mod_log('page {} deleted'.format(page.link_name))
+    mod_log("page {} deleted".format(page.link_name))
 
 
 def update_page(page: PageModel):
     pages.update(page)
-    mod_log('page {} updated'.format(page.link_name))
+    mod_log("page {} updated".format(page.link_name))

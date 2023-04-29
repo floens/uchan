@@ -8,17 +8,17 @@ from uchan.lib.model import BanModel, BoardModel, ThreadModel
 from uchan.lib.proxy_request import get_request_ip4
 from uchan.lib.repository import bans, posts
 from uchan.lib.service import board_service
-from uchan.lib.utils import now, ip4_to_str
+from uchan.lib.utils import ip4_to_str, now
 
 NEW_THREAD_COOLDOWN = 600 * 1000
 NEW_POST_COOLDOWN = 60 * 1000
 MAX_BAN_TIME = 24 * 31 * 60 * 60 * 1000
 MAX_REASON_LENGTH = 2000
 
-MESSAGE_BAN_TOO_LONG = 'Ban too long'
-MESSAGE_IP4_ILLEGAL_RANGE = 'ip4 end must be bigger than ip4'
-MESSAGE_BOARD_NOT_FOUND = 'Board not found'
-MESSAGE_BAN_TEXT_TOO_LONG = 'Ban reason text too long'
+MESSAGE_BAN_TOO_LONG = "Ban too long"
+MESSAGE_IP4_ILLEGAL_RANGE = "ip4 end must be bigger than ip4"
+MESSAGE_BOARD_NOT_FOUND = "Board not found"
+MESSAGE_BAN_TEXT_TOO_LONG = "Ban reason text too long"
 
 
 def is_request_banned(ip4, board):
@@ -26,7 +26,9 @@ def is_request_banned(ip4, board):
     return len(bans) > 0
 
 
-def is_request_suspended(ip4: int, board: BoardModel, thread: ThreadModel) -> Tuple[bool, int]:
+def is_request_suspended(
+    ip4: int, board: BoardModel, thread: ThreadModel
+) -> Tuple[bool, int]:
     timeout = NEW_THREAD_COOLDOWN if thread is None else NEW_POST_COOLDOWN
     from_time = now() - timeout
 
@@ -92,10 +94,17 @@ def add_ban(ban: BanModel) -> BanModel:
 
     ban = bans.create_ban(ban)
 
-    for_board_text = ' on {}'.format(ban.board) if ban.board else ''
-    ip4_end_text = ip4_to_str(ban.ip4_end) if ban.ip4_end is not None else '-'
-    f = 'ban add {} from {} to {}{} for {} hours reason {}'
-    text = f.format(ban.id, ip4_to_str(ban.ip4), ip4_end_text, for_board_text, ban.length / 60 / 60 / 1000, ban.reason)
+    for_board_text = " on {}".format(ban.board) if ban.board else ""
+    ip4_end_text = ip4_to_str(ban.ip4_end) if ban.ip4_end is not None else "-"
+    f = "ban add {} from {} to {}{} for {} hours reason {}"
+    text = f.format(
+        ban.id,
+        ip4_to_str(ban.ip4),
+        ip4_end_text,
+        for_board_text,
+        ban.length / 60 / 60 / 1000,
+        ban.reason,
+    )
     mod_log(text)
 
     return ban

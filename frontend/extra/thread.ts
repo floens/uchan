@@ -25,6 +25,7 @@ export class Post {
       // TODO
       let re = />&gt;&gt;(\d+)</g;
       let res;
+      // eslint-disable-next-line no-cond-assign
       while (res = re.exec(this.html)) {
         this.references.push(parseInt(res[1]));
       }
@@ -85,8 +86,6 @@ export class Thread {
 
   observers: ((threadView: Thread) => void)[] = [];
 
-  constructor() {
-  }
 
   observe(callback: (threadView: Thread) => void) {
     this.observers.push(callback);

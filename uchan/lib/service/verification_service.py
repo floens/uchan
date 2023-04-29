@@ -1,18 +1,19 @@
 import datetime
 from uuid import uuid4
 
-from flask import g as flaskg, Request
+from flask import Request
+from flask import g as flaskg
 
 from uchan.lib.model import VerificationsModel
 from uchan.lib.proxy_request import get_request_ip4
 from uchan.lib.repository import verifications
 from uchan.lib.repository.verifications import VerifyingClient
 
-VERIFICATION_COOKIE_NAME = 'verification'
+VERIFICATION_COOKIE_NAME = "verification"
 
-from uchan import app
-from uchan.lib.cache import CacheDict
-from uchan.lib.utils import get_cookie_domain
+from uchan import app  # noqa
+from uchan.lib.cache import CacheDict  # noqa
+from uchan.lib.utils import get_cookie_domain  # noqa
 
 
 class VerificationMethod:
@@ -40,9 +41,10 @@ class VerificationDataCache(CacheDict):
 methods = []
 
 """
-This verification service is separate from the normal session cookie so that it can easily be
-managed with varnish. The verification should never change GET requests except for /verify/.
-Verifications are also bound to an ip4 address to avoid sharing verifications with multiple users.
+This verification service is separate from the normal session cookie so that it can
+easily be managed with varnish. The verification should never change GET requests except
+for /verify/. Verifications are also bound to an ip4 address to avoid sharing
+verifications with multiple users.
 
 Endpoints can check verification with the require_verification decorator.
 """
@@ -54,7 +56,7 @@ def add_method(method: VerificationMethod):
 
 def get_method() -> VerificationMethod:
     if not methods:
-        raise Exception('No verification methods configured')
+        raise Exception("No verification methods configured")
 
     return methods[0]
 
@@ -80,7 +82,7 @@ def set_verified(request: Request):
 
 # Called after the request to attach the set-cookie to the response
 def after_request(response):
-    if hasattr(flaskg, 'pending_verification'):
+    if hasattr(flaskg, "pending_verification"):
         verification: VerificationsModel = flaskg.pending_verification
 
         name = VERIFICATION_COOKIE_NAME
@@ -88,11 +90,17 @@ def after_request(response):
         expire_date = datetime.datetime.utcfromtimestamp(verification.expires / 1000)
         domain = get_cookie_domain(app)
 
-        response.set_cookie(name, value, expires=expire_date, httponly=True, domain=domain)
+        response.set_cookie(
+            name, value, expires=expire_date, httponly=True, domain=domain
+        )
 
 
 def _get_client(request: Request):
-    verification_id = request.cookies[VERIFICATION_COOKIE_NAME] if VERIFICATION_COOKIE_NAME in request.cookies else None
+    verification_id = (
+        request.cookies[VERIFICATION_COOKIE_NAME]
+        if VERIFICATION_COOKIE_NAME in request.cookies
+        else None
+    )
     if not verification_id:
         return None
 
@@ -109,4 +117,4 @@ def _create_client(request: Request):
 
 
 def _generate_verification_id():
-    return str(uuid4()).replace('-', '')
+    return str(uuid4()).replace("-", "")

@@ -173,6 +173,8 @@ export class Watcher {
     this.updateStatus();
   }
 
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   threadViewUpdated(threadView: Thread) {
   }
 }

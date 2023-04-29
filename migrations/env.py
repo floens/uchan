@@ -2,7 +2,9 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
-import os, sys
+import os
+import sys
+
 sys.path.append(os.getcwd())
 
 # this is the Alembic Config object, which provides
@@ -14,8 +16,9 @@ config = context.config
 fileConfig(config.config_file_name)
 
 # override the sqlalchemy url here to keep the password in config.py
-from uchan.lib.database import OrmModelBase, connect_string
-config.set_main_option('sqlalchemy.url', connect_string())
+from uchan.lib.database import OrmModelBase, connect_string  # noqa
+
+config.set_main_option("sqlalchemy.url", connect_string())
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -49,18 +52,17 @@ def run_migrations_online():
     and associate a connection with the context.
     """
     connectable = engine_from_config(
-            config.get_section(config.config_ini_section),
-            prefix='sqlalchemy.',
-            poolclass=pool.NullPool)
+        config.get_section(config.config_ini_section),
+        prefix="sqlalchemy.",
+        poolclass=pool.NullPool,
+    )
 
     with connectable.connect() as connection:
-        context.configure(
-                connection=connection,
-                target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

@@ -6,11 +6,18 @@ from uchan.lib.action_authorizer import PostAction
 from uchan.lib.crypt_code_compat import generate_crypt_code
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.mod_log import mod_log
-from uchan.lib.model import BoardModel, ThreadModel, PostModel, PostResultModel, FileModel, RegCodeModel
+from uchan.lib.model import (
+    BoardModel,
+    FileModel,
+    PostModel,
+    PostResultModel,
+    RegCodeModel,
+    ThreadModel,
+)
 from uchan.lib.repository import posts, regcode
 from uchan.lib.service import board_service, moderator_service, site_service
 from uchan.lib.tasks.post_task import PostDetails
-from uchan.lib.utils import now, ip4_to_str
+from uchan.lib.utils import ip4_to_str, now
 
 MAX_NAME_LENGTH = 35
 MAX_SUBJECT_LENGTH = 100
@@ -21,18 +28,18 @@ MAX_TEXT_LINES = 25
 MAX_TEXT_LENGTH_OP = 6000
 MAX_TEXT_LINES_OP = 60
 
-MESSAGE_BOARD_NOT_FOUND = 'Board not found'
-MESSAGE_THREAD_NOT_FOUND = 'Thread not found'
-MESSAGE_MODERATOR_NOT_FOUND = 'Moderator not found'
-MESSAGE_THREAD_LOCKED = 'Thread is locked'
-MESSAGE_FILE_POSTING_DISABLED = 'File posting is disabled'
-MESSAGE_FILES_TOO_MANY = 'Too many files'
-MESSAGE_POST_NO_TEXT = 'No text'
-MESSAGE_POST_TEXT_TOO_LONG = 'Text too long'
-MESSAGE_POST_TEXT_TOO_MANY_LINES = 'Too many lines'
-MESSAGE_POST_NAME_TOO_LONG = 'Name too long'
-MESSAGE_PASSWORD_TOO_SHORT = 'Password too short, at least {} characters required'
-MESSAGE_PASSWORD_TOO_LONG = 'Password too long, at most {} characters allowed'
+MESSAGE_BOARD_NOT_FOUND = "Board not found"
+MESSAGE_THREAD_NOT_FOUND = "Thread not found"
+MESSAGE_MODERATOR_NOT_FOUND = "Moderator not found"
+MESSAGE_THREAD_LOCKED = "Thread is locked"
+MESSAGE_FILE_POSTING_DISABLED = "File posting is disabled"
+MESSAGE_FILES_TOO_MANY = "Too many files"
+MESSAGE_POST_NO_TEXT = "No text"
+MESSAGE_POST_TEXT_TOO_LONG = "Text too long"
+MESSAGE_POST_TEXT_TOO_MANY_LINES = "Too many lines"
+MESSAGE_POST_NAME_TOO_LONG = "Name too long"
+MESSAGE_PASSWORD_TOO_SHORT = "Password too short, at least {} characters required"
+MESSAGE_PASSWORD_TOO_LONG = "Password too long, at most {} characters allowed"
 
 
 def create_post(post_details: PostDetails) -> PostResultModel:
@@ -44,13 +51,15 @@ def create_post(post_details: PostDetails) -> PostResultModel:
 
     to_thread = None
     if post_details.thread_refno is not None:
-        to_thread = posts.find_thread_by_board_name_thread_refno(board.name, post_details.thread_refno)
+        to_thread = posts.find_thread_by_board_name_thread_refno(
+            board.name, post_details.thread_refno
+        )
         if to_thread is None:
             raise ArgumentError(MESSAGE_THREAD_NOT_FOUND)
 
     _check_post_details(post_details, to_thread, board)
 
-    plugin_manager.execute_hook('on_handle_post', post_details)
+    plugin_manager.execute_hook("on_handle_post", post_details)
 
     site_config = site_service.get_site_config()
     default_name = site_config.default_name
@@ -60,7 +69,7 @@ def create_post(post_details: PostDetails) -> PostResultModel:
     if post_details.mod_id is not None:
         moderator = moderator_service.find_moderator_id(post_details.mod_id)
         if moderator is None:
-            raise Exception('Moderator not found')
+            raise Exception("Moderator not found")
 
     post = PostModel()
     post.date = now()
@@ -102,18 +111,26 @@ def create_post(post_details: PostDetails) -> PostResultModel:
     return res
 
 
-def _log_post(post_details: PostDetails, result: PostResultModel, insert_time, cache_time):
+def _log_post(
+    post_details: PostDetails, result: PostResultModel, insert_time, cache_time
+):
     total = insert_time + cache_time + post_details.file_time
-    file_time_str = 'file: {}ms, '.format(post_details.file_time) if post_details.file_time else ''
-    s = '{}db: {}ms, caches: {}ms, total: {}ms'
+    file_time_str = (
+        "file: {}ms, ".format(post_details.file_time) if post_details.file_time else ""
+    )
+    s = "{}db: {}ms, caches: {}ms, total: {}ms"
     timings = s.format(file_time_str, insert_time, cache_time, total)
-    post_type = 'thread' if result.post_refno == 1 else 'reply'
-    log = 'new {} /{}/{}#{} ({})'.format(post_type, result.board_name, result.thread_refno, result.post_refno, timings)
+    post_type = "thread" if result.post_refno == 1 else "reply"
+    log = "new {} /{}/{}#{} ({})".format(
+        post_type, result.board_name, result.thread_refno, result.post_refno, timings
+    )
     mod_log(log, ip4_str=ip4_to_str(post_details.ip4))
 
 
-def _check_post_details(post_details: PostDetails, thread: ThreadModel, board: BoardModel):
-    plugin_manager.execute_hook('on_handle_post_check', post_details)
+def _check_post_details(
+    post_details: PostDetails, thread: ThreadModel, board: BoardModel
+):
+    plugin_manager.execute_hook("on_handle_post_check", post_details)
 
     # Get moderator if mod_id was set
     moderator = None
@@ -125,17 +142,27 @@ def _check_post_details(post_details: PostDetails, thread: ThreadModel, board: B
     if thread and thread.locked:
         raise ArgumentError(MESSAGE_THREAD_LOCKED)
 
-    action_authorizer.authorize_post_action(moderator, PostAction.POST_CREATE, post_details=post_details,
-                                            board=board, thread=thread)
+    action_authorizer.authorize_post_action(
+        moderator,
+        PostAction.POST_CREATE,
+        post_details=post_details,
+        board=board,
+        thread=thread,
+    )
 
     if post_details.has_files and not board.config.file_posting:
         raise ArgumentError(MESSAGE_FILE_POSTING_DISABLED)
 
-    if post_details.has_files and len(post_details.uploaded_files) > board.config.max_files:
+    if (
+        post_details.has_files
+        and len(post_details.uploaded_files) > board.config.max_files
+    ):
         raise ArgumentError(MESSAGE_FILES_TOO_MANY)
 
     # Allow no text when an image is attached
-    if (not post_details.text or not post_details.text.strip()) and not post_details.has_files:
+    if (
+        not post_details.text or not post_details.text.strip()
+    ) and not post_details.has_files:
         raise ArgumentError(MESSAGE_POST_NO_TEXT)
 
     if post_details.text is not None:
@@ -163,7 +190,7 @@ def _handle_text(post, post_details):
     if post_details.text is not None:
         post.text = post_details.text.strip()
     else:
-        post.text = ''
+        post.text = ""
 
 
 def _handle_password(post, post_details):
@@ -197,8 +224,8 @@ def _process_name(name):
     sage = False
     result_name = None
 
-    if '##' in name:
-        name, password = _name_password_from_name(name, '##')
+    if "##" in name:
+        name, password = _name_password_from_name(name, "##")
         name = _filter_name(name)
 
         if password:
@@ -210,16 +237,16 @@ def _process_name(name):
                 new_regcode = regcode.create(new_regcode, password)
                 cap = new_regcode.code
 
-            result_name = name + ' !!' + cap
-    elif '#' in name:
-        name, password = _name_password_from_name(name, '#')
+            result_name = name + " !!" + cap
+    elif "#" in name:
+        name, password = _name_password_from_name(name, "#")
         name = _filter_name(name)
 
         if password:
             # Styling is applied later
             cap = generate_crypt_code(password)
-            result_name = name + ' !' + cap
-    elif name.lower() == 'sage' or name == '下げ':
+            result_name = name + " !" + cap
+    elif name.lower() == "sage" or name == "下げ":
         sage = True
     else:
         name = _filter_name(name)
@@ -235,13 +262,13 @@ def _name_password_from_name(name, divider):
 
 
 def _filter_name(name):
-    return name.replace('!', '')
+    return name.replace("!", "")
 
 
 def _generate_capcode():
     sys_random = random.SystemRandom()
 
     length = 10
-    alphabet = string.ascii_letters + string.digits + '+.'
+    alphabet = string.ascii_letters + string.digits + "+."
 
-    return ''.join(sys_random.choice(alphabet) for _ in range(length))
+    return "".join(sys_random.choice(alphabet) for _ in range(length))

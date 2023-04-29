@@ -12,8 +12,8 @@ from sqlalchemy.orm import Session
 from uchan.lib.ormmodel import BoardOrmModel
 from uchan.lib.ormmodel import ThreadOrmModel
 
-revision = 'ffcec420c0bd'
-down_revision = 'ac1680bc48'
+revision = "ffcec420c0bd"
+down_revision = "ac1680bc48"
 branch_labels = None
 depends_on = None
 
@@ -22,17 +22,26 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('board', sa.Column('refno_counter', sa.Integer(), nullable=False, server_default='1'))
-    op.add_column('thread', sa.Column('refno', sa.Integer(), nullable=False, server_default='1'))
-    op.create_index(op.f('ix_thread_refno'), 'thread', ['refno'], unique=False)
+    op.add_column(
+        "board",
+        sa.Column("refno_counter", sa.Integer(), nullable=False, server_default="1"),
+    )
+    op.add_column(
+        "thread", sa.Column("refno", sa.Integer(), nullable=False, server_default="1")
+    )
+    op.create_index(op.f("ix_thread_refno"), "thread", ["refno"], unique=False)
 
     # Adds refnos to each thread, and sets the refno_counter of the board to the last one set
-    print('Changing to thread refnos!')
+    print("Changing to thread refnos!")
     db = Session(bind=op.get_bind())
     boards = db.query(BoardOrmModel).all()
     for board in boards:
-        print('Changing board {}'.format(board.name))
-        threads = db.query(ThreadOrmModel).filter(ThreadOrmModel.board_id == board.id).order_by(ThreadOrmModel.id.asc())
+        print("Changing board {}".format(board.name))
+        threads = (
+            db.query(ThreadOrmModel)
+            .filter(ThreadOrmModel.board_id == board.id)
+            .order_by(ThreadOrmModel.id.asc())
+        )
         refno = 1
         for thread in threads:
             thread.refno = refno
@@ -41,16 +50,16 @@ def upgrade():
 
         db.commit()
 
-    print('Removing defaults...')
+    print("Removing defaults...")
 
     # Remove the default again, it has to be manually set on new models
-    op.alter_column('board', 'refno_counter', server_default=None)
-    op.alter_column('thread', 'refno', server_default=None)
+    op.alter_column("board", "refno_counter", server_default=None)
+    op.alter_column("thread", "refno", server_default=None)
 
-    print('Done')
+    print("Done")
 
 
 def downgrade():
-    op.drop_index(op.f('ix_thread_refno'), table_name='thread')
-    op.drop_column('thread', 'refno')
-    op.drop_column('board', 'refno_counter')
+    op.drop_index(op.f("ix_thread_refno"), table_name="thread")
+    op.drop_column("thread", "refno")
+    op.drop_column("board", "refno_counter")

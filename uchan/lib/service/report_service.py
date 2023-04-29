@@ -1,16 +1,22 @@
 from typing import List, Optional
 
 from uchan.lib import action_authorizer
-from uchan.lib.action_authorizer import ReportAction, PostAction
+from uchan.lib.action_authorizer import PostAction, ReportAction
 from uchan.lib.exceptions import ArgumentError
-from uchan.lib.model import ModeratorLogType, BoardModel, ModeratorModel, ReportModel, PostModel
+from uchan.lib.model import (
+    BoardModel,
+    ModeratorLogType,
+    ModeratorModel,
+    PostModel,
+    ReportModel,
+)
 from uchan.lib.repository import reports
-from uchan.lib.service import posts_service, moderator_service
+from uchan.lib.service import moderator_service, posts_service
 from uchan.lib.tasks.report_task import ManageReportDetails
 from uchan.lib.utils import now
 
-MESSAGE_REPORT_NOT_FOUND = 'Report not found'
-MESSAGE_MODERATOR_NOT_FOUND = 'Moderator not found'
+MESSAGE_REPORT_NOT_FOUND = "Report not found"
+MESSAGE_MODERATOR_NOT_FOUND = "Moderator not found"
 
 
 def handle_manage_report(manage_report_details):
@@ -26,24 +32,32 @@ def handle_manage_report(manage_report_details):
     board = post.thread.board
 
     if manage_report_details.mode == ManageReportDetails.CLEAR:
-        action_authorizer.authorize_report_action(moderator, board, report, ReportAction.REPORT_CLEAR)
+        action_authorizer.authorize_report_action(
+            moderator, board, report, ReportAction.REPORT_CLEAR
+        )
         delete_report(report)
 
-        message = 'Cleared report id {}'.format(report.id)
+        message = "Cleared report id {}".format(report.id)
         moderator_service.log(ModeratorLogType.REPORT_CLEAR, moderator, board, message)
     elif manage_report_details.mode == ManageReportDetails.DELETE_POST:
         action_authorizer.authorize_post_action(moderator, PostAction.POST_DELETE, post)
         # Report gets deleted with a cascade
         posts_service.delete_post(post)
 
-        message = 'Post id {}'.format(post.id)
-        moderator_service.log(ModeratorLogType.REPORT_POST_DELETE, moderator, board, message)
+        message = "Post id {}".format(post.id)
+        moderator_service.log(
+            ModeratorLogType.REPORT_POST_DELETE, moderator, board, message
+        )
     elif manage_report_details.mode == ManageReportDetails.DELETE_FILE:
-        action_authorizer.authorize_post_action(moderator, PostAction.POST_DELETE_FILE, post)
+        action_authorizer.authorize_post_action(
+            moderator, PostAction.POST_DELETE_FILE, post
+        )
         posts_service.delete_file(post)
 
-        message = 'Post id {}'.format(post.id)
-        moderator_service.log(ModeratorLogType.REPORT_POST_DELETE_FILE, moderator, board, message)
+        message = "Post id {}".format(post.id)
+        moderator_service.log(
+            ModeratorLogType.REPORT_POST_DELETE_FILE, moderator, board, message
+        )
 
 
 def report_post(post: PostModel):
@@ -59,7 +73,12 @@ def delete_report(report: ReportModel):
     reports.delete(report)
 
 
-def get_reports(moderator: ModeratorModel, page: int, per_page: int, for_boards: List[BoardModel] = None):
+def get_reports(
+    moderator: ModeratorModel,
+    page: int,
+    per_page: int,
+    for_boards: List[BoardModel] = None,
+):
     return reports.find_by_moderator(moderator, page, per_page, for_boards)
 
 
