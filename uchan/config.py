@@ -1,18 +1,44 @@
 from typing import Literal
 
-from pydantic import AmqpDsn, AnyHttpUrl, AnyUrl, BaseSettings, Json, PostgresDsn
+from pydantic import AnyHttpUrl, BaseSettings, Json
 
 
 class UchanConfig(BaseSettings):
     class Config:
         env_file = ".env"
 
+    # postgres_dsn: PostgresDsn = "postgresql+psycopg2://uchan:uchan@db/uchan"
+    database_host: str = ""
+    database_port: int = 5432
+    database_name: str = "uchan"
+    database_user: str = "uchan"
+    database_password: str = ""
+
+    # Amqp broker url
+    # broker_dsn: AmqpDsn = "amqp://queue/"
+    broker_host: str = ""
+    broker_port: int = 5672
+    broker_user: str = "user"
+    broker_password: str = ""
+    broker_vhost: str = ""
+
+    # Memcache server address
+    memcached_host: str = ""
+    memcached_port: int = 11211
+
+    # Enable to purge the varnish cache
+    varnish_enable_purging: bool = False
+    # Address we can reach varnish, to send PURGE requests to.
+    varnish_host: str = ""
+
     # App name, for logs and the like
+    # FIXME: remove
     name: str = "uchan"
 
     # URL where uchan is reachable from. Used for URL generation.
     site_url: AnyHttpUrl = "http://localhost"
 
+    # FIXME: should be the same as flask debug
     debug: bool = False
 
     asset_build_directory: str = "build/static"
@@ -22,6 +48,9 @@ class UchanConfig(BaseSettings):
 
     # Content of the manifest.json file
     manifest: Json = '{"name": "uchan"}'
+
+    auth_login_require_captcha: bool = False
+    auth_register_require_captcha: bool = True
 
     enable_cooldown_checking: bool = True
     bypass_worker: bool = False
@@ -39,7 +68,7 @@ class UchanConfig(BaseSettings):
     # spoofing by malicious clients appending their own forwarded-for header
     # 2 for a varnish > nginx > uwsgi setup
     # 3 for a front_end > varnish > nginx > uwsgi setup
-    proxy_fixer_num_proxies: int = 2
+    proxy_fixer_num_proxies: int = 1
 
     # Max POST size to accept.
     # Keep this the same as your nginx client_max_body_size config.
@@ -61,23 +90,10 @@ class UchanConfig(BaseSettings):
     # Base url of where the client should request the file.
     local_cdn_web_path: str = "/media/"
 
-    database_connect_string: PostgresDsn = "postgresql+psycopg2://uchan:uchan@db/uchan"
-
     # Check this with your uwsgi total thread count + worker count and the postgres
     # max_connections
     database_pool_size: int = 4
     database_echo_sql: bool = False
-
-    # Celery broker url
-    broker_url: AmqpDsn = "amqp://queue/"
-
-    # Enable to purge the varnish cache
-    varnish_enable_purging: bool = False
-    # Address we can reach varnish, to send PURGE requests to.
-    varnish_url: AnyUrl = "http://varnish"
-
-    # Memcache server address
-    memcache_host: str = "memcached:11211"
 
     # The -I flag of memcache, the max size of items
     # note: "-I 2M" means "2 * 1024 * 1024" here

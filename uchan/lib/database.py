@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 
+from requests import Session
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -14,7 +15,7 @@ _engine = None
 
 
 @contextmanager
-def session():
+def session() -> Session:
     global _session_cls
 
     s = _session_cls()
@@ -28,7 +29,7 @@ def session():
 
 
 def connect_string():
-    return config.database_connect_string
+    return f"postgresql+psycopg2://{config.database_user}:{config.database_password}@{config.database_host}:{config.database_port}/{config.database_name}"
 
 
 def clean_up():
@@ -64,5 +65,15 @@ def init_db():
     import uchan.lib.ormmodel  # noqa
 
 
-def metadata_create_all():
+def get_sqlalchemy_engine():
+    return _engine
+
+
+def create_all_tables_and_alembic_version_table():
     OrmModelBase.metadata.create_all(_engine)
+
+    from alembic import command
+    from alembic.config import Config
+
+    alembic_cfg = Config("alembic.ini")
+    command.stamp(alembic_cfg, "head")

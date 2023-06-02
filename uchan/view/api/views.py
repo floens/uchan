@@ -12,6 +12,12 @@ def api_index():
     return {"version": "unstable"}
 
 
+@api.route("/health")
+@jsonres()
+def api_health():
+    return {"health": "ok"}
+
+
 @api.route("/catalog/<board_name>")
 @jsonres()
 def api_catalog(board_name):

@@ -1,0 +1,19 @@
+{{- if .Values.varnish.enabled -}}
+apiVersion: caching.ibm.com/v1alpha1
+kind: VarnishCluster
+metadata:
+  name: {{ include "uchan.fullname" . }}-varnish-cluster
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  vcl:
+    configMapName: {{ include "uchan.fullname" . }}-vcl-config
+    entrypointFileName: entrypoint.vcl
+  service:
+    port: {{ .Values.service.port }}
+  backend:
+    port: http
+    selector:
+      {{- include "uchan.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+{{- end }}

@@ -3,6 +3,7 @@ node_modules/
 build/
 __pycache__/
 *.py[cod]
+.ruff_cache
 
 # OS files
 .DS_Store

@@ -15,6 +15,11 @@
             <br>
             Detected ip: <b>{{ current_ip4_str }}</b>
         </p>
+        <ul>
+            {% for k, v in client_ip_headers %}
+                <li>{{ k }}: {{ v }}</li>
+            {% endfor %}
+        </ul>
     </fieldset>
 
     <fieldset>

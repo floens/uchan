@@ -2,9 +2,10 @@ import os
 
 from celery import Celery
 from celery.loaders.app import AppLoader
+from flask import Flask
 
-app = None
-celery = None
+app: Flask
+celery: Celery
 logger = None
 mod_logger = None
 
@@ -21,7 +22,7 @@ from uchan.config import UchanConfig  # noqa
 config: UchanConfig
 
 
-def init():
+def init_app():
     global app, celery, config
 
     config = UchanConfig()
@@ -37,7 +38,7 @@ def init():
             "task_serializer": "pickle",
             "accept_content": ["pickle"],
             "result_serializer": "pickle",
-            "broker_url": config.broker_url,
+            "broker_url": f"amqp://{config.broker_user}:{config.broker_password}@{config.broker_host}:{config.broker_port}/",
         }
     )
 
@@ -45,7 +46,7 @@ def init():
     from uchan.flask import CustomFlaskApp, create_web_app
 
     app = CustomFlaskApp(__name__, template_folder="view/templates", static_folder=None)
-    setup_logging()
+    setup_logging(app)
     create_web_app(config, app)
 
     database.register_teardown(app)
@@ -99,11 +100,17 @@ def init():
     # FIXME: remove or improve "plugin" system
     plugin_manager.load_plugins(["captcha2"])
 
+    # Import cli
+
     # database.metadata_create_all()
 
+    return app
 
-def setup_logging():
-    global app, logger, mod_logger
+
+def setup_logging(app):
+    # FIXME: deprecate, and use loggers per file, which derive config
+    # from a base logger configured here
+    global logger, mod_logger
 
     import logging
     from logging.handlers import RotatingFileHandler
@@ -144,4 +151,4 @@ def setup_logging():
     mod_logger.setLevel(logging.INFO)
 
 
-init()
+app = init_app()

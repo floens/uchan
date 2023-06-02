@@ -1,0 +1,21 @@
+apiVersion: v2
+name: uchan
+description: µchan - anonymous imageboard software
+
+type: application
+
+version: 0.1.0
+
+dependencies:
+  - condition: postgresql.enabled
+    name: postgresql
+    version: 12.1.5
+    repository: https://charts.bitnami.com/bitnami
+  - condition: rabbitmq.enabled
+    name: rabbitmq
+    version: 11.15.1
+    repository: https://charts.bitnami.com/bitnami
+  - condition: memcached.enabled
+    name: memcached
+    version: 6.4.2
+    repository: https://charts.bitnami.com/bitnami

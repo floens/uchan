@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 from flask import (
     abort,
     jsonify,
+    make_response,
     render_template,
     request,
     send_from_directory,
@@ -114,6 +115,19 @@ def with_token():
                 abort(400)
 
             return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
+def with_cache_control_no_store():
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            response = make_response(f(*args, **kwargs))
+            response.headers.set("Cache-Control", "no-store")
+            return response
 
         return decorated_function
 

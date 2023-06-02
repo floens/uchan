@@ -39,7 +39,7 @@ _pool = ThreadPoolExecutor(4)
 
 def _purge(endpoint):
     if config.varnish_enable_purging:
-        url = config.varnish_url + endpoint
+        url = f"http://{config.varnish_host}{endpoint}"
 
         return _pool.submit(_call_purge, url)
 

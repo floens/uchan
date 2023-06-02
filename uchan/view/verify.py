@@ -3,11 +3,12 @@ from flask import render_template, request
 from uchan import app
 from uchan.lib.exceptions import ArgumentError, BadRequestError
 from uchan.lib.service import verification_service
-from uchan.view import check_csrf_referer
+from uchan.view import check_csrf_referer, with_cache_control_no_store
 
 
 # Do NOT cache this GET endpoint, an exception in the varnish config has been made.
 @app.route("/verify/", methods=["GET", "POST"])
+@with_cache_control_no_store()
 def verify():
     method = verification_service.get_method()
     verified = False

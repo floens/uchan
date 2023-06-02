@@ -1,0 +1,86 @@
+image:
+  repository: ghcr.io/floens/uchan
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  # tag: "master"
+
+imagePullSecrets: {}
+nameOverride: ""
+fullnameOverride: ""
+
+uchan:
+  siteUrl: "http://example.com"
+  assetUrl: "http://example.com/static/"
+
+varnish:
+  enabled: true
+  port: 80
+
+externalVarnish:
+  host: localhost
+
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      storageClass: ""
+      size: 1Gi
+  auth:
+    username: uchan
+    database: uchan
+
+externalDatabase:
+  host: localhost
+  port: 5432
+  user: uchan
+  password: ""
+  database: uchan
+  existingSecret: ""
+
+rabbitmq:
+  enabled: true
+  auth:
+    username: uchan
+    erlangCookie: ""
+
+externalBroker:
+  host: localhost
+  port: 5672
+  user: uchan
+  password: ""
+  vhost: "/"
+  existingSecret: ""
+
+memcached:
+  enabled: true
+
+externalMemcached:
+  host: localhost
+  port: 11211
+
+podAnnotations: {}
+
+service:
+  enabled: false
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  hosts: []
+  tls: []
+
+resources:
+   limits:
+     cpu: 1
+     memory: 512Gi
+   requests:
+     cpu: 200m
+     memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

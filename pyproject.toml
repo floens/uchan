@@ -73,6 +73,7 @@ pydantic = "^1.10.7"
 python-dotenv = "^1.0.0"
 watchdog = "^3.0.0"
 pre-commit = "^3.2.2"
+uwsgi = "^2.0.21"
 
 
 [build-system]

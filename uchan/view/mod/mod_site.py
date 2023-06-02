@@ -109,12 +109,16 @@ def mod_site():
         )
 
     current_ip4_str = get_request_ip4_str()
+    client_ip_headers = [
+        i for i in request.headers if i[0] in ("X-Real-Ip", "X-Forwarded-For")
+    ]
     memcache_stats = _gather_memcache_stats()
     db_stats = site_service.get_model_counts()
 
     return render_template(
         "mod_site.html",
         current_ip4_str=current_ip4_str,
+        client_ip_headers=client_ip_headers,
         memcache_stats=memcache_stats,
         db_stats=db_stats,
         site_configuration_form=site_configuration_form,

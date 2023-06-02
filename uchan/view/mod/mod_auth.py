@@ -1,5 +1,6 @@
-from flask import abort, flash, redirect, render_template, request, session, url_for
+from flask import abort, redirect, render_template, request, session, url_for
 
+from uchan import config
 from uchan.lib import validation
 from uchan.lib.exceptions import ArgumentError, BadRequestError
 from uchan.lib.mod_log import mod_log
@@ -47,9 +48,13 @@ def mod_auth():
         authed = get_authed()
         moderator = request_moderator() if authed else None
 
-        method = None
+        login_method = None
+        reg_method = None
         if not authed:
-            method = verification_service.get_method()
+            if config.auth_login_require_captcha:
+                login_method = verification_service.get_method()
+            if config.auth_register_require_captcha:
+                reg_method = verification_service.get_method()
 
         show_registration = site_service.get_site_config().registration
 
@@ -57,7 +62,8 @@ def mod_auth():
             "auth.html",
             authed=authed,
             moderator=moderator,
-            method=method,
+            login_method=login_method,
+            reg_method=reg_method,
             show_registration=show_registration,
         )
 
@@ -75,7 +81,8 @@ def _mod_auth_auth():
     if not check_csrf_referer(request):
         raise BadRequestError("Bad referer header")
 
-    verify_method()
+    if config.auth_login_require_captcha:
+        verify_method()
 
     username = request.form["username"]
     password = request.form["password"]
@@ -93,7 +100,6 @@ def _mod_auth_auth():
             try:
                 moderator_service.check_password(moderator, password)
                 set_mod_authed(moderator)
-                flash("Logged in")
                 mod_log("logged in")
             except ArgumentError as e:
                 mod_log(
@@ -119,7 +125,8 @@ def mod_reg():
     if not check_csrf_referer(request):
         raise BadRequestError("Bad referer header")
 
-    verify_method()
+    if config.auth_register_require_captcha:
+        verify_method()
 
     username = request.form["username"]
     password = request.form["password"]

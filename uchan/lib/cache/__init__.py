@@ -118,4 +118,6 @@ class LocalCache:
         return None
 
 
-cache = CacheWrapper(config.memcache_host, config.memcache_max_item_size)
+cache = CacheWrapper(
+    f"{config.memcached_host}:{config.memcached_port}", config.memcache_max_item_size
+)

@@ -1,12 +1,13 @@
 # build/library files
 node_modules/
 build/
-__pycache__/
-*.py[cod]
+**/__pycache__
+**/*.pyc
+.ruff_cache
 
 # OS files
-.DS_Store
-._*
+**/*.DS_Store
+**/*._*
 
 # config files
 config.ini

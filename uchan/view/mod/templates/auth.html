@@ -25,7 +25,9 @@
                 </label>
                 <br>
 
-                {{ method.get_html()|safe }}<br>
+                {% if login_method %}
+                    {{ login_method.get_html()|safe }}<br>
+                {% endif %}
 
                 <input type="submit" value="Submit">
             </fieldset>
@@ -53,7 +55,9 @@
                     </label>
                     <br>
 
-                    {{ method.get_html()|safe }}<br>
+                    {% if reg_method %}
+                        {{ reg_method.get_html()|safe }}<br>
+                    {% endif %}
 
                     <input type="submit" value="Register">
                 </fieldset>

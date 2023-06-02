@@ -4,10 +4,12 @@ from uchan import app
 from uchan.lib.exceptions import ArgumentError, BadRequestError
 from uchan.lib.service import ban_service, verification_service
 from uchan.lib.utils import now
+from uchan.view import with_cache_control_no_store
 
 
 # Do NOT cache this GET endpoint, an exception in the varnish config has been made.
 @app.route("/banned/", methods=["GET", "POST"])
+@with_cache_control_no_store()
 def banned():
     method = verification_service.get_method()
     if request.method == "GET":
