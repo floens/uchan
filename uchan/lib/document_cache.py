@@ -1,3 +1,4 @@
+import logging
 from concurrent import futures
 from concurrent.futures import ThreadPoolExecutor
 from urllib.parse import urlparse
@@ -5,8 +6,10 @@ from urllib.parse import urlparse
 import requests
 from requests import RequestException
 
-from uchan import config, logger
+from uchan import config
 from uchan.lib.model import BoardModel, ThreadModel
+
+logger = logging.getLogger(__name__)
 
 # TODO: We can't use url_for outside the flask context, until there's a better way, use
 # this

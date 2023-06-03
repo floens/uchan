@@ -1,7 +1,10 @@
+import logging
+
 from flask import request as request_ctx
 
-from uchan import logger
 from uchan.lib.exceptions import ArgumentError
+
+logger = logging.getLogger(__name__)
 
 
 def get_request_ip4_str(request=None):

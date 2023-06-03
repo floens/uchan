@@ -21,8 +21,6 @@ def create_web_app(config: UchanConfig, app):
     if config.use_proxy_fixer:
         app.wsgi_app = ProxyFix(app.wsgi_app, config.proxy_fixer_num_proxies)
 
-    app.config["DEBUG"] = config.debug
-    app.config["APP_NAME"] = config.name
     app.config["MAX_CONTENT_LENGTH"] = config.max_content_length
 
     app.jinja_env.trim_blocks = True
@@ -32,13 +30,11 @@ def create_web_app(config: UchanConfig, app):
 
     uchan.view.routing.converters.init_converters(app)
 
-    from uchan import logger
     from uchan.lib.exceptions import BadRequestError
 
     # Setup error handlers
     @app.errorhandler(500)
     def server_error_handler(error):
-        logger.exception(error)
         return send_from_directory("view/static", "500.html"), 404
 
     @app.errorhandler(404)

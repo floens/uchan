@@ -6,7 +6,6 @@ from flask import Flask
 
 app: Flask
 celery: Celery
-logger = None
 mod_logger = None
 
 
@@ -27,6 +26,8 @@ def init_app():
 
     config = UchanConfig()
 
+    setup_logging()
+
     import uchan.lib.database as database
 
     database.init_db()
@@ -46,7 +47,6 @@ def init_app():
     from uchan.flask import CustomFlaskApp, create_web_app
 
     app = CustomFlaskApp(__name__, template_folder="view/templates", static_folder=None)
-    setup_logging(app)
     create_web_app(config, app)
 
     database.register_teardown(app)
@@ -107,47 +107,41 @@ def init_app():
     return app
 
 
-def setup_logging(app):
-    # FIXME: deprecate, and use loggers per file, which derive config
-    # from a base logger configured here
-    global logger, mod_logger
+def setup_logging():
+    global mod_logger
 
     import logging
+    from logging.config import dictConfig
     from logging.handlers import RotatingFileHandler
 
-    app_log_path = config.app_log_path
-    os.makedirs(os.path.dirname(app_log_path), exist_ok=True)
-
-    log_format = "[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"
-    max_bytes = 5000000
-    backup_count = 5
-
-    # app.logger.handlers[0].setFormatter(logging.Formatter(log_format))
-    log_handler = RotatingFileHandler(
-        app_log_path, maxBytes=max_bytes, backupCount=backup_count
+    dictConfig(
+        {
+            "version": 1,
+            "formatters": {
+                "default": {
+                    "format": "[%(asctime)s] %(levelname)s in %(module)s: %(message)s",
+                }
+            },
+            "handlers": {
+                "wsgi": {
+                    "class": "logging.StreamHandler",
+                    "stream": "ext://flask.logging.wsgi_errors_stream",
+                    "formatter": "default",
+                }
+            },
+            "root": {"level": "INFO", "handlers": ["wsgi"]},
+        }
     )
-    log_handler.setFormatter(logging.Formatter(log_format))
-
-    app.logger.addHandler(log_handler)
-
-    if config.debug:
-        log_handler.setLevel(logging.DEBUG)
-        app.logger.setLevel(logging.DEBUG)
-    else:
-        log_handler.setLevel(logging.INFO)
-        app.logger.setLevel(logging.INFO)
-
-    logger = app.logger
 
     mod_log_path = config.mod_log_path
     os.makedirs(os.path.dirname(mod_log_path), exist_ok=True)
-    mod_log_handler = RotatingFileHandler(
-        mod_log_path, maxBytes=max_bytes, backupCount=backup_count
+    mod_file_log_handler = RotatingFileHandler(
+        mod_log_path, maxBytes=5000000, backupCount=5
     )
-    mod_log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s"))
+    mod_file_log_handler.setFormatter(logging.Formatter("[%(asctime)s] %(message)s"))
 
     mod_logger = logging.getLogger("mod log")
-    mod_logger.addHandler(mod_log_handler)
+    mod_logger.addHandler(mod_file_log_handler)
     mod_logger.setLevel(logging.INFO)
 
 

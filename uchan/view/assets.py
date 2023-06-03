@@ -1,11 +1,14 @@
 import json
+import logging
 import os
 from collections import namedtuple
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from uchan import config, logger
+from uchan import config
+
+logger = logging.getLogger(__name__)
 
 Asset = namedtuple("Asset", ["name", "type", "url"])
 

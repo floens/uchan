@@ -17,3 +17,4 @@ config.ini
 # local dirs during development
 media
 mediaqueue
+log

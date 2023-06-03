@@ -1,3 +1,4 @@
+import logging
 import random
 import string
 from functools import wraps
@@ -15,11 +16,13 @@ from flask import (
 )
 from markupsafe import Markup, escape
 
-from uchan import app, config, logger
+from uchan import app, config
 from uchan.filter.app_filters import page_formatting
 from uchan.lib import plugin_manager
 from uchan.lib.service import board_service, page_service, site_service
 from uchan.lib.utils import ip4_to_str, now
+
+logger = logging.getLogger(__name__)
 
 
 class ExtraJavascript:

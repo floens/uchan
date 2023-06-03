@@ -31,15 +31,8 @@ class UchanConfig(BaseSettings):
     # Address we can reach varnish, to send PURGE requests to.
     varnish_host: str = ""
 
-    # App name, for logs and the like
-    # FIXME: remove
-    name: str = "uchan"
-
     # URL where uchan is reachable from. Used for URL generation.
     site_url: AnyHttpUrl = "http://localhost"
-
-    # FIXME: should be the same as flask debug
-    debug: bool = False
 
     asset_build_directory: str = "build/static"
     asset_build_meta_file: str = "build/static/_meta.json"
@@ -57,8 +50,7 @@ class UchanConfig(BaseSettings):
     thumbnail_op: int = 256
     thumbnail_reply: int = 128
     max_boards_per_moderator: int = 5
-    app_log_path: str = "data/log/uchan.log"
-    mod_log_path: str = "data/log/mod.log"
+    mod_log_path: str = "log/mod.log"
 
     # Enable this when serving behind a proxy (almost always)
     # Do not use this middleware in non-proxy setups for security reasons.

@@ -1,12 +1,14 @@
+import logging
 import os
 
 import dateutil.parser
 import requests
 
-from uchan import logger
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.service import verification_service
 from uchan.lib.utils import now
+
+logger = logging.getLogger(__name__)
 
 """
 This plugin adds google reCaptcha v2 as a verification method.

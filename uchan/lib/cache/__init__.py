@@ -1,10 +1,13 @@
 import json
+import logging
 from time import time
 
 from cachelib.memcached import MemcachedCache
 
-from uchan import config, logger
+from uchan import config
 from uchan.lib.utils import now
+
+logger = logging.getLogger(__name__)
 
 
 def make_attr_dict(value):

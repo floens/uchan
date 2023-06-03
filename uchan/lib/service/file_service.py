@@ -1,3 +1,4 @@
+import logging
 import os
 import random
 import shutil
@@ -6,9 +7,10 @@ import string
 from PIL import Image
 from sqlalchemy.event import listen
 
-from uchan import logger
 from uchan.lib.exceptions import ArgumentError
 from uchan.lib.ormmodel import FileOrmModel
+
+logger = logging.getLogger(__name__)
 
 # Extensions that will be converted
 CONVERT_EXTENSIONS = [("jpeg", "jpg")]
