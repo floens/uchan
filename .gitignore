@@ -4,6 +4,7 @@ build/
 __pycache__/
 *.py[cod]
 .ruff_cache
+docs/_build/
 
 # OS files
 .DS_Store
