@@ -16,7 +16,7 @@ WORKDIR /app
 
 COPY poetry.lock pyproject.toml ./
 
-RUN poetry install --no-root --no-ansi --without dev
+RUN poetry install --no-root --no-ansi
 
 FROM node:18.16 as node-builder
 
