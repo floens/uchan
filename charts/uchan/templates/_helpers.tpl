@@ -240,3 +240,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{ end }}
 
 {{- end }}
+
+{{- define "uchan.volumeMounts" -}}
+- name: uchan-media
+  mountPath: /app/media
+{{- end }}
+
+{{- define "uchan.volumes" -}}
+- name: uchan-media
+  persistentVolumeClaim:
+    claimName: {{ include "uchan.fullname" . }}-media
+{{- end }}

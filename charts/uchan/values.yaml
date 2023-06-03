@@ -12,6 +12,9 @@ uchan:
   siteUrl: "http://example.com"
   assetUrl: "http://example.com/static/"
 
+  mediaStorageClassName: ""
+  mediaStorageSizeRequest: 10Gi
+
 varnish:
   enabled: true
   port: 80
