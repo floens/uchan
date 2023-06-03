@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Installation &#8212; µchan  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to µchan" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
+<p>The recommended installation approach is using the built-in Helm chart, with Kubernetes.</p>
+<section id="installation-with-kubernetes">
+<h2>Installation with Kubernetes<a class="headerlink" href="#installation-with-kubernetes" title="Permalink to this heading">¶</a></h2>
+<p>To install the Helm chart for µchan, please ensure you have the following prerequisites
+in place:</p>
+<ol class="arabic simple">
+<li><p>Set up a Kubernetes cluster: If you don’t have a Kubernetes cluster already,
+provision one using a tool like Minikube for local development or choose a cloud
+provider such as Google Kubernetes Engine (GKE), Amazon Elastic Kubernetes Service
+(EKS), or Microsoft Azure Kubernetes Service (AKS) to create a cluster.</p></li>
+<li><p>Configure kubectl: Install the <code class="code docutils literal notranslate"><span class="pre">kubectl</span></code> command-line tool and configure it to
+connect to your Kubernetes cluster. You’ll need to set up the cluster context and
+ensure you have the necessary credentials to access the cluster. You can find
+detailed instructions on how to configure <code class="code docutils literal notranslate"><span class="pre">kubectl</span></code> in the Kubernetes
+documentation specific to your cluster provider.</p></li>
+<li><p>Install Helm: Ensure that you have Helm installed on your system. Helm is a package
+manager for Kubernetes that simplifies the deployment and management of applications.
+Refer to the <a class="reference external" href="https://helm.sh/docs/intro/install/)">Helm documentation</a> for
+installation instructions tailored to your operating system.</p></li>
+</ol>
+<p>Once you have completed these steps, you will have a functioning Kubernetes cluster with
+<cite>kubectl</cite> and Helm installed, ready to proceed with the installation of the Helm chart
+for µchan.</p>
+<section id="install-varnish-operator">
+<h3>Install varnish-operator<a class="headerlink" href="#install-varnish-operator" title="Permalink to this heading">¶</a></h3>
+<p>µchan leverages extensive caching techniques to optimize the rapid delivery of web
+pages. One crucial component in this architecture is Varnish, which functions as a
+document cache, capable of caching complete HTML responses.</p>
+<p>When integrating Varnish into the Kubernetes ingress-service-pod model, the recommended
+approach is to employ the <a class="reference external" href="https://ibm.github.io/varnish-operator/">varnish-operator</a>.
+This operator efficiently manages the reloading of the VCL configuration in response to
+changes in the Pod topology.</p>
+<p>Configure the Helm chart and install varnish-operator:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ helm repo add varnish-operator https://raw.githubusercontent.com/IBM/varnish-operator/main/helm-releases
+$ helm repo update
+$ helm install varnish-operator --namespace varnish-operator varnish-operator/varnish-operator
+</pre></div>
+</div>
+<p>While running µchan without Varnish is possible, it’s important to note that it may
+negatively impact performance. By default, µchan is designed to work seamlessly with
+Varnish for optimal results. However, if you wish to disable the Varnish integration,
+you can achieve this by disabling it in your <code class="code docutils literal notranslate"><span class="pre">values.yaml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">varnish</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</pre></div>
+</div>
+<p>Keep in mind that this configuration change may result in decreased
+performance and may not provide the same level of caching and page delivery speed as
+when Varnish is enabled.</p>
+</section>
+<section id="prepare-values-yaml">
+<h3>Prepare values.yaml<a class="headerlink" href="#prepare-values-yaml" title="Permalink to this heading">¶</a></h3>
+<p>To ensure proper configuration of the Helm chart, please follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Create a file called <cite>values.yaml</cite>.</p></li>
+<li><p>Copy and paste the following contents into the <cite>values.yaml</cite> file:</p></li>
+</ol>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">uchan</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">siteUrl</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://&lt;your_domain_here&gt;&quot;</span>
+<span class="w">  </span><span class="nt">assetUrl</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://&lt;your_domain_here&gt;/static/&quot;</span>
+
+<span class="nt">ingress</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">hosts</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">&lt;your_domain_here&gt;</span>
+<span class="w">      </span><span class="nt">paths</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/</span>
+<span class="w">          </span><span class="nt">pathType</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ImplementationSpecific</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Replace <cite>&lt;your_domain_here&gt;</cite> with your actual domain name for the following values:</p>
+<ul class="simple">
+<li><p><cite>uchan.siteUrl</cite>: Replace with the URL where your site will be accessible.</p></li>
+<li><p><cite>uchan.assetUrl</cite>: Replace with the URL where your images  will be hosted. By
+default, µchan delives the assets.</p></li>
+<li><p><cite>ingress.hosts[0].host</cite>: Replace with the your domain (without the schema).</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="get-the-chan-helm-chart">
+<h3>Get the µchan Helm chart<a class="headerlink" href="#get-the-chan-helm-chart" title="Permalink to this heading">¶</a></h3>
+<p>The helm chart is embedded in the repository. Clone the repository:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/floens/uchan
+$ cd uchan
+</pre></div>
+</div>
+<p>Install the Helm chart. Change the namespace as you seem fit:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>$ helm install uchan charts/uchan/ -n uchan -f values.yaml
+</pre></div>
+</div>
+<p>µchan is now installed. Try to access the mod portal as indicated by the installation
+notes.</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">µchan</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation-with-kubernetes">Installation with Kubernetes</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to µchan</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Floens.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
